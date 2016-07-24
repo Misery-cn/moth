@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "define.h"
+#include "const.h"
 
 template<class Point>
 class CPointGuard
@@ -31,3 +36,5 @@ CPointGuard<Point>::~CPointGuard()
 	
 	point_ = NULL;
 }
+
+bool get_work_dir(char* buf);

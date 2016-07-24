@@ -11,7 +11,9 @@
 		delete p; \
 		p = NULL; \
 	}
-
+	
+#define WORK_DIR "WORK_DIR"
+	
 // socket½á¹ûÂë
 enum {
 	SOCKET_ERROR = 100,

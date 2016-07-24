@@ -9,8 +9,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "define.h"
-#include "const.h"
 #include "util.h"
 
 class CSocket
