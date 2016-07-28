@@ -35,10 +35,12 @@ public:
 		if (head_)
 		{
 			delete head_;
+			head_ = NULL;
 		}
 		if (tail_)
 		{
 			delete tail_;
+			tail_ = NULL;
 		}
 		if (entries_)
 		{

@@ -5,13 +5,24 @@
 // 待完成RUNLOG
 #define RUNLOG printf
 
-#define DELETE_P(p) \
+/*#define DELETE_P(p) \
 	if (p) \
 	{ \
 		delete p; \
 		p = NULL; \
 	}
-	
+*/
+
+static inline void 
+DELETE_P(void* p)
+{
+	if (p)
+	{
+	    delete p;
+		p = NULL;
+	}
+}	
+
 #define WORK_DIR "WORK_DIR"
 	
 // socket结果码

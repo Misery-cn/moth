@@ -25,9 +25,9 @@ public:
 	{
 		if (this != &other)
 		{
-			this->file_name_ = other.file_name_;
-			this->section_name_ = other.section_name_;
-			this->item_name_ = other.item_name_;
+			file_name_ = other.file_name_;
+			section_name_ = other.section_name_;
+			item_name_ = other.item_name_;
 		}
 		
 		return true;
@@ -35,17 +35,21 @@ public:
 	
 	void set_file_name(char* filename) {file_name_ = filename;}
 	
-	const char* get_file_name() { return file_name_; }
+	const char* get_file_name() const { return file_name_; }
 	
 	void set_section_name(char* section) {section_name_ = section;}
 	
-	const char* get_section_name() { return section_name_;}
+	const char* get_section_name() const { return section_name_;}
 	
 	void set_item_name(char* item) {item_name_ = item;}
 	
-	const char* get_item_name() { return item_name_; }
+	const char* get_item_name() const { return item_name_; }
 	
 private:
+    // google style
+	CConfigName(const CConfigName& c);
+	CConfigName & operator=(CConfigName& c);
+	
 	// 配置文件名(全路径)
 	char* file_name_;
 	// section的名字
@@ -68,6 +72,7 @@ public:
 	{
 		if (TYPE_STR == value_type_)
         {
+			//use inline not Macro function
             DELETE_P(str_value_);
         }
 	}
