@@ -99,9 +99,9 @@ private:
 	int get_file();
 	int geting();
 	
-	int ftp_write(CSocket* sock, char* buff);
+	int ftp_write(sys::CSocket* sock, char* buff);
 	
-	int ftp_read(CSocket* sock, char* buff, int len);
+	int ftp_read(sys::CSocket* sock, char* buff, int len);
 	
 	int parse_pasv_result(char* result);
     // 递归创建目录
@@ -115,9 +115,9 @@ public:
 
 private:
 	// 命令连接
-    CSocket* sock_cmd_;
+    sys::CSocket* sock_cmd_;
 	// pasv数据传输连接
-	CSocket* sock_data_;
+	sys::CSocket* sock_data_;
 	ftp_param_s* param_;
     std::map<int, func> cmds_;
 };
