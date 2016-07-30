@@ -1,8 +1,8 @@
 
 #include "cond.h"
 
-namespace sys
-{
+SYS_NAMESPACE_BEGIN
+
 
 CCond::CCond() throw (sys::CSysCallException)
 {
@@ -105,4 +105,4 @@ void CCond::broadcast() throw (sys::CSysCallException)
 	}
 }
 
-}
+SYS_NAMESPACE_END

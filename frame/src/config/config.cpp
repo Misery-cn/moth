@@ -1,8 +1,5 @@
 #include "config.h"
 
-namespace sys
-{
-
 char CConfigFile::config_path_[MAX_FILE_NAME] = {0};
 
 const char* CConfigFile::get_config_path()
@@ -30,4 +27,3 @@ bool CConfigFile::get(const CConfigName& cfgname, CConfigValue& cfgvalue, bool i
 	return true;
 }
 
-}

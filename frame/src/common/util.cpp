@@ -1,7 +1,6 @@
 #include "util.h"
 
-namespace utils
-{
+UTILS_NAMESPACE_BEGIN
 
 bool get_work_dir(char* buf)
 {
@@ -30,4 +29,5 @@ bool get_work_dir(char* buf)
     }
 }
 
-}
+UTILS_NAMESPACE_END
+

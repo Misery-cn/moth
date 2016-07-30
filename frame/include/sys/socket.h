@@ -15,8 +15,7 @@
 #include <netinet/in.h>
 #include "util.h"
 
-namespace sys
-{
+SYS_NAMESPACE_BEGIN
 
 class CSocket
 {
@@ -55,6 +54,6 @@ private:
 	SOCKET_STATE state_;
 };
 
-}
+SYS_NAMESPACE_END
 
 #endif

@@ -7,8 +7,8 @@
 #include "define.h"
 #include "const.h"
 
-namespace utils
-{
+UTILS_NAMESPACE_BEGIN
+
 
 template<class Point>
 class CPointGuard
@@ -45,6 +45,6 @@ CPointGuard<Point>::~CPointGuard()
 
 bool get_work_dir(char* buf);
 
-}
+UTILS_NAMESPACE_END
 
 #endif

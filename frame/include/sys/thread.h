@@ -5,8 +5,7 @@
 #include <pthread.h>
 #include "cond.h"
 
-namespace sys
-{
+SYS_NAMESPACE_BEGIN
 
 class CThread
 {
@@ -97,6 +96,6 @@ private:
     uint32_t stack_size_;    
 };
 
-}
+SYS_NAMESPACE_END
 
 #endif

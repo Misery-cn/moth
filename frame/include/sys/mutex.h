@@ -8,8 +8,7 @@
 #include "exception.h"
 #include "define.h"
 
-namespace sys
-{
+SYS_NAMESPACE_BEGIN
 
 class CMutex
 {
@@ -48,6 +47,6 @@ private:
 	CMutex& lock_;
 };
 
-}
+SYS_NAMESPACE_END
 
 #endif

@@ -1,14 +1,11 @@
-#ifndef _SYS_CONFIG_H_
-#define _SYS_CONFIG_H_
+#ifndef _CONFIG_H_
+#define _CONFIG_H_
 
 #include "util.h"
 
 const int MAX_FILE_NAME = 256;
 
 const int MAX_LINE_LEN = 1024;
-
-namespace sys
-{
 
 class CConfigName
 {
@@ -169,7 +166,5 @@ private:
 
     static char config_path_[MAX_FILE_NAME];
 };
-
-}
 
 #endif

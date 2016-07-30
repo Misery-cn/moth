@@ -1,7 +1,7 @@
 #include "socket.h"
 
-namespace sys
-{
+SYS_NAMESPACE_BEGIN
+
 
 CSocket::CSocket()
 {
@@ -262,5 +262,4 @@ int CSocket::s_write(int fd, char* buff)
 	}
 }
 
-}
-
+SYS_NAMESPACE_END

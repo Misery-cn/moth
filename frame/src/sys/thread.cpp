@@ -1,8 +1,8 @@
 #include "thread.h"
 
 
-namespace sys
-{
+SYS_NAMESPACE_BEGIN
+
 
 CThread::CThread() throw (sys::CException, sys::CSysCallException)
 	// 创建一个递归锁
@@ -193,5 +193,5 @@ void CThread::do_sleep(int milliseconds)
     }
 }
 
-}
+SYS_NAMESPACE_END
 

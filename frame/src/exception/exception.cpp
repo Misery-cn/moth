@@ -1,7 +1,7 @@
 #include "exception.h"
 
-namespace sys
-{
+SYS_NAMESPACE_BEGIN
+
 
 CException::CException(const char* errmsg, int errcode, const char* filename, int linenum) throw ()
 				: errmsg_(errmsg), errcode_(errcode), filename_(filename), linenum_(linenum)
@@ -57,5 +57,5 @@ std::string CSysCallException::to_string() const throw ()
     return ss.str();
 }
 
-}
+SYS_NAMESPACE_END
 

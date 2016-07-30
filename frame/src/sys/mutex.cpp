@@ -1,7 +1,6 @@
 #include "mutex.h"
 
-namespace sys
-{
+SYS_NAMESPACE_BEGIN
 
 CMutex::CMutex(bool recursive) throw (sys::CSysCallException)
 {
@@ -138,5 +137,5 @@ bool CMutex::timed_lock(uint32_t millisecond) throw (sys::CSysCallException)
 	THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_mutex_timedlock");
 }
 
-}
+SYS_NAMESPACE_END
 

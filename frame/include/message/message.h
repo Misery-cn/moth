@@ -1,9 +1,7 @@
 
-#ifndef _SYS_MESSAGE_H_
-#define _SYS_MESSAGE_H_
+#ifndef _MESSAGE_H_
+#define _MESSAGE_H_
 
-namespace sys
-{
 struct Message
 {
 public:
@@ -17,7 +15,5 @@ public:
 private:
 	int len_;
 };
-
-}
 
 #endif

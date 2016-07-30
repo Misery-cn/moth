@@ -25,6 +25,14 @@ typedef long long int		int64_t;
 // 待完成RUNLOG
 #define RUNLOG printf
 
+// sys命名空间宏
+#define SYS_NAMESPACE_BEGIN namespace sys {
+#define SYS_NAMESPACE_END }
+
+// util命名空间宏
+#define UTILS_NAMESPACE_BEGIN namespace utils {
+#define UTILS_NAMESPACE_END	}
+
 #define DELETE_P(p) \
 	if (p) \
 	{ \

@@ -1,3 +1,5 @@
+#ifndef _CONST_H_
+#define _CONST_H_
 
 const int ALLOC_MEM_ERROR = -1;
 const int NO_ERROR = 0;
@@ -19,3 +21,5 @@ const int BUFF_SIZE = 1 * K;
 const int MAX_READ_SIZE = 1 * M;
 
 const int MAX_FILENAME = 1024;
+
+#endif

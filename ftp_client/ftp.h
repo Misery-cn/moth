@@ -1,3 +1,6 @@
+#ifndef _FTP_CLIENT_H_
+#define _FTP_CLIENT_H_
+
 #include <map>
 #include <string>
 #include "socket.h"
@@ -121,3 +124,5 @@ private:
 	ftp_param_s* param_;
     std::map<int, func> cmds_;
 };
+
+#endif

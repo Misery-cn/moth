@@ -3,8 +3,8 @@
 
 #include "thread.h"
 
-namespace sys
-{
+SYS_NAMESPACE_BEGIN
+
 
 // 模版实现,由用户特化自己的线程
 template <class ThreadClass>
@@ -137,6 +137,6 @@ private:
     ThreadClass** thread_array_;
 };
 
-}
+SYS_NAMESPACE_END
 
 #endif

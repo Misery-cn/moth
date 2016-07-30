@@ -1,5 +1,6 @@
-#ifndef _SYS_LOG_H_
-#define _SYS_LOG_H_
+#ifndef _LOG_H_
+#define _LOG_H_
+
 #include "define.h"
 #include "const.h"
 
@@ -35,9 +36,6 @@ typedef struct
 } log_message_t;
 
 
-namespace sys
-{
-
 // 日志基类
 class CLog
 {
@@ -64,7 +62,5 @@ public:
 	CLogger();
 	~CLogger();
 };
-
-}
 
 #endif

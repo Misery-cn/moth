@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sstream>
 #include <errno.h>
+#include "define.h"
 #include "const.h"
 
 #define THROW_EXCEPTION(errmsg, errcode) \
@@ -14,8 +15,7 @@
 #define THROW_SYSCALL_EXCEPTION(errmsg, errcode, syscall) \
     throw ::sys::CSysCallException(errmsg, errcode, __FILE__, __LINE__, syscall)
 
-namespace sys
-{
+SYS_NAMESPACE_BEGIN
 
 // 所有异常继承该类
 class CException : public std::exception
@@ -63,6 +63,6 @@ private:
 	std::string syscall_;
 };
 
-}
+SYS_NAMESPACE_END
 
 #endif
