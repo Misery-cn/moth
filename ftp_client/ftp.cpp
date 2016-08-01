@@ -677,7 +677,7 @@ int FtpClient::ftp_read(sys::CSocket* sock, char* buff, int len)
         // 判断描述字sockfd的异常位是否打开,如果打开则表示产生错误
         if (FD_ISSET(sock->getfd(), &errfds))
         {
-            return SOCKET_READ_ERROR;
+            return DATA_READ_ERROR;
         }
 
         // 判断描述字sockfd的可读位是否打开,如果打开则读取数据
