@@ -1,6 +1,7 @@
 #ifndef _LOG_H_
 #define _LOG_H_
 
+#include <string>
 #include "define.h"
 #include "const.h"
 
@@ -73,7 +74,8 @@ public:
 
     virtual bool enabled_raw() { return false; }
 
-	virtual void run_log(log_level_t level, const char* filename, int lineno, const char* module_name, const char* format, ...)  __attribute__((format(printf, 5, 6))) {}
+	// 格式化字符串是第6个位置,参数从第7个参数开始
+	virtual void run_log(log_level_t level, const char* filename, int lineno, const char* module_name, const char* format, ...)  __attribute__((format(printf, 6, 7))) {}
 
     virtual void log_detail(const char* filename, int lineno, const char* module_name, const char* format, ...)  __attribute__((format(printf, 5, 6))) {}
     virtual void log_debug(const char* filename, int lineno, const char* module_name, const char* format, ...) __attribute__((format(printf, 5, 6)))   {}
