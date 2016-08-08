@@ -1,6 +1,6 @@
 CC=g++
-CFLAGS= -c -g -pthread -lrt -D_REENTRANT -D`uname -s` -Wall
-LDFLAGS= -g -pthread -lrt
+CFLAGS= -c -Wall
+LDFLAGS= -g -pthread -lrt -lz
 target=moth
 
 WORK_HOME=/home/misery/moth

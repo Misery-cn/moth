@@ -79,7 +79,7 @@ private:
 	
 	// 线程启动前的操作
 	// 由派生类实现
-    virtual bool before_start() { return true; }
+    virtual void before_start() {}
 
 	// 线程结束前的操作
 	// 由派生类实现

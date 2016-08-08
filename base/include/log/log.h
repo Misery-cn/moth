@@ -1,16 +1,19 @@
 #ifndef _LOG_H_
 #define _LOG_H_
 
+#include <unistd.h>
+#include <fcntl.h>
 #include <string>
+#include <stdlib.h>
 #include "define.h"
 #include "const.h"
 
 // 日志行最小长度
-const int LOG_LINE_SIZE_MIN	= 256;
+const int LOG_LINE_SIZE_MIN = 256;
 // 日志行最大长度(32K),最大不能超过64K,因为使用2字节无符号整数存储的
-const int LOG_LINE_SIZE_MA	= 32768;
+const int LOG_LINE_SIZE_MAX = 32768;
 // 默认的单个日志文件大小(100MB)
-const int DEFAULT_LOG_FILE_SIZE	= 100 * M;
+const int DEFAULT_LOG_FILE_SIZE = 100 * M;
 // 默认的日志文件备份个数
 const int DEFAULT_LOG_FILE_BACKUP_NUMBER = 10;
 
@@ -25,7 +28,8 @@ typedef enum
     LOG_LEVEL_ERROR  = 4,
     LOG_LEVEL_FATAL  = 5,    
     LOG_LEVEL_STATE  = 6,
-    LOG_LEVEL_TRACE  = 7
+    LOG_LEVEL_TRACE  = 7,
+    LOG_LEVEL_RAW	 = 8
 } log_level_t;
 
 

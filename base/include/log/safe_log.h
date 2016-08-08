@@ -5,6 +5,16 @@
 #include "log.h"
 #include "exception.h"
 #include "mutex.h"
+#include "atomic.h"
+#include "string_utils.h"
+#include "utils.h"
+#include "file_utils.h"
+#include "datetime_utils.h"
+#include "file_locker.h"
+
+// 默认的文件模式
+#define FILE_DEFAULT_PERM (S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH)
+
 
 class CSafeLogger;
 

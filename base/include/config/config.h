@@ -1,7 +1,7 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
-#include "util.h"
+#include "utils.h"
 
 const int MAX_FILE_NAME = 256;
 
