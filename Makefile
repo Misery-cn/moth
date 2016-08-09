@@ -1,19 +1,22 @@
 CC=g++
-CFLAGS= -c -g -pthread -lrt -D_REENTRANT -D`uname -s` -Wall
-LDFLAGS= -g -pthread -lrt
+CFLAGS= -c -Wall
+LDFLAGS= -g -pthread -lrt -lz
 target=moth
 
-WORK_HOME=/home/misery/MyProject/MyCpp
+WORK_HOME=/home/misery/moth
+BASE_DIR=${WORK_HOME}/base
+BASE_SRC=${BASE_DIR}/src
+BASE_INC=${BASE_DIR}/include
 SRCS=$(wildcard *.cpp ${WORK_HOME}/lru_cache/*.cpp \
-		${WORK_HOME}/ftp_client/*.cpp ${WORK_HOME}/socket/*.cpp ${WORK_HOME}/common/*.cpp \
-		${WORK_HOME}/session/*.cpp ${WORK_HOME}/message/*.cpp ${WORK_HOME}/sys/*.cpp ${WORK_HOME}/sql/*.cpp \
-		${WORK_HOME}/log/*.cpp ${WORK_HOME}/exception/*.cpp ${WORK_HOME}/config/*.cpp)
+		${WORK_HOME}/ftp_client/*.cpp ${BASE_SRC}/common/*.cpp \
+		${BASE_SRC}/session/*.cpp ${BASE_SRC}/message/*.cpp ${BASE_SRC}/sys/*.cpp ${BASE_SRC}/db/*.cpp \
+		${BASE_SRC}/log/*.cpp ${BASE_SRC}/exception/*.cpp ${BASE_SRC}/config/*.cpp)
 		
 OBJS=$(patsubst %cpp,%o,$(SRCS))
 
-INCLUDE=-I${WORK_HOME}/lru_cache/ -I${WORK_HOME}/ftp_client/ -I${WORK_HOME}/socket/ \
-		-I${WORK_HOME}/common/ -I${WORK_HOME}/session/ -I${WORK_HOME}/message/ -I{WORK_HOME}/sys/ -I${WORK_HOME}/sql/ \
-		-I${WORK_HOME}/log/ -I${WORK_HOME}/exception/ -I${WORK_HOME}/config/
+INCLUDE=-I${WORK_HOME}/lru_cache/ -I${WORK_HOME}/ftp_client/ -I${BASE_INC}/sys/ \
+		-I${BASE_INC}/common/ -I${BASE_INC}/session/ -I${BASE_INC}/message/ -I${BASE_INC}/db/ \
+		-I${BASE_INC}/log/ -I${BASE_INC}/exception/ -I${BASE_INC}/config/
 
 all : $(target)
 
@@ -27,5 +30,6 @@ moth : $(OBJS)
 
 clean:
 	@rm -rf $(target) *.o ${WORK_HOME}/lru_cache/*.o ${WORK_HOME}/ftp_client/*.o \
-	${WORK_HOME}/socket/*.o ${WORK_HOME}/common/*o ${WORK_HOME}/session/*.o ${WORK_HOME}/message/*.o \
-	${WORK_HOME}/sys/*.o ${WORK_HOME}/sql/*.o ${WORK_HOME}/log/*.o ${WORK_HOME}/exception/*.o ${WORK_HOME}/config/*.o
+	${BASE_SRC}/sys/*.o ${BASE_SRC}/common/*o ${BASE_SRC}/session/*.o ${BASE_SRC}/message/*.o \
+	${BASE_SRC}/db/*.o ${BASE_SRC}/log/*.o ${BASE_SRC}/exception/*.o ${BASE_SRC}/config/*.o
+	

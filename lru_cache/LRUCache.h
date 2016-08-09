@@ -1,3 +1,6 @@
+#ifndef _LRU_CACHE_H_
+#define _LRU_CACHE_H_
+
 #include <iostream>
 #include <vector>
 #include <map>
@@ -130,3 +133,5 @@ private:
 	// 双向链表中的节点
 	Node<K, T>* entries_;
 };
+
+#endif

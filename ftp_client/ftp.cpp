@@ -5,8 +5,8 @@
 
 FtpClient::FtpClient()
 {
-    sock_cmd_ = new CSocket();
-	sock_data_ = new CSocket();
+    sock_cmd_ = new sys::CSocket();
+	sock_data_ = new sys::CSocket();
 	param_ = new ftp_param_s();
 
     REG_CMD(MKD, &FtpClient::mkd);
@@ -38,7 +38,7 @@ int FtpClient::usr(ftp_param_s* param)
 	char* buff = new char[BUFF_SIZE + 1];
 	memset(buff, 0, BUFF_SIZE + 1);
 	// 托管该资源
-	CPointGuard<char> g(buff);
+	utils::CPointGuard<char> g(buff);
 
 	// 发送user命令
    	snprintf(buff, BUFF_SIZE, "USER %s\r\n", param->usr_);
@@ -81,7 +81,7 @@ int FtpClient::pwd(ftp_param_s* param)
 	char* buff = new char[BUFF_SIZE + 1];
 	memset(buff, 0, BUFF_SIZE + 1);
 	// 托管该资源
-	CPointGuard<char> g(buff);
+	utils::CPointGuard<char> g(buff);
 
 	// 发送pass命令
    	snprintf(buff, BUFF_SIZE, "PASS %s\r\n", param->pwd_);
@@ -124,7 +124,7 @@ int FtpClient::type(ftp_param_s* param)
 	char* buff = new char[BUFF_SIZE + 1];
 	memset(buff, 0, BUFF_SIZE + 1);
 	// 托管该资源
-	CPointGuard<char> g(buff);
+	utils::CPointGuard<char> g(buff);
 
 	// 发送type命令
    	snprintf(buff, BUFF_SIZE, "TYPE %c\r\n", param->type_);
@@ -167,7 +167,7 @@ int FtpClient::pasv(ftp_param_s* param)
 	char* buff = new char[BUFF_SIZE + 1];
 	memset(buff, 0, BUFF_SIZE + 1);
 	// 托管该资源
-	CPointGuard<char> g(buff);
+	utils::CPointGuard<char> g(buff);
 
 	// 发送pasv命令
    	strcpy(buff, "PASV\r\n");
@@ -238,7 +238,7 @@ int FtpClient::cwd(ftp_param_s* param)
 	char* buff = new char[BUFF_SIZE + 1];
 	memset(buff, 0, BUFF_SIZE + 1);
 	// 托管该资源
-	CPointGuard<char> g(buff);
+	utils::CPointGuard<char> g(buff);
 
 	// 发送进入工作目录命令
    	snprintf(buff, BUFF_SIZE, "CWD %s\r\n", param->desDir_);
@@ -281,7 +281,7 @@ int FtpClient::stor(ftp_param_s* param)
 	char* buff = new char[BUFF_SIZE + 1];
 	memset(buff, 0, BUFF_SIZE + 1);
 	// 托管该资源
-	CPointGuard<char> g(buff);
+	utils::CPointGuard<char> g(buff);
 
 	// 发送stor上传文件命令
    	snprintf(buff, BUFF_SIZE, "STOR %s\r\n", param->filename_);
@@ -324,7 +324,7 @@ int FtpClient::retr(ftp_param_s* param)
 	char* buff = new char[BUFF_SIZE + 1];
 	memset(buff, 0, BUFF_SIZE + 1);
 	// 托管该资源
-	CPointGuard<char> g(buff);
+	utils::CPointGuard<char> g(buff);
 
 	// 发送下载文件命令
    	snprintf(buff, BUFF_SIZE, "RETR %s\r\n", param->filename_);
@@ -367,7 +367,7 @@ int FtpClient::quit(ftp_param_s* param)
 	char* buff = new char[BUFF_SIZE + 1];
 	memset(buff, 0, BUFF_SIZE + 1);
 	// 托管该资源
-	CPointGuard<char> g(buff);
+	utils::CPointGuard<char> g(buff);
 
 	// 发送退出命令
    	strcpy(buff, "QUIT\r\n");
@@ -442,7 +442,7 @@ int FtpClient::puting()
 	int r = NO_ERROR;
 	char* buff = new char[MAX_READ_SIZE + 1];
 	memset(buff, 0, MAX_READ_SIZE + 1);
-	CPointGuard<char> g(buff);
+	utils::CPointGuard<char> g(buff);
 	
 	std::string f(param_->localDir_);
 	f.append("/").append(param_->filename_);
@@ -551,7 +551,7 @@ int FtpClient::geting()
 	int r = NO_ERROR;
 	char* buff = new char[MAX_READ_SIZE + 1];
 	memset(buff, 0, MAX_READ_SIZE + 1);
-	CPointGuard<char> g(buff);
+	utils::CPointGuard<char> g(buff);
 	
 	std::string f(param_->localDir_);
 	f.append("/").append(param_->filename_);
@@ -624,7 +624,7 @@ int FtpClient::geting()
 	return NO_ERROR;
 }
 
-int FtpClient::ftp_write(CSocket* sock, char* buff)
+int FtpClient::ftp_write(sys::CSocket* sock, char* buff)
 {
 	fd_set writefds;
     struct timeval tv;
@@ -652,7 +652,7 @@ int FtpClient::ftp_write(CSocket* sock, char* buff)
 	return FTP_TIME_OUT;
 }
 
-int FtpClient::ftp_read(CSocket* sock, char* buff, int len)
+int FtpClient::ftp_read(sys::CSocket* sock, char* buff, int len)
 {
 	fd_set readfds;
     fd_set errfds;
@@ -677,7 +677,7 @@ int FtpClient::ftp_read(CSocket* sock, char* buff, int len)
         // 判断描述字sockfd的异常位是否打开,如果打开则表示产生错误
         if (FD_ISSET(sock->getfd(), &errfds))
         {
-            return SOCKET_READ_ERROR;
+            return DATA_READ_ERROR;
         }
 
         // 判断描述字sockfd的可读位是否打开,如果打开则读取数据
@@ -714,7 +714,7 @@ int FtpClient::create_cmd_link(char* ip, int port)
 		char* buff = new char[BUFF_SIZE + 1];
 		memset(buff, 0, BUFF_SIZE + 1);
 		// 托管该资源
-		CPointGuard<char> g(buff);
+		utils::CPointGuard<char> g(buff);
 		
 		// 创建一个套接字
 		r = sock_cmd_->s_open();
