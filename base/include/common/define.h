@@ -91,24 +91,4 @@ DELETE_P(void* p)
 #endif
 #define IO_BUFFER_MAX 4096
 
-
-class VaListGuard
-{
-public:
-	VaListGuard(va_list& args) : args_(args)
-	{
-	}
-
-	~VaListGuard()
-	{
-		va_end(args_);
-	}
-
-private:
-	va_list& args_;
-};
-
-
-#define WORK_DIR "WORK_DIR"
-
 #endif

@@ -21,7 +21,7 @@ INCLUDE=-I${WORK_HOME}/lru_cache/ -I${WORK_HOME}/ftp_client/ -I${BASE_INC}/sys/ 
 all : $(target)
 
 moth : $(OBJS)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) -o $@ $^ $(LDFLAGS)
 	@echo  $@ Build OK.
 	
 .SUFFIXES:.cpp .o
@@ -32,4 +32,5 @@ clean:
 	@rm -rf $(target) *.o ${WORK_HOME}/lru_cache/*.o ${WORK_HOME}/ftp_client/*.o \
 	${BASE_SRC}/sys/*.o ${BASE_SRC}/common/*o ${BASE_SRC}/session/*.o ${BASE_SRC}/message/*.o \
 	${BASE_SRC}/db/*.o ${BASE_SRC}/log/*.o ${BASE_SRC}/exception/*.o ${BASE_SRC}/config/*.o
+	@echo $@ OK.
 	

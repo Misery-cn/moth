@@ -49,6 +49,24 @@ CPointGuard<Point>::~CPointGuard()
 	point_ = NULL;
 }
 
+
+class VaListGuard
+{
+public:
+	VaListGuard(va_list& args) : args_(args)
+	{
+	}
+
+	~VaListGuard()
+	{
+		va_end(args_);
+	}
+
+private:
+	va_list& args_;
+};
+
+
 // 类类型close助手函数，要求该类有公有的close方法
 template <class ClassType>
 class CloseHelper

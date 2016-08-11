@@ -174,7 +174,7 @@ void CSafeLogger::log_detail(const char* filename, int lineno, const char* modul
     {
         va_list args;
         va_start(args, format);
-        VaListGuard vg(args);
+        utils::VaListGuard vg(args);
 
         do_log(LOG_LEVEL_DETAIL, filename, lineno, module_name, format, args);
     }
@@ -186,7 +186,7 @@ void CSafeLogger::log_debug(const char* filename, int lineno, const char* module
     {
         va_list args;
         va_start(args, format);
-        VaListGuard vg(args);
+        utils::VaListGuard vg(args);
 
         do_log(LOG_LEVEL_DEBUG, filename, lineno, module_name, format, args);
     }
@@ -198,7 +198,7 @@ void CSafeLogger::log_info(const char* filename, int lineno, const char* module_
     {
         va_list args;
         va_start(args, format);
-        VaListGuard vg(args);
+        utils::VaListGuard vg(args);
 
         do_log(LOG_LEVEL_INFO, filename, lineno, module_name, format, args);
     }
@@ -210,7 +210,7 @@ void CSafeLogger::log_warn(const char* filename, int lineno, const char* module_
     {
         va_list args;
         va_start(args, format);
-        VaListGuard vg(args);
+        utils::VaListGuard vg(args);
 
         do_log(LOG_LEVEL_WARN, filename, lineno, module_name, format, args);
     }
@@ -222,7 +222,7 @@ void CSafeLogger::log_error(const char* filename, int lineno, const char* module
     {
         va_list args;
         va_start(args, format);
-        VaListGuard vg(args);
+        utils::VaListGuard vg(args);
 
         do_log(LOG_LEVEL_ERROR, filename, lineno, module_name, format, args);
     }
@@ -234,7 +234,7 @@ void CSafeLogger::log_fatal(const char* filename, int lineno, const char* module
     {
         va_list args;
         va_start(args, format);
-        VaListGuard vg(args);
+        utils::VaListGuard vg(args);
 
         do_log(LOG_LEVEL_FATAL, filename, lineno, module_name, format, args);
     }
@@ -246,7 +246,7 @@ void CSafeLogger::log_state(const char* filename, int lineno, const char* module
     {
         va_list args;
         va_start(args, format);
-        VaListGuard vg(args);
+        utils::VaListGuard vg(args);
 
         do_log(LOG_LEVEL_STATE, filename, lineno, module_name, format, args);
     }
@@ -258,7 +258,7 @@ void CSafeLogger::log_trace(const char* filename, int lineno, const char* module
     {
         va_list args;
         va_start(args, format);
-        VaListGuard vg(args);
+        utils::VaListGuard vg(args);
 
         do_log(LOG_LEVEL_TRACE, filename, lineno, module_name, format, args);
     }
@@ -270,7 +270,7 @@ void CSafeLogger::log_raw(const char* format, ...)
     {
         va_list args;
         va_start(args, format);
-        VaListGuard vg(args);
+        utils::VaListGuard vg(args);
 		
         do_log(LOG_LEVEL_RAW, NULL, -1, NULL, format, args);
     }

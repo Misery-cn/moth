@@ -357,7 +357,7 @@ void CUtils::set_process_name(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    VaListGuard guard(args);
+    utils::VaListGuard guard(args);
 
     char name[NAME_MAX] = {0};
     vsnprintf(name, sizeof(name), format, args);
@@ -435,7 +435,7 @@ void CUtils::set_process_title(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
-    VaListGuard guard(args);
+    utils::VaListGuard guard(args);
 
     char title[PATH_MAX] = {0};
     vsnprintf(title, sizeof(title), format, args);

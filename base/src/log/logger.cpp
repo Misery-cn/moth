@@ -293,9 +293,6 @@ void CLogger::create_thread()
 
 bool CLogger::execute()
 {   
-    // 增加引用计数，以保证下面的操作是安全的
-    CLogger* self = const_cast<CLogger*>(this);
-
     try
     {           
         // 写入前，预处理
@@ -574,7 +571,7 @@ void CLogger::do_log(log_level_t log_level, const char* filename, int lineno, co
 {    
     va_list args_copy;
     va_copy(args_copy, args);
-    VaListGuard guard(args_copy);
+    utils::VaListGuard guard(args_copy);
     log_message_t* log_message = (log_message_t*)malloc(log_line_size_ + sizeof(log_message_t) + 1);
 
     char datetime[sizeof("1970-00-00 00:00:00/0123456789")];
@@ -675,7 +672,7 @@ void CLogger::log_detail(const char* filename, int lineno, const char* module_na
     {
         va_list args;
         va_start(args, format);
-        VaListGuard guard(args);
+        utils::VaListGuard guard(args);
         
         do_log(LOG_LEVEL_DETAIL, filename, lineno, module_name, format, args);
     }
@@ -687,7 +684,7 @@ void CLogger::log_debug(const char* filename, int lineno, const char* module_nam
     {
         va_list args;
         va_start(args, format);
-        VaListGuard guard(args);
+        utils::VaListGuard guard(args);
 
         do_log(LOG_LEVEL_DEBUG, filename, lineno, module_name, format, args);
     }
@@ -699,7 +696,7 @@ void CLogger::log_info(const char* filename, int lineno, const char* module_name
     {
         va_list args;
         va_start(args, format);
-        VaListGuard guard(args);
+        utils::VaListGuard guard(args);
 
         do_log(LOG_LEVEL_INFO, filename, lineno, module_name, format, args);
     }
@@ -711,7 +708,7 @@ void CLogger::log_warn(const char* filename, int lineno, const char* module_name
     {
         va_list args;
         va_start(args, format);
-        VaListGuard guard(args);
+        utils::VaListGuard guard(args);
 
         do_log(LOG_LEVEL_WARN, filename, lineno, module_name, format, args);
     }
@@ -723,7 +720,7 @@ void CLogger::log_error(const char* filename, int lineno, const char* module_nam
     {
         va_list args;
         va_start(args, format);
-        VaListGuard guard(args);
+        utils::VaListGuard guard(args);
 
         do_log(LOG_LEVEL_ERROR, filename, lineno, module_name, format, args);
     }
@@ -735,7 +732,7 @@ void CLogger::log_fatal(const char* filename, int lineno, const char* module_nam
     {
         va_list args;        
         va_start(args, format);
-        VaListGuard guard(args);
+        utils::VaListGuard guard(args);
 
         do_log(LOG_LEVEL_FATAL, filename, lineno, module_name, format, args);
     }
@@ -747,7 +744,7 @@ void CLogger::log_state(const char* filename, int lineno, const char* module_nam
     {
         va_list args;        
         va_start(args, format);
-        VaListGuard guard(args);
+        utils::VaListGuard guard(args);
 
         do_log(LOG_LEVEL_STATE, filename, lineno, module_name, format, args);
     }
@@ -759,7 +756,7 @@ void CLogger::log_trace(const char* filename, int lineno, const char* module_nam
     {
         va_list args;
         va_start(args, format);
-        VaListGuard guard(args);
+        utils::VaListGuard guard(args);
 
         do_log(LOG_LEVEL_TRACE, filename, lineno, module_name, format, args);
     }
