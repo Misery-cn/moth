@@ -1,0 +1,2 @@
+#cmakedefine HAVE_STDINT_H
+#cmakedefine HAVE_UIO_H

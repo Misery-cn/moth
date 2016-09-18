@@ -1,0 +1,4 @@
+include(CheckIncludeFiles)
+CHECK_INCLUDE_FILES(stdint.h HAVE_STDINT_H)
+CHECK_INCLUDE_FILES(sys/uio.h HAVE_UIO_H)
+CONFIGURE_FILE(config.h.in include/common/config.h)
