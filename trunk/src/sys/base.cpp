@@ -2,12 +2,12 @@
 
 // SYS_NS_BEGIN
 
-CBase::CBase()
+Base::Base()
 {
 
 }
 
-CBase::~CBase()
+Base::~Base()
 {
 
 }

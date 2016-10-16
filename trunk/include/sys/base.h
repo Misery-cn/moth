@@ -7,11 +7,11 @@
 // SYS_NS_BEGIN
 
 // 所有类的基类
-class CBase
+class Base
 {
 public:
-	CBase();
-	virtual ~CBase();
+	Base();
+	virtual ~Base();
 	
 	std::string description_;
 };

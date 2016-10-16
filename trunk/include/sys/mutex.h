@@ -25,6 +25,23 @@ public:
 	bool try_lock() throw (CSysCallException);
 	// 如果在指定的毫秒时间内加锁成功则返回true,否则返回false
 	bool timed_lock(uint32_t millisecond) throw (CSysCallException);
+
+public:
+	class Locker 
+	{
+	public:
+		explicit Locker(CMutex& m) : mutex_(m)
+		{
+			mutex_.lock();
+		}
+		
+		~Locker()
+		{
+			mutex_.unlock();
+		}
+	private:
+		CMutex& mutex_;
+	};
 	
 private:
 	pthread_mutexattr_t attr_;

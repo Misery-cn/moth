@@ -49,7 +49,7 @@ void CTimer::timer_thread()
 
 	while (!stopping)
 	{
-		int64_t now = CDatetimeUtils::get_current_microseconds();
+		int64_t now = CTimeUtils::get_current_microseconds();
 		// 
 		while (!schedule_.empty())
 		{
@@ -88,7 +88,7 @@ void CTimer::timer_thread()
 
 void CTimer::add_event_after(int64_t seconds, callback cb)
 {
-	int64_t when = CDatetimeUtils::get_current_microseconds();
+	int64_t when = CTimeUtils::get_current_microseconds();
 	when += seconds;
 	add_event_at(when, cb);
 }

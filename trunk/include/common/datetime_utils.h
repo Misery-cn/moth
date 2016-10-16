@@ -7,7 +7,7 @@
 
 // UTILS_NS_BEGIN
 
-class CDatetimeUtils
+class CTimeUtils
 {
 public:
     // 判断是否为同一天
@@ -114,7 +114,7 @@ extern std::string tomorrow(const char* format = "%04d-%02d-%02d");
 // 如果with_milliseconds为false则datetime_buffer_size的大小不能小于sizeof("YYYY-MM-DD hh:mm:ss")，
 extern void get_formatted_current_datetime(char* datetime_buffer, size_t datetime_buffer_size, bool with_milliseconds = true);
 
-// 如果with_milliseconds为false，则返回同CDatetimeUtils::get_current_datetime()
+// 如果with_milliseconds为false，则返回同CTimeUtils::get_current_datetime()
 // 如果with_milliseconds为true，则返回为：YYYY-MM-DD hh:mm:ss/milliseconds
 extern std::string get_formatted_current_datetime(bool with_milliseconds = true);
 
