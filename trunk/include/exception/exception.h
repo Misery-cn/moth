@@ -30,22 +30,22 @@ public:
 	virtual std::string to_string() const;
 	
 	// 获取异常所在文件名
-    const char* get_filename() const throw () { return filename_.c_str(); }
+    const char* get_filename() const throw () { return _filename.c_str(); }
 
     // 获取异常所在行号
-    int get_linenumber() const throw () { return linenum_; }
+    int get_linenumber() const throw () { return _linenum; }
 
     // 获取errcode
-    int get_errcode() const throw () { return errcode_; }
+    int get_errcode() const throw () { return _errcode; }
 
 	// 获取错误信息
-    std::string get_errmessage() const throw () { return errmsg_.c_str(); }
+    std::string get_errmessage() const throw () { return _errmsg.c_str(); }
 	
 protected:
-    std::string errmsg_;
-    int errcode_;
-    std::string filename_;
-    int linenum_;
+    std::string _errmsg;
+    int _errcode;
+    std::string _filename;
+    int _linenum;
 };
 
 
@@ -60,7 +60,7 @@ public:
 	virtual std::string to_string() const throw ();
 	
 private:
-	std::string syscall_;
+	std::string _syscall;
 };
 
 // SYS_NS_END

@@ -10,26 +10,26 @@
 class ErrorKeeper
 {
 public:
-    ErrorKeeper() : errcode_(errno)
+    ErrorKeeper() : _errcode(errno)
     {
     }
 
-    ErrorKeeper(int errcode) : errcode_(errcode)
+    ErrorKeeper(int errcode) : _errcode(errcode)
     {
     }
 
     ~ErrorKeeper()
     {
-        errno = errcode_;
+        errno = _errcode;
     }
 
     operator int() const
     {
-        return errcode_;
+        return _errcode;
     }
 
 private:
-    int errcode_;
+    int _errcode;
 };
 
 namespace Error

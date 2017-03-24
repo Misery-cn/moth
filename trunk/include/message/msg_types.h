@@ -8,8 +8,8 @@
 struct entity_name_t
 {
 public:
-	int8_t type_;
-	int64_t num_;
+	int8_t _type;
+	int64_t _num;
 
 	enum 
 	{
@@ -17,8 +17,8 @@ public:
 		ENTITY_TYPE_SERVER
 	};
 
-	entity_name_t() : type_(0), num_(0) { }
-	entity_name_t(int8_t t, int64_t n) : type_(t), num_(n) { }
+	entity_name_t() : _type(0), _num(0) { }
+	entity_name_t(int8_t t, int64_t n) : _type(t), _num(n) { }
 };
 
 
@@ -26,9 +26,9 @@ public:
 struct entity_addr_t
 {
 public:
-	int32_t type_;
+	int32_t _type;
 	// Œ®“ª±Í ∂
-	int32_t nonce_;
+	int32_t _nonce;
 
 	union 
 	{
@@ -37,7 +37,7 @@ public:
 	    sockaddr_in6 addr6;
 	};
 
-	entity_addr_t() : type_(0), nonce_(0) { 
+	entity_addr_t() : _type(0), _nonce(0) { 
     	memset(&addr, 0, sizeof(addr));
 	}
 
@@ -54,8 +54,8 @@ public:
 	    return sizeof(addr);
 	}
 
-	uint32_t get_nonce() const { return nonce_; }
-	void set_nonce(uint32_t n) { nonce_ = n; }
+	uint32_t get_nonce() const { return _nonce; }
+	void set_nonce(uint32_t n) { _nonce = n; }
 
 	int get_family() const { return addr.ss_family; }
 	void set_family(int f) { addr.ss_family = f; }
@@ -169,10 +169,10 @@ struct entity_inst_t
 {
 public:
 	
-	entity_name_t name_;
-	entity_addr_t addr_;
+	entity_name_t _name;
+	entity_addr_t _addr;
 	entity_inst_t() {}
-	entity_inst_t(entity_name_t n, const entity_addr_t& a) : name_(n), addr_(a) {}
+	entity_inst_t(entity_name_t n, const entity_addr_t& a) : _name(n), _addr(a) {}
 };
 
 #endif

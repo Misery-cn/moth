@@ -30,37 +30,37 @@ public:
 	class Locker 
 	{
 	public:
-		explicit Locker(CMutex& m) : mutex_(m)
+		explicit Locker(CMutex& m) : _mutex(m)
 		{
-			mutex_.lock();
+			_mutex.lock();
 		}
 		
 		~Locker()
 		{
-			mutex_.unlock();
+			_mutex.unlock();
 		}
 	private:
-		CMutex& mutex_;
+		CMutex& _mutex;
 	};
 	
 private:
-	pthread_mutexattr_t attr_;
-	pthread_mutex_t mutex_;
+	pthread_mutexattr_t _attr;
+	pthread_mutex_t _mutex;
 };
 
 class CMutexGuard
 {
 public:
-	CMutexGuard(CMutex& lock) : lock_(lock)
+	CMutexGuard(CMutex& lock) : _lock(lock)
 	{
 		lock.lock();
 	}
 	virtual ~CMutexGuard()
 	{
-		lock_.unlock();
+		_lock.unlock();
 	}
 private:
-	CMutex& lock_;
+	CMutex& _lock;
 };
 
 // SYS_NS_END

@@ -4,25 +4,25 @@
 
 CRWLock::CRWLock() throw (CSysCallException)
 {
-	pthread_rwlockattr_init(&attr_);
+	pthread_rwlockattr_init(&_attr);
 	
-	int r = pthread_rwlock_init(&rwlock_, &attr_);
+	int r = pthread_rwlock_init(&_rwlock, &_attr);
 	if (0 != r)
 	{
-		pthread_rwlock_destroy(&rwlock_);
+		pthread_rwlock_destroy(&_rwlock);
 		THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_rwlock_init");
 	}
 }
 
 CRWLock::~CRWLock() throw ()
 {
-	pthread_rwlockattr_destroy(&attr_);	
-	pthread_rwlock_destroy(&rwlock_);
+	pthread_rwlockattr_destroy(&_attr);	
+	pthread_rwlock_destroy(&_rwlock);
 }
 
 void CRWLock::unlock() throw (CSysCallException)
 {
-	int r = pthread_rwlock_unlock(&rwlock_);
+	int r = pthread_rwlock_unlock(&_rwlock);
 	if (0 != r)
 	{
 	    THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_rwlock_unlock");
@@ -31,7 +31,7 @@ void CRWLock::unlock() throw (CSysCallException)
 
 void CRWLock::lock_read() throw (CSysCallException)
 {
-	int r = pthread_rwlock_rdlock(&rwlock_);
+	int r = pthread_rwlock_rdlock(&_rwlock);
 	if (0 != r)
 	{
 	    THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_rwlock_rdlock");
@@ -40,7 +40,7 @@ void CRWLock::lock_read() throw (CSysCallException)
 
 void CRWLock::lock_write() throw (CSysCallException)
 {
-	int r = pthread_rwlock_wrlock(&rwlock_);
+	int r = pthread_rwlock_wrlock(&_rwlock);
 	if (0 != r)
 	{
 	    THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_rwlock_wrlock");
@@ -49,7 +49,7 @@ void CRWLock::lock_write() throw (CSysCallException)
 
 bool CRWLock::try_lock_read() throw (CSysCallException)
 {
-	int r = pthread_rwlock_tryrdlock(&rwlock_);
+	int r = pthread_rwlock_tryrdlock(&_rwlock);
 
 	if (0 == r)
 	{
@@ -66,7 +66,7 @@ bool CRWLock::try_lock_read() throw (CSysCallException)
 
 bool CRWLock::try_lock_write() throw (CSysCallException)
 {
-	int r = pthread_rwlock_trywrlock(&rwlock_);
+	int r = pthread_rwlock_trywrlock(&_rwlock);
 	
 	if (0 == r)
 	{
@@ -87,7 +87,7 @@ bool CRWLock::timed_lock_read(uint32_t millisecond) throw (CSysCallException)
 
 	if (0 == millisecond)
 	{
-	    r = pthread_rwlock_rdlock(&rwlock_);
+	    r = pthread_rwlock_rdlock(&_rwlock);
 	}
 	else
 	{	
@@ -97,7 +97,7 @@ bool CRWLock::timed_lock_read(uint32_t millisecond) throw (CSysCallException)
 		ts.tv_sec += millisecond / 1000;
 		ts.tv_nsec += (millisecond % 1000) * 1000000;
 
-		r = pthread_rwlock_timedrdlock(&rwlock_, &ts);
+		r = pthread_rwlock_timedrdlock(&_rwlock, &ts);
 	}
 
 	if (0 == r)
@@ -119,7 +119,7 @@ bool CRWLock::timed_lock_write(uint32_t millisecond) throw (CSysCallException)
 
 	if (0 == millisecond)
 	{
-	    r = pthread_rwlock_trywrlock(&rwlock_);
+	    r = pthread_rwlock_trywrlock(&_rwlock);
 	}
 	else
 	{	
@@ -129,7 +129,7 @@ bool CRWLock::timed_lock_write(uint32_t millisecond) throw (CSysCallException)
 		ts.tv_sec += millisecond / 1000;
 		ts.tv_nsec += (millisecond % 1000) * 1000000;
 
-		r = pthread_rwlock_timedwrlock(&rwlock_, &ts);
+		r = pthread_rwlock_timedwrlock(&_rwlock, &ts);
 	}
 
 	if (0 == r)

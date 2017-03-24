@@ -6,9 +6,9 @@
 
 CThread::CThread() throw (CException, CSysCallException)
 	// 创建一个递归锁
-    : lock_(true), stop_(false), state_(state_sleeping), stack_size_(0)
+    : _lock(true), _stop(false), _state(state_sleeping), _stack_size(0)
 {
-    int r = pthread_attr_init(&attr_);
+    int r = pthread_attr_init(&_attr);
     if (0 != r)
     {
         // RUNLOG or export exception
@@ -18,7 +18,7 @@ CThread::CThread() throw (CException, CSysCallException)
 
 CThread::~CThread() throw ()
 {
-	pthread_attr_destroy(&attr_);
+	pthread_attr_destroy(&_attr);
 }
 
 void* CThread::thread_proc(void* thread_param)
@@ -42,9 +42,9 @@ void CThread::start(bool detach) throw (CException, CSysCallException)
     int r = 0;
 
     // 设置线程栈大小
-    if (0 < stack_size_)
+    if (0 < _stack_size)
 	{
-		r = pthread_attr_setstacksize(&attr_, stack_size_);
+		r = pthread_attr_setstacksize(&_attr, _stack_size);
 		if (0 != r)
 		{
 			THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_attr_setstacksize");
@@ -52,14 +52,14 @@ void CThread::start(bool detach) throw (CException, CSysCallException)
 	}
         
 	// 设置线程运行方式
-	r = pthread_attr_setdetachstate(&attr_, detach ? PTHREAD_CREATE_DETACHED : PTHREAD_CREATE_JOINABLE);
+	r = pthread_attr_setdetachstate(&_attr, detach ? PTHREAD_CREATE_DETACHED : PTHREAD_CREATE_JOINABLE);
 	if (0 != r)
 	{
 		THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_attr_setdetachstate");
 	}
        
 	// 创建线程
-    r = pthread_create(&thread_, &attr_, thread_proc, this);
+    r = pthread_create(&_thread, &_attr, thread_proc, this);
 	if (0 != r)
 	{
 		THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_create");
@@ -69,7 +69,7 @@ void CThread::start(bool detach) throw (CException, CSysCallException)
 size_t CThread::get_stack_size() const throw (CSysCallException)
 {
     size_t stack_size = 0;
-    int r = pthread_attr_getstacksize(&attr_, &stack_size);
+    int r = pthread_attr_getstacksize(&_attr, &stack_size);
     if (0 != r)
 	{
 		// RUNLOG or export exception
@@ -84,9 +84,9 @@ void CThread::join() throw (CSysCallException)
     // 线程自己不能调用join
     if (CThread::get_current_thread_id() != this->get_thread_id())
     {
-    	if (0 < thread_)
+    	if (0 < _thread)
 		{
-			int r = pthread_join(thread_, NULL);
+			int r = pthread_join(_thread, NULL);
 	        if (0 != r)
 			{
 				// RUNLOG or export exception
@@ -98,7 +98,7 @@ void CThread::join() throw (CSysCallException)
 
 void CThread::detach() throw (CSysCallException)
 {
-    int r = pthread_detach(thread_);
+    int r = pthread_detach(_thread);
     if (0 != r)
 	{
 		// RUNLOG or export exception
@@ -109,7 +109,7 @@ void CThread::detach() throw (CSysCallException)
 bool CThread::can_join() const throw (CSysCallException)
 {
     int state;
-    int r = pthread_attr_getdetachstate(&attr_, &state);
+    int r = pthread_attr_getdetachstate(&_attr, &state);
     if (0 != r)
 	{
 		// RUNLOG or export exception
@@ -121,7 +121,7 @@ bool CThread::can_join() const throw (CSysCallException)
 
 bool CThread::is_stop() const
 {
-    return stop_;
+    return _stop;
 }
 
 void CThread::do_wakeup(bool stop)
@@ -129,34 +129,34 @@ void CThread::do_wakeup(bool stop)
     // 线程终止标识
     if (stop)
 	{
-		stop_ = stop;
+		_stop = stop;
 	}
     
     // 保证在唤醒线程之前，已经将它的状态修改为state_wakeup
-    if (state_sleeping == state_)
+    if (state_sleeping == _state)
     {
-        state_ = state_wakeuped;
-        cond_.signal();  
+        _state = state_wakeuped;
+        _cond.signal();  
     }
     else
     {
-        state_ = state_wakeuped;
+        _state = state_wakeuped;
     }
 }
 
 void CThread::wakeup()
 {
-    CMutexGuard g(lock_);
+    CMutexGuard g(_lock);
     do_wakeup(false);
 }
 
 void CThread::stop(bool wait_stop) throw (CException, CSysCallException)
 {
-    if (!stop_)
+    if (!_stop)
     {
-        stop_ = true;
+        _stop = true;
         before_stop();
-        CMutexGuard g(lock_);
+        CMutexGuard g(_lock);
         do_wakeup(true);
     }
 	
@@ -171,24 +171,24 @@ void CThread::do_sleep(int milliseconds)
     // 非本线程调用无效
     if (this->get_thread_id() == CThread::get_current_thread_id())
     {    
-        CMutexGuard g(lock_);
+        CMutexGuard g(_lock);
         if (!is_stop())
         {
-            if (state_ != state_wakeuped)
+            if (_state != state_wakeuped)
             {        
-                state_ = state_sleeping;
+                _state = state_sleeping;
                 if (0 > milliseconds)
 				{
-                    cond_.wait(lock_);
+                    _cond.wait(_lock);
 				}
                 else
 				{
-					cond_.timed_wait(lock_, milliseconds); 
+					_cond.timed_wait(_lock, milliseconds); 
 				}               
             }
 
             // 不设置为state_wakeup，保证再次都可以调用do_millisleep
-            state_ = state_running;
+            _state = state_running;
         }
     }
 }

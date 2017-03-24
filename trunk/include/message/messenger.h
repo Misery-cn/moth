@@ -13,27 +13,26 @@ class CMessenger
 public:
 	CMessenger();
 
-	CMessenger(entity_name_t entityname) : entity_(), magic_(0)
+	CMessenger(entity_name_t entityname) : _entity(), _magic(0)
 	{
-		entity_.name_ = entityname;
+		_entity.name_ = entityname;
 	}
 	
 	virtual ~CMessenger() {};
 
-	// 
 	static CMessenger* create(std::string type, entity_name_t name, std::string lname, uint64_t nonce = 0, uint64_t features = 0);
 
-	const entity_inst_t& get_entity() { return entity_; }
+	const entity_inst_t& get_entity() { return _entity; }
 
-	void set_entity(entity_inst_t e) { entity_ = e; }
+	void set_entity(entity_inst_t e) { _entity = e; }
 
-	uint32_t get_magic() { return magic_; }
+	uint32_t get_magic() { return _magic; }
 	
-	void set_magic(uint32_t magic) { magic_ = magic; }
+	void set_magic(uint32_t magic) { _magic = magic; }
 
-	const entity_addr_t& get_entity_addr() { return entity_.addr_; }
+	const entity_addr_t& get_entity_addr() { return _entity.addr_; }
 
-	const entity_name_t& get_entity_name() { return entity_.name_; }
+	const entity_name_t& get_entity_name() { return _entity.name_; }
 
 	struct Policy
 	{
@@ -60,25 +59,25 @@ public:
 	virtual void mark_down(const entity_addr_t& addr) = 0;
 
 protected:
-	virtual void set_entity_addr(const entity_addr_t& a) { entity_.addr_ = a; }
+	virtual void set_entity_addr(const entity_addr_t& a) { _entity.addr_ = a; }
 
 public:
-	int crc_flag_;
+	int _crc_flag;
 
 protected:
 	// 当前通信实体
-	entity_inst_t entity_;
+	entity_inst_t _entity;
 
 	// 是否已启动
-	bool started_;
+	bool _started;
 
-	uint32_t magic_;
+	uint32_t _magic;
 
 private:
-	// 消息分发
-	std::list<CDispatcher*> dispatchers_;
-	// 快速消息分发
-	std::list<CDispatcher*> fast_dispatchers_;
+	// 消息分发器
+	std::list<CDispatcher*> _dispatchers;
+	// 快速消息分发器
+	std::list<CDispatcher*> _fast_dispatchers;
 };
 
 #endif

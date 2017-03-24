@@ -12,7 +12,7 @@ class CThreadPool
 {
 public:
     // 构造函数
-    CThreadPool() : next_thread_(0), thread_count_(0), thread_array_(NULL)
+    CThreadPool() : _next_thread(0), _thread_count(0), _thread_array(NULL)
     {
 		
     }
@@ -23,19 +23,19 @@ public:
 	// parameter:传递给池线程的参数
     void create(unsigned int thread_count, void* parameter = NULL)
     {
-        thread_array_ = new ThreadClass*[thread_count];
+        _thread_array = new ThreadClass*[thread_count];
         for (unsigned int i = 0; i < thread_count; ++i)
         {
-            thread_array_[i] = new ThreadClass;
-            thread_array_[i]->set_index(i);
-            thread_array_[i]->set_parameter(parameter);
+            _thread_array[i] = new ThreadClass;
+            _thread_array[i]->set_index(i);
+            _thread_array[i]->set_parameter(parameter);
         }
         for (unsigned int i = 0; i < thread_count; ++i)
         {
             try
             {                
-                thread_array_[i]->start();
-                ++thread_count_;
+                _thread_array[i]->start();
+                ++_thread_count;
             }
             catch (...)
             {
@@ -48,17 +48,17 @@ public:
     // 销毁线程池,这里会等待所有线程退,然后删除线程
     void destroy()
     {
-        if (NULL != thread_array_)
+        if (NULL != _thread_array)
         {
-            unsigned int thread_count = thread_count_;
+            unsigned int thread_count = _thread_count;
             for (unsigned int i = thread_count; 0 < i; --i)
             {
-                thread_array_[i-1]->stop();
-                --thread_count_;
+                _thread_array[i-1]->stop();
+                --_thread_count;
             }
 
-            delete []thread_array_;
-            thread_array_ = NULL;
+            delete []_thread_array;
+            _thread_array = NULL;
         }
     }
 
@@ -66,75 +66,75 @@ public:
 	// 也可以单独调用各池线程的wakeup将它们唤醒
     void activate()
     {
-        for (unsigned int i = 0; i < thread_count_; ++i)
+        for (unsigned int i = 0; i < _thread_count; ++i)
 		{
-			thread_array_[i]->wakeup();
+			_thread_array[i]->wakeup();
 		}
     }
 
     // 获取线程个数
-    unsigned int get_thread_count() const { return thread_count_; }
+    unsigned int get_thread_count() const { return _thread_count; }
 
     // 得到线程池中的线程数组
-    ThreadClass** get_thread_array() { return thread_array_; }
-    ThreadClass** get_thread_array() const { return thread_array_; }
+    ThreadClass** get_thread_array() { return _thread_array; }
+    ThreadClass** get_thread_array() const { return _thread_array; }
 
     // 根据线程编号,得到对应的线程
     ThreadClass* get_thread(unsigned int thread_index)
     {
-        if (0 == thread_count_)
+        if (0 == _thread_count)
 		{
 			return NULL;
 		}
 		
-        if (thread_index > thread_count_)
+        if (thread_index > _thread_count)
 		{
 			return NULL;
 		}
 		
-        return thread_array_[thread_index];
+        return _thread_array[thread_index];
     }
     
     // 根据线程编号,得到对应的线程
     ThreadClass* get_thread(unsigned int thread_index) const
     {
-        if (0 == thread_count_)
+        if (0 == _thread_count)
 		{
 			return NULL;
 		}
 		
-        if (thread_index > thread_count_)
+        if (thread_index > _thread_count)
 		{
 			return NULL;
 		}
 		
-        return thread_array_[thread_index];
+        return _thread_array[thread_index];
     }
     
 	// 得到指向下个线程的指针,从第一个开始循环遍历,无终结点,即达到最后一个时,又指向第一个
 	// 主要应用于采用轮询方式将一堆任务分配均衡分配给池线程
     ThreadClass* get_next_thread()
     {
-        if (0 == thread_count_)
+        if (0 == _thread_count)
 		{
 			return NULL;
 		}
 		// 最后一个线程
-        if (next_thread_ >= thread_count_)
+        if (_next_thread >= _thread_count)
 		{
-			next_thread_ = 0;
+			_next_thread = 0;
 		}
 
-        return thread_array_[next_thread_++];
+        return _thread_array[_next_thread++];
     }
 
 private:
 	// 下一个线程索引号
-    unsigned int next_thread_;
+    unsigned int _next_thread;
 	// 线程数
-    unsigned int thread_count_;
+    unsigned int _thread_count;
 	// 线程数组
-    ThreadClass** thread_array_;
+    ThreadClass** _thread_array;
 };
 
 // SYS_NS_END

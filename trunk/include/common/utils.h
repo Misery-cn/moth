@@ -23,30 +23,30 @@ public:
     CPointGuard(T* p, bool is_arrary = false);
     virtual ~CPointGuard();
 private:
-    T* point_;
-	bool is_arrary_;
+    T* _point;
+	bool _is_arrary;
 };
 
 template<typename T>
 CPointGuard<T>::CPointGuard(T * p, bool is_arrary)
 {
-	point_ = p;
-	is_arrary_ = is_arrary;
+	_point = p;
+	_is_arrary = is_arrary;
 }
 
 template<typename T>
 CPointGuard<T>::~CPointGuard()
 {
-	if (!is_arrary_)
+	if (!_is_arrary)
 	{
-		delete point_;
+		delete _point;
 	}
 	else
 	{
-		delete[] point_;
+		delete[] _point;
 	}
 	
-	point_ = NULL;
+	_point = NULL;
 }
 
 // 类类型close助手函数，要求该类有公有的close方法
@@ -54,69 +54,69 @@ template <typename T>
 class CloseHelper
 {
 public:
-    CloseHelper(T* obj) : obj_(obj)
+    CloseHelper(T* obj) : _obj(obj)
     {
     }
 
     ~CloseHelper()
     {
-        if (NULL != obj_)
+        if (NULL != _obj)
         {
-            obj_->close();
+            _obj->close();
         }
     }
 
     T* operator->()
     {
-        return obj_;
+        return _obj;
     }
 
     T* release()
     {
-        T* obj = obj_;
-        obj_ = NULL;
+        T* obj = _obj;
+        _obj = NULL;
         return obj;
     }
 
 private:
-    T* obj_;
+    T* _obj;
 };
 
 template <>
 class CloseHelper<int>
 {
 public:
-    CloseHelper<int>(int fd) : fd_(fd)
+    CloseHelper<int>(int fd) : _fd(fd)
     {
     }
     
     ~CloseHelper<int>()
     {
-        if (-1 != fd_)
+        if (-1 != _fd)
         {
-            ::close(fd_);
+            ::close(_fd);
         }
     }
 
     operator int() const
     {
-        return fd_;
+        return _fd;
     }
 
     int get() const
     {
-        return fd_;
+        return _fd;
     }
 
     int release()
     {
-        int fd = fd_;
-        fd_ = -1;
+        int fd = _fd;
+        _fd = -1;
         return fd;
     }
 
 private:
-    int fd_;
+    int _fd;
 };
  
 
@@ -124,54 +124,54 @@ template <>
 class CloseHelper<FILE*>
 {
 public:
-    CloseHelper<FILE*>(FILE* fp) : fd_(fp)
+    CloseHelper<FILE*>(FILE* fp) : _fd(fp)
     {
     }
     
     ~CloseHelper<FILE*>()
     {
-        if (NULL != fd_)
+        if (NULL != _fd)
         {
-            fclose(fd_);
+            fclose(_fd);
         }
     }
 
     operator FILE*() const
     {
-        return fd_;
+        return _fd;
     }
 
     FILE* release()
     {
-        FILE* fp = fd_;
-        fd_ = NULL;
+        FILE* fp = _fd;
+        _fd = NULL;
         return fp;
     }
  
 private:
-    FILE* fd_;
+    FILE* _fd;
 };
 
 template <typename T>
 class ReleaseHelper
 {
 public:
-    ReleaseHelper(T* obj) : obj_(obj)
+    ReleaseHelper(T* obj) : _obj(obj)
     {
     }
 
     ~ReleaseHelper()
     {
-        obj_->release();
+        _obj->release();
     }
 
     T* operator->()
     {
-        return obj_;
+        return _obj;
     }
 
 private:
-    T* obj_;
+    T* _obj;
 };
 
 
@@ -179,82 +179,82 @@ template <typename DataType>
 class CArrayList
 {       
 public:
-    CArrayList(uint32_t list_max) : head_(0), tail_(0), list_size_(0)
+    CArrayList(uint32_t list_max) : _head(0), _tail(0), _list_size(0)
     {
-        list_max_ = list_max;
-        if (0 == list_max_)
+        _list_max = list_max;
+        if (0 == _list_max)
         {
-            items_ = NULL;
+            _items = NULL;
         }
         else
         {
-            items_ = new DataType[list_max_];        
-            memset(items_, 0, list_max_);
+            _items = new DataType[_list_max];        
+            memset(_items, 0, _list_max);
         }
     }
 
     ~CArrayList()
     {
-        delete []items_;
+        delete []_items;
     }
 
 	
     bool is_full() const 
     {
-        return (list_max_ == list_size_);
+        return (_list_max == _list_size);
     }
     
     bool is_empty() const 
     {
-        return (0 == list_size_);
+        return (0 == _list_size);
     }
 
     DataType front() const 
     {
-        return items_[head_];
+        return _items[_head];
     }
     
     DataType pop_front() 
     {
-        DataType item = items_[head_];
-        head_ = (head_ + 1) % list_max_;
-        --list_size_;
+        DataType item = _items[_head];
+        _head = (_head + 1) % _list_max;
+        --_list_size;
         return item;
     }
 
     void push_back(DataType item) 
     {
-        items_[tail_] = item;
-        tail_ = (tail_ + 1) % list_max_; 
-        ++list_size_;
+        _items[_tail] = item;
+        _tail = (_tail + 1) % _list_max; 
+        ++_list_size;
     }
 
     uint32_t size() const 
     {
-        return list_size_;
+        return _list_size;
     }
 
 	DataType& operator[](uint32_t pos)
 	{
-		if (list_size_ < pos)
+		if (_list_size < pos)
 		{
-			return items_[list_size_];
+			return _items[_list_size];
 		}
 
-		return items_[pos];
+		return _items[pos];
 	}
     
     uint32_t capacity() const
     {
-        return list_max_;
+        return _list_max;
     }
 
 private:
-	volatile uint32_t head_;
-    volatile uint32_t tail_;
-    volatile uint32_t list_size_;
-    uint32_t list_max_;
-    DataType* items_;
+	volatile uint32_t _head;
+    volatile uint32_t _tail;
+    volatile uint32_t _list_size;
+    uint32_t _list_max;
+    DataType* _items;
 };
 
 
@@ -324,17 +324,8 @@ public:
 	// 则通过program_invocation_short_name可能取不到预期的值，甚至返回的是空
     static std::string get_program_short_name();
 
-    /**
-     * 取路径的文件名部分，结果包含后缀部分，效果如下：
-     *
-     * path           dirpath        basename
-     * "/usr/lib"     "/usr"         "lib"
-     * "/usr/"        "/"            "usr"
-     * "usr"          "."            "usr"
-     * "/"            "/"            "/"
-     * "."            "."            "."
-     * ".."           "."            ".."
-     */
+
+	// 取路径的文件名部分，结果包含后缀部分
     static std::string get_filename(const std::string& filepath);
 
 	// 取路径的目录部分，不包含文件名部分，并保证不以反斜杠结尾

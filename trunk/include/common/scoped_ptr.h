@@ -16,7 +16,7 @@ class ScopedPtr
 public:
     typedef T element_type;
 
-    explicit ScopedPtr(T* p = NULL) : ptr_(p)
+    explicit ScopedPtr(T* p = NULL) : _ptr(p)
     {
     }
 
@@ -25,74 +25,74 @@ public:
     	// 防止T只有声明没有定义
         enum { type_must_be_complete = sizeof(T) };
 
-		if (ptr_)
+		if (_ptr)
 		{
-			delete ptr_;
-        	ptr_ = reinterpret_cast<T*>(-1);
+			delete _ptr;
+        	_ptr = reinterpret_cast<T*>(-1);
 		}
     }
 
     bool operator!() const
     {
-        return (NULL == ptr_);
+        return (NULL == _ptr);
     }
 
     void reset(T* p = NULL)
     {
-        if (p != ptr_)
+        if (p != _ptr)
         {
             enum { type_must_be_complete = sizeof(T) };
 
-			if (ptr_)
+			if (_ptr)
 			{
-            	delete ptr_;
+            	delete _ptr;
 			}
 			
-            ptr_ = p;
+            _ptr = p;
         }
     }
 
     T& operator*() const
     {
-        assert(NULL != ptr_);
+        assert(NULL != _ptr);
 		
-        return *ptr_;
+        return *_ptr;
     }
 
     T* operator->() const
     {
-        assert(NULL != ptr_);
+        assert(NULL != _ptr);
 		
-        return ptr_;
+        return _ptr;
     }
 
     T* get() const
     {
-        return ptr_;
+        return _ptr;
     }
 
     bool operator==(T* p) const
     {
-        return (ptr_ == p);
+        return (_ptr == p);
     }
 
     bool operator!=(T* p) const
     {
-        return (ptr_ != p);
+        return (_ptr != p);
     }
 
     void swap(ScopedPtr& p2)
     {
-        T* tmp = ptr_;
-        ptr_ = p2._ptr;
-        p2.ptr_ = tmp;
+        T* tmp = _ptr;
+        _ptr = p2._ptr;
+        p2._ptr = tmp;
     }
 
     T* release()
     {
-        T* tmp = ptr_;
+        T* tmp = _ptr;
 		
-        ptr_ = NULL;
+        _ptr = NULL;
 
         return tmp;
     }
@@ -104,7 +104,7 @@ private:
     template <class T2> bool operator!=(ScopedPtr<T2> const& p2) const;
 
 private:
-    T* ptr_;
+    T* _ptr;
 };
 
 template <class T>
@@ -113,7 +113,7 @@ class ScopedArray
 public:
     typedef T element_type;
 
-    explicit ScopedArray(T* p = NULL) : array_(p)
+    explicit ScopedArray(T* p = NULL) : _array(p)
     {
     }
 
@@ -121,67 +121,67 @@ public:
     {
         enum { type_must_be_complete = sizeof(T) };
 
-		if (array_)
+		if (_array)
 		{
-			delete[] array_;
-        	array_ = reinterpret_cast<T*>(-1);
+			delete[] _array;
+        	_array = reinterpret_cast<T*>(-1);
 		}
     }
 
     bool operator!() const
     {
-        return (NULL == array_);
+        return (NULL == _array);
     }
 
     void reset(T* p = NULL)
     {
-        if (p != array_)
+        if (p != _array)
         {
             enum { type_must_be_complete = sizeof(T) };
 
-			if (array_)
+			if (_array)
 			{
-				delete[] array_;
+				delete[] _array;
 			}
 			
-            array_ = p;
+            _array = p;
         }
     }
 
     T& operator [](std::ptrdiff_t i) const
     {
         assert(0 <= i);
-        assert(NULL != array_);
+        assert(NULL != _array);
 
-        return array_[i];
+        return _array[i];
     }
 
     T* get() const
     {
-        return array_;
+        return _array;
     }
 
     bool operator==(T* p) const
 	{
-		return (array_ == p);
+		return (_array == p);
 	}
 	
     bool operator!=(T* p) const
 	{
-		return (array_ != p);
+		return (_array != p);
 	}
 
     void swap(ScopedArray& p2)
     {
-        T* tmp = array_;
-        array_ = p2._array;
+        T* tmp = _array;
+        _array = p2._array;
         p2._array = tmp;
     }
 
     T* release()
     {
-        T* tmp = array_;
-        array_ = NULL;
+        T* tmp = _array;
+        _array = NULL;
 
         return tmp;
     }
@@ -193,7 +193,7 @@ private:
     template <class T2> bool operator!=(ScopedArray<T2> const& p2) const;
 
 private:
-    T* array_;
+    T* _array;
 };
 
 // UTILS_NS_END

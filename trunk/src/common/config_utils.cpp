@@ -9,13 +9,13 @@
 
 CConfLine::CConfLine(const std::string& key, const std::string val,
       const std::string section, const std::string comment, int lineno)
-	: key_(key), val_(val), section_(section)
+	: _key(key), _val(val), _section(section)
 {
 }
 
 bool CConfLine::operator<(const CConfLine& oth) const
 {
-	if (key_ < oth.key_)
+	if (_key < oth._key)
 	{
 		return true;
 	}
@@ -27,7 +27,7 @@ bool CConfLine::operator<(const CConfLine& oth) const
 
 std::ostream& operator<<(std::ostream& oss, const CConfLine& line)
 {
-	oss << line.key_ << line.val_ << line.section_;
+	oss << line._key << line._val << line._section;
 	return oss;
 }
 
@@ -41,7 +41,7 @@ CConfFile::~CConfFile()
 
 void CConfFile::clear()
 {
-	sections_.clear();
+	_sections.clear();
 }
 
 int CConfFile::parse_file(const std::string& filename)
@@ -51,7 +51,7 @@ int CConfFile::parse_file(const std::string& filename)
 	size_t sz = 0;
 	char* buf = NULL;
 	
-	// ÊâìÂºÄÈÖçÁΩÆÊñá‰ª∂
+	// ¥Úø™≈‰÷√Œƒº˛
 	FILE* fp = fopen(filename.c_str(), "r");
 	if (!fp)
 	{
@@ -69,7 +69,7 @@ int CConfFile::parse_file(const std::string& filename)
 			break;
 		}
 		
-		// Ê£ÄÊü•ÈÖçÁΩÆÊñá‰ª∂Â§ßÂ∞è
+		// ºÏ≤È≈‰÷√Œƒº˛¥Û–°
 		// if (MAX_CONFIG_FILE_SZ < st_buf.st_size)
 		// {
 		// }
@@ -95,7 +95,8 @@ int CConfFile::parse_file(const std::string& filename)
 				break;
 			}
 		}
-	
+
+		// “ª¥Œº”‘ÿ≈‰÷√Œƒº˛
 		load_from_buffer(buf, sz);
 		
 		r = 0;
@@ -118,8 +119,11 @@ void CConfFile::load_from_buffer(const char* buf, size_t sz)
 	section_iter_t cur_section;
 
 	const char* b = buf;
+	// ◊‹–– ˝
 	int line_no = 0;
+	// “ª––µƒ≥§∂»
 	size_t line_len = -1;
+	//  £”‡¥Û–°
 	size_t rem = sz;
 	std::string acc;
 
@@ -132,12 +136,12 @@ void CConfFile::load_from_buffer(const char* buf, size_t sz)
 			break;
 		}
 		
-		// Ë°åÂè∑+1
+		// ¥¶¿Ì“ª––
 		line_no++;
-		// Êü•ÊâæÊç¢Ë°å
+		// “ª––µƒΩ·Œ≤
 		const char* end = (const char*)memchr(b, '\n', rem);
 
-		// Ê≤°ÊúâÊç¢Ë°å
+		// »Áπ˚√ª”–ªª––∑˚,º¥Ω· ¯
 		if (!end)
 		{
 			break;
@@ -145,10 +149,10 @@ void CConfFile::load_from_buffer(const char* buf, size_t sz)
 		
 		line_len = 0;
 		bool found_null = false;
-		// Êü•ÊâæËØ•Ë°åÊòØÂê¶ÊúâÁªìÊùüÁ¨¶
+		// ≤È’“Ω· ¯∑˚
 		for (const char* i = b; i != end; ++i)
 		{
-			// ËØ•Ë°åÈïøÂ∫¶+1
+			// ∏√––≥§∂»
 			line_len++;
 			if ('\0' == *i)
 			{
@@ -165,53 +169,50 @@ void CConfFile::load_from_buffer(const char* buf, size_t sz)
 		// {
 		// }
 		
-		// Â∑≤ÂèçÊñúÊù†ÁªìÂ∞æ
+		// »Áπ˚ «“‘\\Ω·Œ≤
 		if ((1 <= line_len) && ('\\' == b[line_len - 1]))
 		{
-			// ÊääËØ•Ë°å‰øùÂ≠òËµ∑Êù•
+			// œ»∞—∏√––±£¥Ê∆¿¥
 			acc.append(b, line_len - 1);
 			continue;	
 		}
 	
 		acc.append(b, line_len);
 		
-		// Ëß£ÊûêËØ•Ë°å
+		// Ω‚Œˆ∏√––
 		CConfLine* cline = process_line(line_no, acc.c_str());
 		
-		// Ê∏ÖÁ©∫
 		acc.clear();
 
-		// ËØ•Ë°åÊ≤°ÊúâÊúâÊïàÈÖçÁΩÆÈ°π
+		// ∏√––√ª”–”––ß≈‰÷√œÓ,ºÃ–¯
 		if (!cline)
 		{
 			continue;
 		}
 		
-		const std::string& csection(cline->section_);
-		// ËØ•Ë°åÂåÖÂê´section
+		const std::string& csection(cline->_section);
+		// ∏ƒ–– «“ª∏ˆsection
 		if (!csection.empty())
 		{
-			// ‰øùÂ≠òsection
+			// ±£¥Ê∏√section
 			std::map<std::string, CConfSection>::value_type vt(csection, CConfSection());
-			std::pair<section_iter_t, bool> nr(sections_.insert(vt));
+			std::pair<section_iter_t, bool> nr(_sections.insert(vt));
 			cur_section = nr.first;
 		}
 		else
 		{
-			// ÊòØÂê¶ÈáçÂ§ç
-			if (cur_section->second.lines_.count(*cline))
+			// ºÏ≤È «∑Ò÷ÿ∏¥≈‰÷√œÓ
+			if (cur_section->second._lines.count(*cline))
 			{
-				cur_section->second.lines_.erase(*cline);
-				if (cline->key_.length())
+				cur_section->second._lines.erase(*cline);
+				if (cline->_key.length())
 				{
-					// ÈÖçÁΩÆÈ°πÈáçÂ§ç‰∫Ü
+					// ∏√≈‰÷√œÓ”–÷ÿ∏¥
 				}
 			}
-			// [section]
-			// test = 1
-			// test = 2
-			// ÂèñÊúÄÂêé‰∏ÄÊ¨°test=2
-			cur_section->second.lines_.insert(*cline);
+
+			// “‘◊Ó∫Û“ª∏ˆŒ™◊º
+			cur_section->second._lines.insert(*cline);
 		}
 
 		delete cline;
@@ -219,7 +220,7 @@ void CConfFile::load_from_buffer(const char* buf, size_t sz)
 	
 	if (!acc.empty())
 	{
-		// ÈîôËØØË°å
+		// ∏√––”–¥ÌŒÛ
 	}	
 }
 
@@ -250,7 +251,7 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 		{
 			case ACCEPT_INIT:
 			{
-				// ÁªìÊùüÁ¨¶
+				// Ω· ¯∑˚
 				if ('\0' == c)
 				{
 					return NULL;
@@ -260,54 +261,54 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 				{
 					state = ACCEPT_SECTION_NAME;
 				}
-				// Ê≥®Èáä
+				// ◊¢ Õ
 				else if (('#' == c) || ';' == c)
 				{
 					state = ACCEPT_COMMENT_TEXT;
 				}
-				// ÈîôËØØ
+				// ¥ÌŒÛ
 				else if (']' == c)
 				{
 					return NULL;
 				}
 				else if (isspace(c))
 				{
-					// Á©∫Ê†º
+					// ø’∏Ò
 				}
 				else
 				{
-					// ÊôÆÈÄöÁöÑÂ≠óÁ¨¶,ÂèØËÉΩÊòØÈÖçÁΩÆÈ°πÁöÑÂêçÂ≠ó
+					// ∆’Õ®◊÷∑˚,ø…ƒ‹ «≈‰÷√œÓ
 					state = ACCEPT_KEY;
-					// Ê≠§Â§ÑË¶ÅÂõûÈÄÄÂà∞ÈÖçÁΩÆÈ°πÁöÑÂ§¥,Áî±ACCEPT_KEYÂ§ÑÁêÜ
+					// ¥À¥¶“™ªÿÕÀµΩ≈‰÷√œÓµƒÕ∑,”…ACCEPT_KEY¥¶¿Ì
 					--l;
 				}
 				break;
 			}
 			case ACCEPT_SECTION_NAME:
 			{
-				// ÁªìÊùüÁ¨¶
+				// Ω· ¯∑˚
 				if ('\0' == c)
 				{
 					return NULL;
 				}
-				// sectionÁªìÊùü
+				// sectionΩ· ¯
 				else if ((']' == c) && (!escaping))
 				{
-					// Ê†ºÂºèÂåñ
+					// »•≥˝ø’∏Ò
 					trim_whitespace(section, true);
 					if (section.empty())
 					{
 						return NULL;
 					}
 					
-					// Ê£ÄÊü•ÊòØÂê¶ÊúâÊ≥®Èáä
+					// ºÏ≤È «∑Ò”–◊¢ Õ
 					state = ACCEPT_COMMENT_START;
 				}
 				else if ((('#' == c) || (';' == c)) && !escaping)
 				{
 					return NULL;
 				}
-				// ÂèçÊñúÊù†,ÁªßÁª≠
+				// ∑¥–±∏‹,ºÃ–¯
 				else if (('\\' == c) && !escaping)
 				{
 					escaping = true;
@@ -315,7 +316,7 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 				else 
 				{
 					escaping = false;
-					// ËÆ∞ÂΩï‰∏ãsection
+					// º«¬ºœ¬section
 					section += c;
 				}
 				break;
@@ -328,13 +329,13 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 				}
 				else if ('=' == c && !escaping)
 				{
-					// Ê†ºÂºèÂåñÈÖçÁΩÆÈ°πÂêç
+					// ∏Ò ΩªØ≈‰÷√œÓ√˚
 					key = normalize_key_name(key);
 					if (key.empty())
 					{
 						return NULL;
 					}
-					// ÂêéÈù¢ÁöÑÂ≠óÁ¨¶ÊúâACCEPT_VAL_STARTÂ§ÑÁêÜ
+					// ∫Û√Êµƒ◊÷∑˚”–ACCEPT_VAL_START¥¶¿Ì
 					state = ACCEPT_VAL_START;
 				}
 				else if ('\\' == c && !escaping)
@@ -344,7 +345,7 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 				else
 				{
 					escaping = false;
-					// ËÆ∞ÂΩïÂÜôÈÖçÁΩÆÈ°πÂêç
+					// º«¬ºœ¬≈‰÷√œÓ√˚
 					key += c;
 				}
 				break;
@@ -359,7 +360,7 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 				{
 					state = ACCEPT_COMMENT_TEXT;
 				}
-				// ÈÖçÁΩÆÈ°πÁöÑÂÄºÊúâÂºïÂè∑ÂåÖÂê´
+				// ≈‰÷√œÓµƒ÷µ”–“˝∫≈
 				else if ('"' == c)
 				{
 					state = ACCEPT_QUOTED_VAL;
@@ -369,9 +370,8 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 				}
 				else
 				{
-					// Ê≤°ÊúâÂºïÂè∑ÂåÖÂê´
+					// √ª”–“˝∫≈
 					state = ACCEPT_UNQUOTED_VAL;
-					// ÂõûÈÄÄ
 					--l;
 				}
 				break;
@@ -400,7 +400,7 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 				else
 				{
 					escaping = false;
-					// ËÆ∞ÂΩïÈÖçÁΩÆÈ°πÁöÑÂÄº
+					// º«¬º≈‰÷√œÓµƒ÷µ
 					val += c;
 				}
 				break;
@@ -422,7 +422,7 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 				else
 				{
 					escaping = false;
-					// ËÆ∞ÂΩï‰∏ãÈÖçÁΩÆÈ°πÁöÑÂÄº
+					// º«¬ºœ¬≈‰÷√œÓµƒ÷µ
 					val += c;
 				}
 				break;
@@ -469,7 +469,7 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 void CConfFile::trim_whitespace(std::string& str, bool strip_internal)
 {
 	const char* in = str.c_str();
-	// ÂéªÊéâÂ§¥ÈÉ®Á©∫Â≠óÁ¨¶
+	// »•µÙÕ∑≤øø’∏Ò
 	while (1)
 	{
 		char c = *in;
@@ -483,7 +483,7 @@ void CConfFile::trim_whitespace(std::string& str, bool strip_internal)
 	char output[strlen(in) + 1];
 	strcpy(output, in);
 
-	// ÂéªÊéâÂ∞æÈÉ®Á©∫Â≠óÁ¨¶
+	// »•µÙŒ≤≤øø’∏Ò
 	char* o = output + strlen(output);
 	while (1)
 	{
@@ -511,7 +511,7 @@ void CConfFile::trim_whitespace(std::string& str, bool strip_internal)
 	char* out2 = output2;
 	bool prev_was_space = false;
 
-	// ÂéªÊéâ‰∏≠Èó¥ÁöÑÁ©∫Â≠óÁ¨¶
+	// »•µÙ÷–º‰ø’∏Ò
 	for (char* u = output; *u; ++u)
 	{
 		char c = *u;
@@ -538,6 +538,7 @@ std::string CConfFile::normalize_key_name(const std::string& key)
 {
 	std::string k(key);
 	CConfFile::trim_whitespace(k, true);
+	// ≈‰÷√œÓ√˚ø’∏ÒÃÊªªŒ™œ¬ªÆœﬂ
 	std::replace(k.begin(), k.end(), ' ', '_');
 	return k;
 }
@@ -545,42 +546,29 @@ std::string CConfFile::normalize_key_name(const std::string& key)
 int CConfFile::read(const std::string& section, const std::string& key, std::string& val) const
 {
 	std::string k(normalize_key_name(key));
-	const_section_iter_t s = sections_.find(section);
-	if (s == sections_.end())
+	const_section_iter_t s = _sections.find(section);
+	if (s == _sections.end())
 	{
 		return -ENOENT;
 	}
 
 	CConfLine line(k, "", "", "", 0);
-	CConfSection::const_line_iter_t l = s->second.lines_.find(line);
-	if (l == s->second.lines_.end())
+	CConfSection::const_line_iter_t l = s->second._lines.find(line);
+	if (l == s->second._lines.end())
 	{
 		return -ENOENT;
 	}
 
-	val = l->val_;
+	val = l->_val;
 	return 0;
 }
 
 CConfFile::const_section_iter_t CConfFile::sections_begin()
 {
-	return sections_.begin();
+	return _sections.begin();
 }
 
 CConfFile::const_section_iter_t CConfFile::sections_end()
 {
-	return sections_.end();
-}
- 
-int main()
-{
-	CConfFile cf;
-	std::string val;
-	
-	cf.parse_file("/home/rhino/zkb/test.conf");
-	
-	cf.read("test2", "hehe and haha", val);
-	
-	std::cout << val << std::endl;
-	return 0;
+	return _sections.end();
 }

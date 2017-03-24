@@ -14,20 +14,20 @@ bool CLog::init()
 	// 初始化文件附加器
 	CAppender* appender = new CFileAppender("moth");
 	
-	run_ = new CLogger();
-	run_->set_appender(appender);
+	_run = new CLogger();
+	_run->set_appender(appender);
 
 	return true;
 }
 
 void CLog::do_log(log_level_t level, const char* format, ...)
 {
-	if (NULL == run_)
+	if (NULL == _run)
 	{
 		return;
 	}
 
-	if (level <= run_->get_log_level())
+	if (level <= _run->get_log_level())
 	{
 		CRunLogEvent event(level);
 	
@@ -36,15 +36,15 @@ void CLog::do_log(log_level_t level, const char* format, ...)
 		CStringUtils::fix_vsnprintf(event.content_, LOG_LINE_SIZE, format, args);
 		va_end(args);
 
-		run_->call_appender(&event);
+		_run->call_appender(&event);
 	}
 }
 
 CLogger::CLogger()
 {
-	level_ = Log_Info;
+	_level = Log_Info;
 	// 附加器列表,目前只有一个文件附加器
-	appenders_ = new CArrayList<CAppender*>(1);
+	_appenders = new CArrayList<CAppender*>(1);
 }
 
 CLogger::~CLogger()
@@ -58,13 +58,13 @@ void CLogger::call_appender(CLogEvent* event)
 		return;
 	}
 
-	lock_.lock();
+	_lock.lock();
 	// 托管
-	CMutexGuard guard(lock_);
+	CMutexGuard guard(_lock);
 
-	for (uint32_t i = 0; i < appenders_->size(); i++)
+	for (uint32_t i = 0; i < _appenders->size(); i++)
 	{
-		CAppender* ap = (*appenders_)[i];
+		CAppender* ap = (*_appenders)[i];
 		ap->do_appender(event);
 	}
 }

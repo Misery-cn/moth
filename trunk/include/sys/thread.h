@@ -30,13 +30,13 @@ public:
 	void start(bool detach = false) throw (CException, CSysCallException);
 
     // 设置线程栈大小。应当在start之前调用，否则设置无效，如放在before_start当中
-    void set_stack_size(uint32_t stack_size) { stack_size_ = stack_size; }
+    void set_stack_size(uint32_t stack_size) { _stack_size = stack_size; }
     
     // 得到线程栈大小字节数
     size_t get_stack_size() const throw (CSysCallException);
 
     // 得到本线程号
-    uint32_t get_thread_id() const { return thread_; }
+    uint32_t get_thread_id() const { return _thread; }
     
     // 等待线程返回
     void join() throw (CSysCallException);
@@ -57,10 +57,10 @@ public:
 	int set_affinity(int cpuid);
 
 	// 是否已启动
-	bool is_started() const { return 0 != thread_; }
+	bool is_started() const { return 0 != _thread; }
 	
 	// 是否是当前线程
-	bool am_self() const { return pthread_self() == thread_; }
+	bool am_self() const { return pthread_self() == _thread; }
 	
 protected:
 
@@ -87,26 +87,26 @@ private:
 
 protected:
 	// 互斥锁
-    CMutex lock_;
+    CMutex _lock;
 
 private:
 	// 条件变量
-    CCond cond_;
+    CCond _cond;
 	// 是否停止线程标识
-    volatile bool stop_;
+    volatile bool _stop;
 	// 线程状态
     volatile enum 
 	{
 		state_sleeping, 
 		state_wakeuped, 
 		state_running
-	} state_;
+	} _state;
 	
 	// 线程id
-    pthread_t thread_;
-    pthread_attr_t attr_;
+    pthread_t _thread;
+    pthread_attr_t _attr;
 	// 栈大小
-    uint32_t stack_size_;    
+    uint32_t _stack_size;    
 };
 
 // SYS_NS_END

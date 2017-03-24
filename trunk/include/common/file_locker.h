@@ -20,14 +20,14 @@ class FileLocker
 public:
 	// 不加锁构造函数，由调用者决定何时加锁
     explicit FileLocker(const char* filepath) throw ()
-        : fd_(-1), filepath_(filepath)
+        : _fd(-1), _filepath(filepath)
     {
     }
 
 	// 自动加锁构造函数
 	// 建议使用SharedFileLocker或ExclusiveFileLocker，替代此构造函数调用
     explicit FileLocker(const char* filepath, bool exclusive) throw ()
-        : fd_(-1), filepath_(filepath)
+        : _fd(-1), _filepath(filepath)
     {
         lock(exclusive);
     }
@@ -43,21 +43,21 @@ public:
         // 独占还是共享
         int operation = exclusive ? LOCK_EX : LOCK_SH;
 
-        fd_ = open(filepath_.c_str(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-        if (-1 != fd_)
+        _fd = open(_filepath.c_str(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+        if (-1 != _fd)
         {
-            if (-1 == flock(fd_, operation))
+            if (-1 == flock(_fd, operation))
             {
                 int errcode = errno;
-                close(fd_);
+                close(_fd);
 
-                fd_ = -1;
+                _fd = -1;
 				// 恢复，目的是让上层调用者可以使用errno
                 errno = errcode;
             }
         }
 
-        return (-1 != fd_);
+        return (-1 != _fd);
     }
 
     bool unlock() throw ()
@@ -66,12 +66,12 @@ public:
     
         if (is_locked())
         {
-            if (0 == flock(fd_, LOCK_UN))
+            if (0 == flock(_fd, LOCK_UN))
             {
                 ret = true;
             }
 
-            close(fd_);
+            close(_fd);
         }
         
         return ret;
@@ -79,23 +79,23 @@ public:
 
     bool is_locked() const throw ()
     {
-        return (-1 != fd_);
+        return (-1 != _fd);
     }
 
     operator bool () const
     {
-        return (-1 != fd_);
+        return (-1 != _fd);
     }
 
 	// 获取锁文件路径
     const std::string& get_filepath() const throw ()
     {
-        return filepath_;
+        return _filepath;
     }
 
 private:
-    int fd_;
-    std::string filepath_;
+    int _fd;
+    std::string _filepath;
 };
 
 
@@ -139,7 +139,7 @@ public:
 	// 且必须以O_WRONLY或O_RDWR方式打开，否则遇到EBADF错误
 	// 但如果调用进程具有PRIV_LOCKRDONLY权限的组的成员，则可使用O_RDONLY打开fd
     explicit ExFileLocker(int fd)
-        : fd_(fd)
+        : _fd(fd)
     {
     }
 
@@ -150,9 +150,9 @@ public:
 	// 如果为负，则表示锁定从文件当前偏移开始，往前大小为size的连续区域
     bool lock(off_t size)
     {
-        if (-1 != fd_)
+        if (-1 != _fd)
         {
-            return 0 == lockf(fd_, F_LOCK, size);
+            return 0 == lockf(_fd, F_LOCK, size);
         }
 
         return false;
@@ -165,9 +165,9 @@ public:
 	// 如果为负，则表示尝试锁定从文件当前偏移开始，往前大小为size的连续区域
     bool try_lock(off_t size)
     {
-        if (-1 != fd_)
+        if (-1 != _fd)
         {
-            return 0 == lockf(fd_, F_TLOCK, size);
+            return 0 == lockf(_fd, F_TLOCK, size);
         }
 
         return false;
@@ -180,9 +180,9 @@ public:
 	// 如果为负，则表示检测从文件当前偏移开始，往前大小为size的连续区域的锁定状态
     bool test_lock(off_t size)
     {
-        if (-1 != fd_)
+        if (-1 != _fd)
         {
-            return 0 == lockf(fd_, F_TEST, 0);
+            return 0 == lockf(_fd, F_TEST, 0);
         }
 
         return false;
@@ -194,16 +194,16 @@ public:
 	// 如果为负，则表示解锁从文件当前偏移开始，往前大小为size的连续区域
     bool unlock(off_t size)
     {
-        if (-1 != fd_)
+        if (-1 != _fd)
         {
-            return 0 == lockf(fd_, F_ULOCK, size);
+            return 0 == lockf(_fd, F_ULOCK, size);
         }
 
         return false;
     }
 
 private:
-    int fd_;
+    int _fd;
 };
 
 // UTILS_NS_END

@@ -4,7 +4,7 @@
 
 
 CException::CException(const char* errmsg, int errcode, const char* filename, int linenum) throw ()
-				: errmsg_(errmsg), errcode_(errcode), filename_(filename), linenum_(linenum)
+				: _errmsg(errmsg), _errcode(errcode), _filename(filename), _linenum(linenum)
 {
 
 }
@@ -16,7 +16,7 @@ CException::~CException() throw ()
 
 const char* CException::what() const throw ()
 {
-	return errmsg_.c_str();
+	return _errmsg.c_str();
 }
 
 
@@ -24,10 +24,10 @@ std::string CException::to_string() const
 {
     std::stringstream ss;
     ss << "exception:"
-       << errcode_ << "-"
-       << errmsg_<< "-"
-       << filename_<< "-"
-       << linenum_;
+       << _errcode << "-"
+       << _errmsg<< "-"
+       << _filename<< "-"
+       << _linenum;
 
     return ss.str();
 }
@@ -35,8 +35,8 @@ std::string CException::to_string() const
 CSysCallException::CSysCallException(const char* errmsg, int errcode, const char* filename, int linenum, const char* syscall) throw ()
 			: CException(errmsg, errcode, filename, linenum)
 {
-	errmsg_ = strerror(errno);
-	syscall_ = syscall;
+	_errmsg = strerror(errno);
+	_syscall = syscall;
 }
 
 CSysCallException::~CSysCallException() throw ()
@@ -48,11 +48,11 @@ std::string CSysCallException::to_string() const throw ()
 {
     std::stringstream ss;
     ss << "SysCallException" << "-"
-       << errcode_ << "-"
-       << errmsg_<< "-"
-       << filename_ << "-"
-       << linenum_ << "-"
-       << syscall_;
+       << _errcode << "-"
+       << _errmsg<< "-"
+       << _filename << "-"
+       << _linenum << "-"
+       << _syscall;
 
     return ss.str();
 }

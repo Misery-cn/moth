@@ -5,4 +5,3 @@ project(trunk)
 include(CMake.common)
 
 add_subdirectory(src)
-add_subdirectory(tools)

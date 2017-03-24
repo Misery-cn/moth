@@ -9,32 +9,32 @@ CMutex::CMutex(bool recursive) throw (CSysCallException)
     if (recursive)
     {    
 		#if defined(__linux) && !defined(__USE_UNIX98)
-        attr_ = PTHREAD_MUTEX_RECURSIVE_NP;
+        _attr = PTHREAD_MUTEX_RECURSIVE_NP;
 		#else
-        r = pthread_mutexattr_init(&attr_);
+        r = pthread_mutexattr_init(&_attr);
 		if (0 != r)
 		{
 			THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_mutexattr_init");
 		}
         
-        r = pthread_mutexattr_settype(&attr_, PTHREAD_MUTEX_RECURSIVE);
+        r = pthread_mutexattr_settype(&_attr, PTHREAD_MUTEX_RECURSIVE);
         if (0 != r)
 		{
 			THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_mutexattr_settype");
-            pthread_mutexattr_destroy(&attr_);
+            pthread_mutexattr_destroy(&_attr);
         }
 		#endif    
-        r = pthread_mutex_init(&mutex_, &attr_);
+        r = pthread_mutex_init(&_mutex, &_attr);
     }
     else 
 	{
-        r = pthread_mutex_init(&mutex_, NULL);
+        r = pthread_mutex_init(&_mutex, NULL);
     }
     
     if (0 != r) 
 	{
 		// RUNLOG or throw Exception
-        pthread_mutexattr_destroy(&attr_);
+        pthread_mutexattr_destroy(&_attr);
 		THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_mutex_init");
     }
 }
@@ -44,14 +44,14 @@ CMutex::~CMutex() throw ()
 	#if defined(__linux) && !defined(__USE_UNIX98)
 	//
 	#else
-    pthread_mutexattr_destroy(&attr_);
+    pthread_mutexattr_destroy(&_attr);
 	#endif
-    pthread_mutex_destroy(&mutex_);
+    pthread_mutex_destroy(&_mutex);
 }
 
 void CMutex::lock() throw (CSysCallException)
 {
-	int r = pthread_mutex_lock(&mutex_);
+	int r = pthread_mutex_lock(&_mutex);
     if (0 != r)
 	{
 		// RUNLOG or throw Exception
@@ -61,7 +61,7 @@ void CMutex::lock() throw (CSysCallException)
 
 void CMutex::unlock() throw (CSysCallException)
 {
-	int r = pthread_mutex_unlock(&mutex_);
+	int r = pthread_mutex_unlock(&_mutex);
     if (0 != r)
 	{
 		// RUNLOG or throw Exception
@@ -71,7 +71,7 @@ void CMutex::unlock() throw (CSysCallException)
 
 bool CMutex::try_lock() throw (CSysCallException)
 {
-	int r = pthread_mutex_trylock(&mutex_);
+	int r = pthread_mutex_trylock(&_mutex);
 
     if (0 == r)
 	{
@@ -93,7 +93,7 @@ bool CMutex::timed_lock(uint32_t millisecond) throw (CSysCallException)
 
 	if (0 == millisecond)
 	{
-		r = pthread_mutex_lock(&mutex_);
+		r = pthread_mutex_lock(&_mutex);
 	}
 	else
 	{
@@ -120,7 +120,7 @@ bool CMutex::timed_lock(uint32_t millisecond) throw (CSysCallException)
         ts.tv_sec += millisecond / 1000;
         ts.tv_nsec += (millisecond % 1000) * 1000000;
         
-		r = pthread_mutex_timedlock(&mutex_, &ts);
+		r = pthread_mutex_timedlock(&_mutex, &ts);
 	}
 	
 	if (0 == r)

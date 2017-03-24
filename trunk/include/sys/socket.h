@@ -48,10 +48,10 @@ public:
     // Ð´ÈëÊý¾Ý
     int s_write(IN int fd, IN char* buff) throw (CSysCallException);
 	
-	inline size_t getfd() {return fd_;}
+	inline size_t getfd() {return _fd;}
 private:
-    size_t fd_;
-	SOCKET_STATE state_;
+    size_t _fd;
+	SOCKET_STATE _state;
 };
 
 // SYS_NS_END

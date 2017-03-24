@@ -12,7 +12,7 @@ public:
 	virtual int decode() = 0;
 	
 private:
-	int len_;
+	int _len;
 };
 
 #endif

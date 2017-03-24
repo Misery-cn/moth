@@ -4,11 +4,12 @@
 #include "thread.h"
 #include "datetime_utils.h"
 
-// è‡ªå®šä¹‰ç±»åž‹
+// »Øµ÷º¯ÊýÀàÐÍ
 typedef  void (*callback)(void);
 
 class CTimerThread;
 
+// ¶¨Ê±Æ÷Àà
 class CTimer
 {
 public:
@@ -19,7 +20,7 @@ public:
 	
 	void shutdown();
 	
-	// å»¶è¿Ÿæ‰§è¡Œ
+	// ÑÓ³ÙÖ´ÐÐ
 	void add_event_after(int64_t seconds, callback cb);
 	
 	void add_event_at(int64_t when, callback cb);
@@ -34,10 +35,10 @@ private:
 	void timer_thread();
 	
 private:
-	bool stopping;
-	CMutex lock_;
-	CCond cond_;
-	CTimerThread* thread_;
-	std::multimap<int64_t, callback> schedule_;
-	std::map<callback, std::multimap<int64_t, callback>::iterator> events_;
+	bool _stopping;
+	CMutex _lock;
+	CCond _cond;
+	CTimerThread* _thread;
+	std::multimap<int64_t, callback> _schedule;
+	std::map<callback, std::multimap<int64_t, callback>::iterator> _events;
 };

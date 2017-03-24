@@ -9,41 +9,41 @@ class CMessenger;
 class Connection : public CRefCountable
 {
 public:
-	Connection(CMessenger* m) : msger_(m), ref_(NULL)
+	Connection(CMessenger* m) : _msger(m), _ref(NULL)
 	{
 	}
 
 	virtual ~Connection()
 	{
-		if (ref_)
+		if (_ref)
 		{
-			ref_->dec_refcount();
+			_ref->dec_refcount();
 		}
 	}
 
-	CMessenger* get_messenger() { return msger_; }
+	CMessenger* get_messenger() { return _msger; }
 
 	void set_ref(CRefCountable* ref)
 	{
-		// CMutexGuard(lock_);
-		CMutex::Locker l(lock_);
+		// CMutexGuard(_lock);
+		CMutex::Locker l(_lock);
 		// 之前的引用-1
-		if (ref_)
+		if (_ref)
 		{
-			ref_->dec_refcount();
+			_ref->dec_refcount();
 		}
 
-		ref_ = ref;
+		_ref = ref;
 	}
 
 	CRefCountable* get_ref()
 	{
-		// CMutexGuard(lock_);
-		CMutex::Locker l(lock_);
+		// CMutexGuard(_lock);
+		CMutex::Locker l(_lock);
 
-		if (ref_)
+		if (_ref)
 		{
-			return ref_->get();
+			return _ref->get();
 		}
 
 		return NULL;
@@ -56,11 +56,11 @@ public:
 	virtual void mark_down() = 0;
 
 private:
-	mutable CMutex lock_;
-	CMessenger* msger_;
-	CRefCountable* ref_;
-	int type_;
-	entity_addr_t addr_;
+	mutable CMutex _lock;
+	CMessenger* _msger;
+	CRefCountable* _ref;
+	int _type;
+	entity_addr_t _addr;
 	time_t last_keepalive;
 	time_t last_keepalive_ack;
 };

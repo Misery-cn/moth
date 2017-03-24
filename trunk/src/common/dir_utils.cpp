@@ -127,7 +127,8 @@ void CDirUtils::create_directory_recursive(const char* dirpath, mode_t permissio
     for (;;)
     {
         slash = strchr(pathname_p, '/');
-        if (NULL == slash) // 叶子目录
+		// 子目录
+        if (NULL == slash)
         {
             if (0 == mkdir(pathname, permissions))
 			{
@@ -151,7 +152,8 @@ void CDirUtils::create_directory_recursive(const char* dirpath, mode_t permissio
         *slash++ = '/';
         while ('/' == *slash)
 		{
-			++slash; // 过滤掉相连的斜杠
+			// 去掉重复的斜杠
+			++slash;
         }
         pathname_p = slash;
     }

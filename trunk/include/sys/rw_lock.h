@@ -29,33 +29,33 @@ public:
 	bool timed_lock_write(uint32_t millisecond) throw (CSysCallException);
 	
 private:
-	pthread_rwlockattr_t attr_;
-	pthread_rwlock_t rwlock_;
+	pthread_rwlockattr_t _attr;
+	pthread_rwlock_t _rwlock;
 };
 
 class CRWLockGuard
 {
 public:
 	// Ä¬ÈÏ¼Ó¶ÁËø
-    CRWLockGuard(CRWLock& lock, bool is_read = true) : lock_(lock)
+    CRWLockGuard(CRWLock& lock, bool is_read = true) : _lock(lock)
     {
     	if (is_read)
 		{
-        	lock_.lock_read();
+        	_lock.lock_read();
     	}
 		else
 		{
-			lock_.lock_write();
+			_lock.lock_write();
 		}
     }    
     
     ~CRWLockGuard()
     {
-        lock_.unlock();
+        _lock.unlock();
     }
     
 private:
-    CRWLock& lock_;
+    CRWLock& _lock;
 };
 
 // SYS_NS_END

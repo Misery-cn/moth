@@ -22,68 +22,68 @@ private:
 
 void CTimer::init()
 {
-	stopping = false;
-	thread_ = new CTimerThread(this);
-	thread_->start();
+	_stopping = false;
+	_thread = new CTimerThread(this);
+	_thread->start();
 }
 
 void CTimer::shutdown()
 {
-	if (thread_)
+	if (_thread)
 	{
 		cancel_all_events();
-		stopping = true;
-		cond_.signal();
-		lock_.unlock();
-		thread_->join();
-		lock_.lock();
+		_stopping = true;
+		_cond.signal();
+		_lock.unlock();
+		_thread->join();
+		_lock.lock();
 		
-		delete thread_;
-		thread_ = NULL;
+		delete _thread;
+		_thread = NULL;
 	}
 }
 
 void CTimer::timer_thread()
 {
-	lock_.lock();
+	_lock.lock();
 
-	while (!stopping)
+	while (!_stopping)
 	{
 		int64_t now = CTimeUtils::get_current_microseconds();
 		// 
-		while (!schedule_.empty())
+		while (!_schedule.empty())
 		{
-			scheduled_map_t::iterator p = schedule_.begin();
-			// æ—¶é—´è¿˜æ²¡åˆ°
+			scheduled_map_t::iterator p = _schedule.begin();
+			// Ê±¼ä»¹Ã»µ½
 			if (p->first > now)
 			{
 				break;
 			}
 
 			callback cb = p->second;
-			events_.erase(cb);
-			schedule_.erase(p);
+			_events.erase(cb);
+			_schedule.erase(p);
 			
-			// æ‰§è¡Œ
+			// Ö´ÐÐ»Øµ÷º¯Êý
 			(*cb)();
 		}
 
-		if (stopping)
+		if (_stopping)
 		{
 			break;
 		}
 
-		if (schedule_.empty())
+		if (_schedule.empty())
 		{
-			cond_.wait(lock_);
+			_cond.wait(_lock);
 		}
 		else
 		{
-			cond_.timed_wait(lock_, schedule_.begin()->first - now);
+			_cond.timed_wait(_lock, _schedule.begin()->first - now);
 		}
 	}
 	
-	lock_.unlock();
+	_lock.unlock();
 }
 
 void CTimer::add_event_after(int64_t seconds, callback cb)
@@ -96,40 +96,40 @@ void CTimer::add_event_after(int64_t seconds, callback cb)
 void CTimer::add_event_at(int64_t when, callback cb)
 {
 	scheduled_map_t::value_type s_val(when, cb);
-	scheduled_map_t::iterator i = schedule_.insert(s_val);
+	scheduled_map_t::iterator i = _schedule.insert(s_val);
 
 	event_lookup_map_t::value_type e_val(cb, i);
-	std::pair<event_lookup_map_t::iterator, bool> rval(events_.insert(e_val));
+	std::pair<event_lookup_map_t::iterator, bool> rval(_events.insert(e_val));
 
-	if (i == schedule_.begin())
+	if (i == _schedule.begin())
 	{
-		cond_.signal();
+		_cond.signal();
 	}
 }
 
 bool CTimer::cancel_event(callback cb)
 {
-	std::map<callback, std::multimap<int64_t, callback>::iterator>::iterator p = events_.find(cb);
-	if (p == events_.end())
+	std::map<callback, std::multimap<int64_t, callback>::iterator>::iterator p = _events.find(cb);
+	if (p == _events.end())
 	{
 		return false;
 	}
 
 	// delete p->first;
 
-	schedule_.erase(p->second);
-	events_.erase(p);
+	_schedule.erase(p->second);
+	_events.erase(p);
 	
 	return true;
 }
 
 void CTimer::cancel_all_events()
 {
-	while (!events_.empty())
+	while (!_events.empty())
 	{
-		std::map<callback, std::multimap<int64_t, callback>::iterator>::iterator p = events_.begin();
+		std::map<callback, std::multimap<int64_t, callback>::iterator>::iterator p = _events.begin();
 		// delete p->first;
-		schedule_.erase(p->second);
-		events_.erase(p);
+		_schedule.erase(p->second);
+		_events.erase(p);
 	}
 }

@@ -36,9 +36,9 @@ public:
 	virtual std::string format() = 0;
 
 public:
-	log_level_t level_;
+	log_level_t _level;
 	
-	char content_[LOG_LINE_SIZE];
+	char _content[LOG_LINE_SIZE];
 };
 
 // 运行时日志
@@ -83,15 +83,15 @@ public:
 	void do_appender(CLogEvent* logevent);
 
 private:
-	int log_fd_;
+	int _log_fd;
 	// 当前文件序号
-	int log_file_seq_;
+	int _log_file_seq;
 	// 日志文件名
-	char log_file_name_[FILENAME_MAX];
+	char _log_file_name[FILENAME_MAX];
 	// 当前日志文件名
-	char current_file_name_[FILENAME_MAX];
+	char _current_file_name[FILENAME_MAX];
 	// 日志路径
-	char log_path_[PATH_MAX];
+	char _log_path[PATH_MAX];
 };
 
 #endif

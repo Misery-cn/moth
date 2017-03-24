@@ -23,45 +23,45 @@ private:
 	static void destroy_singleton();
 
 private:
-	static CMutex lock_;
-	static T *instance_;
-	static bool destroyed_;
+	static CMutex _lock;
+	static T *_instance;
+	static bool _destroyed;
 };
 
 
 template<typename T>
-CMutex CSingleton<T>::lock_;
+CMutex CSingleton<T>::_lock;
 
 template<typename T>
-T* CSingleton<T>::instance_ = NULL;
+T* CSingleton<T>::_instance = NULL;
 
 template<typename T>
-bool CSingleton<T>::destroyed_ = false;
+bool CSingleton<T>::_destroyed = false;
 
 template<typename T>
 T& CSingleton<T>::instance()
 {
-    if (!instance_)
+    if (!_instance)
     {
-        CMutexGuard guard(lock_);
+        CMutexGuard guard(_lock);
 
-        if (!instance_)
+        if (!_instance)
         {
-			instance_ = new T;
+			_instance = new T;
 			std::atexit(destroy_singleton);
         }
     }
 
-    return *instance_;
+    return *_instance;
 }
 
 template<typename T>
 void CSingleton<T>::destroy_singleton()
 {
-    if (NULL != instance_)
+    if (NULL != _instance)
     {
-        delete instance_;
-        instance_ = NULL;
+        delete _instance;
+        _instance = NULL;
     }
 }
 

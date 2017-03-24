@@ -26,8 +26,8 @@ public:
     void broadcast() throw (CSysCallException);
     
 private:
-	pthread_condattr_t attr_;
-    pthread_cond_t cond_;
+	pthread_condattr_t _attr;
+    pthread_cond_t _cond;
 };
 
 // SYS_NS_END

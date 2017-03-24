@@ -5,24 +5,24 @@
 
 CSocket::CSocket()
 {
-	state_ = SOCKET_CLOSE;
-    fd_ = -1;
+	_state = SOCKET_CLOSE;
+    _fd = -1;
 }
 
 CSocket::~CSocket()
 {
-    if (0 < fd_)
+    if (0 < _fd)
     {
         (void)s_close();
-		fd_ = -1;
+		_fd = -1;
     }
 }
 
 int CSocket::s_open() throw (CSysCallException)
 {
     // 创建一个套接字
-    fd_ = socket(AF_INET, SOCK_STREAM, 0);
-    if (0 >= fd_)
+    _fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (0 >= _fd)
     {
         THROW_SYSCALL_EXCEPTION(NULL, errno, "socket");
     }
@@ -33,14 +33,14 @@ int CSocket::s_open() throw (CSysCallException)
 int CSocket::s_close() throw (CSysCallException)
 {
     // 关闭连接
-    shutdown(fd_, SHUT_RDWR);
+    shutdown(_fd, SHUT_RDWR);
     // 清理套接字
-    if (0 != close(fd_))
+    if (0 != close(_fd))
     {
         THROW_SYSCALL_EXCEPTION(NULL, errno, "close");
     }
 	
-	fd_ = -1;
+	_fd = -1;
 	
     return 0;
 }
@@ -79,14 +79,14 @@ int CSocket::s_bind(char* ip, int port) throw (CSysCallException)
 
     // 允许在bind过程中本地地址可重复使用
     // 成功返回0，失败返回-1
-    if (0 > setsockopt(fd_, SOL_SOCKET, SO_REUSEADDR, (char *)&op, sizeof(op)))
+    if (0 > setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&op, sizeof(op)))
     {
         return -1;
     }
 
     // 给套接口分配协议地址,如果前面没有设置地址可重复使用,则要判断errno=EADDRINUSE,即地址已使用
     // 成功返回0，失败返回-1
-    if (0 > bind(fd_, (struct sockaddr*)&addr, sizeof(addr)))
+    if (0 > bind(_fd, (struct sockaddr*)&addr, sizeof(addr)))
     {
         THROW_SYSCALL_EXCEPTION(NULL, errno, "bind");
     }
@@ -96,7 +96,7 @@ int CSocket::s_bind(char* ip, int port) throw (CSysCallException)
 
 int CSocket::s_listen() throw (CSysCallException)
 {
-    if (0 != listen(fd_, MAX_CONN))
+    if (0 != listen(_fd, MAX_CONN))
     {
         THROW_SYSCALL_EXCEPTION(NULL, errno, "listen");
     }
@@ -109,7 +109,7 @@ int CSocket::s_accept(int* fd, struct sockaddr_in* addr) throw (CSysCallExceptio
     int newfd = -1;
     int size = sizeof(struct sockaddr_in);
 
-    newfd = accept(fd_, (struct sockaddr*)addr, (socklen_t*)&size);
+    newfd = accept(_fd, (struct sockaddr*)addr, (socklen_t*)&size);
     if (0 > newfd)
     {
         THROW_SYSCALL_EXCEPTION(NULL, errno, "accept");
@@ -129,7 +129,7 @@ int CSocket::s_connect(char* ip, int port) throw (CSysCallException)
     addr.sin_port = htons(port);
 
     // CSocket连接
-    if (0 != connect(fd_, (struct sockaddr*)&addr, sizeof(addr)))
+    if (0 != connect(_fd, (struct sockaddr*)&addr, sizeof(addr)))
     {
         THROW_SYSCALL_EXCEPTION(NULL, errno, "connect");
     }

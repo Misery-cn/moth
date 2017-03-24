@@ -6,9 +6,9 @@
 
 CCond::CCond() throw (CSysCallException)
 {
-    pthread_condattr_init(&attr_);
+    pthread_condattr_init(&_attr);
 	
-	int r = pthread_cond_init(&cond_, &attr_);
+	int r = pthread_cond_init(&_cond, &_attr);
     if (0 != r)
     {
 		THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_cond_init");
@@ -17,13 +17,13 @@ CCond::CCond() throw (CSysCallException)
 
 CCond::~CCond() throw ()
 {
-	pthread_condattr_destroy(&attr_);
-	pthread_cond_destroy(&cond_);
+	pthread_condattr_destroy(&_attr);
+	pthread_cond_destroy(&_cond);
 }
 
 void CCond::wait(CMutex& lock) throw (CSysCallException)
 {
-	int r = pthread_cond_wait(&cond_, &lock.mutex_);
+	int r = pthread_cond_wait(&_cond, &lock._mutex);
     if (0 != r)
     {
 		THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_cond_wait");
@@ -36,7 +36,7 @@ bool CCond::timed_wait(CMutex& lock, uint32_t millisecond) throw (CSysCallExcept
 
 	if (0 == millisecond)
 	{
-		r = pthread_cond_wait(&cond_, &lock.mutex_);
+		r = pthread_cond_wait(&_cond, &lock._mutex);
 	}
 	else
 	{
@@ -71,7 +71,7 @@ bool CCond::timed_wait(CMutex& lock, uint32_t millisecond) throw (CSysCallExcept
             ts.tv_nsec %= 1000000000L;
         }
 
-		r = pthread_cond_timedwait(&cond_, &lock.mutex_, &ts);
+		r = pthread_cond_timedwait(&_cond, &lock._mutex, &ts);
 	}
 
     if (0 == r)
@@ -89,7 +89,7 @@ bool CCond::timed_wait(CMutex& lock, uint32_t millisecond) throw (CSysCallExcept
 
 void CCond::signal() throw (CSysCallException)
 {
-	int r = pthread_cond_signal(&cond_);
+	int r = pthread_cond_signal(&_cond);
     if (0 != r)
 	{
 		THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_cond_signal");
@@ -98,7 +98,7 @@ void CCond::signal() throw (CSysCallException)
 
 void CCond::broadcast() throw (CSysCallException)
 {
-	int r = pthread_cond_broadcast(&cond_);
+	int r = pthread_cond_broadcast(&_cond);
     if (0 != r)
 	{
 		THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_cond_broadcast");

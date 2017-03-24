@@ -15,12 +15,12 @@ public:
 	friend std::ostream& operator<<(std::ostream& oss, const CConfLine& line);
 	
 public:
-	// é…ç½®é¡¹
-	std::string key_;
-	// é…ç½®é¡¹çš„å€¼
-	std::string val_;
-	// èŠ‚ç‚¹å
-	std::string section_;
+	// ÅäÖÃÏîÃû
+	std::string _key;
+	// ÅäÖÃÏîµÄÖµ
+	std::string _val;
+
+	std::string _section;
 };
 
 
@@ -29,7 +29,7 @@ class CConfSection
 public:
 	typedef std::set<CConfLine>::const_iterator const_line_iter_t;
 
-	std::set<CConfLine> lines_;
+	std::set<CConfLine> _lines;
 };
 
 class CConfFile
@@ -41,31 +41,27 @@ public:
 	CConfFile();
 	~CConfFile();
 	
-	// æ¸…ç©º
 	void clear();
-	// è§£ææ–‡ä»¶
+
 	int parse_file(const std::string& filename);
-	// è¯»å–é…ç½®é¡¹
+
 	int read(const std::string& section, const std::string& key, std::string& val) const;
 	
 	const_section_iter_t sections_begin();
 	const_section_iter_t sections_end();
 	
-	// å»é™¤ç©ºå­—ç¬¦
 	static void trim_whitespace(std::string& str, bool strip_internal);
 
-	// æ ¼å¼åŒ–é…ç½®é¡¹å
 	static std::string normalize_key_name(const std::string& key);
 	
 public:
 	friend std::ostream& operator<<(std::ostream& oss, const CConfFile& cf);
 
 private:
-	// åŠ è½½é…ç½®æ–‡ä»¶
 	void load_from_buffer(const char* buf, size_t sz);
-	
-	// è§£æä¸€è¡Œ
+
+	// ½âÎöÒ»ĞĞÅäÖÃÎÄ¼ş
 	static CConfLine* process_line(int line_no, const char* line);
 
-	std::map<std::string, CConfSection> sections_;
+	std::map<std::string, CConfSection> _sections;
 };
