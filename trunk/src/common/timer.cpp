@@ -1,12 +1,12 @@
 #include "timer.h"
 
-typedef std::multimap<int64_t, callback> scheduled_map_t;
-typedef std::map<callback, scheduled_map_t::iterator> event_lookup_map_t;
+typedef std::multimap<utime_t, Callback*> scheduled_map_t;
+typedef std::map<Callback*, scheduled_map_t::iterator> event_lookup_map_t;
 
-class CTimerThread : public CThread
+class TimerThread : public Thread
 {
 public:
-	CTimerThread(CTimer* t) : timer(t)
+	TimerThread(Timer* t) : timer(t)
 	{
 	}
 	
@@ -17,17 +17,17 @@ public:
 	}
 	
 private:
-	CTimer* timer;
+	Timer* timer;
 };
 
-void CTimer::init()
+void Timer::init()
 {
 	_stopping = false;
-	_thread = new CTimerThread(this);
+	_thread = new TimerThread(this);
 	_thread->start();
 }
 
-void CTimer::shutdown()
+void Timer::shutdown()
 {
 	if (_thread)
 	{
@@ -43,14 +43,14 @@ void CTimer::shutdown()
 	}
 }
 
-void CTimer::timer_thread()
+void Timer::timer_thread()
 {
 	_lock.lock();
 
 	while (!_stopping)
 	{
-		int64_t now = CTimeUtils::get_current_microseconds();
-		// 
+		utime_t now = clock_now();
+
 		while (!_schedule.empty())
 		{
 			scheduled_map_t::iterator p = _schedule.begin();
@@ -60,19 +60,21 @@ void CTimer::timer_thread()
 				break;
 			}
 
-			callback cb = p->second;
+			Callback* cb = p->second;
 			_events.erase(cb);
 			_schedule.erase(p);
 			
 			// 执行回调函数
-			(*cb)();
+			cb->complete(0);
 		}
 
+		// 停止
 		if (_stopping)
 		{
 			break;
 		}
 
+		// 挂起
 		if (_schedule.empty())
 		{
 			_cond.wait(_lock);
@@ -86,14 +88,14 @@ void CTimer::timer_thread()
 	_lock.unlock();
 }
 
-void CTimer::add_event_after(int64_t seconds, callback cb)
+void Timer::add_event_after(int64_t seconds, Callback* cb)
 {
-	int64_t when = CTimeUtils::get_current_microseconds();
+	utime_t when = clock_now();
 	when += seconds;
 	add_event_at(when, cb);
 }
 
-void CTimer::add_event_at(int64_t when, callback cb)
+void Timer::add_event_at(utime_t when, Callback* cb)
 {
 	scheduled_map_t::value_type s_val(when, cb);
 	scheduled_map_t::iterator i = _schedule.insert(s_val);
@@ -107,9 +109,9 @@ void CTimer::add_event_at(int64_t when, callback cb)
 	}
 }
 
-bool CTimer::cancel_event(callback cb)
+bool Timer::cancel_event(Callback* cb)
 {
-	std::map<callback, std::multimap<int64_t, callback>::iterator>::iterator p = _events.find(cb);
+	std::map<Callback*, std::multimap<utime_t, Callback*>::iterator>::iterator p = _events.find(cb);
 	if (p == _events.end())
 	{
 		return false;
@@ -123,11 +125,11 @@ bool CTimer::cancel_event(callback cb)
 	return true;
 }
 
-void CTimer::cancel_all_events()
+void Timer::cancel_all_events()
 {
 	while (!_events.empty())
 	{
-		std::map<callback, std::multimap<int64_t, callback>::iterator>::iterator p = _events.begin();
+		std::map<Callback*, std::multimap<utime_t, Callback*>::iterator>::iterator p = _events.begin();
 		// delete p->first;
 		_schedule.erase(p->second);
 		_events.erase(p);

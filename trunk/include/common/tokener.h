@@ -10,7 +10,7 @@
 
 // UTILS_NS_BEGIN
 
-class CTokener
+class Tokener
 {
 public:
 	// 以指定的字符串作为分隔符，将整个字符中各Token解析到一个容器中

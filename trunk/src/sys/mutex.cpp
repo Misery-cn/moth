@@ -2,15 +2,15 @@
 
 // SYS_NS_BEGIN
 
-CMutex::CMutex(bool recursive) throw (CSysCallException)
+Mutex::Mutex(bool recursive) throw (SysCallException)
 {
 	int r = 0;
 	// ´´½¨µÝ¹éËø
     if (recursive)
     {    
-		#if defined(__linux) && !defined(__USE_UNIX98)
+	#if defined(__linux) && !defined(__USE_UNIX98)
         _attr = PTHREAD_MUTEX_RECURSIVE_NP;
-		#else
+	#else
         r = pthread_mutexattr_init(&_attr);
 		if (0 != r)
 		{
@@ -23,7 +23,7 @@ CMutex::CMutex(bool recursive) throw (CSysCallException)
 			THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_mutexattr_settype");
             pthread_mutexattr_destroy(&_attr);
         }
-		#endif    
+	#endif    
         r = pthread_mutex_init(&_mutex, &_attr);
     }
     else 
@@ -39,17 +39,17 @@ CMutex::CMutex(bool recursive) throw (CSysCallException)
     }
 }
 
-CMutex::~CMutex() throw ()
+Mutex::~Mutex() throw ()
 {
-	#if defined(__linux) && !defined(__USE_UNIX98)
+#if defined(__linux) && !defined(__USE_UNIX98)
 	//
-	#else
+#else
     pthread_mutexattr_destroy(&_attr);
-	#endif
+#endif
     pthread_mutex_destroy(&_mutex);
 }
 
-void CMutex::lock() throw (CSysCallException)
+void Mutex::lock() throw (SysCallException)
 {
 	int r = pthread_mutex_lock(&_mutex);
     if (0 != r)
@@ -59,7 +59,7 @@ void CMutex::lock() throw (CSysCallException)
 	}
 }
 
-void CMutex::unlock() throw (CSysCallException)
+void Mutex::unlock() throw (SysCallException)
 {
 	int r = pthread_mutex_unlock(&_mutex);
     if (0 != r)
@@ -69,7 +69,7 @@ void CMutex::unlock() throw (CSysCallException)
 	}
 }
 
-bool CMutex::try_lock() throw (CSysCallException)
+bool Mutex::try_lock() throw (SysCallException)
 {
 	int r = pthread_mutex_trylock(&_mutex);
 
@@ -87,7 +87,7 @@ bool CMutex::try_lock() throw (CSysCallException)
 	THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_mutex_trylock");
 }
 
-bool CMutex::timed_lock(uint32_t millisecond) throw (CSysCallException)
+bool Mutex::timed_lock(uint32_t millisecond) throw (SysCallException)
 {
 	int r;
 

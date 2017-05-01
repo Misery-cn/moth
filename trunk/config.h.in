@@ -1,2 +1,25 @@
 #cmakedefine HAVE_STDINT_H
 #cmakedefine HAVE_UIO_H
+#cmakedefine HAVE_INTTYPES_H
+#cmakedefine HAVE_LINUX_TYPES_H
+#cmakedefine HAVE_SYS_TYPES_H
+#cmakedefine HAVE_GLIB
+
+#cmakedefine HAVE_PWRITEV
+#cmakedefine HAVE_SPLICE
+
+#cmakedefine HAVE_GOOD_YASM_ELF64
+#cmakedefine HAVE_ARMV8_CRC
+#cmakedefine HAVE_ARM
+
+/* linux/types/h */
+#cmakedefine HAVE___U8	1
+#cmakedefine HAVE___S8	1
+#cmakedefine HAVE___U16	1
+#cmakedefine HAVE___S16	1
+#cmakedefine HAVE___U32	1
+#cmakedefine HAVE___S32	1
+#cmakedefine HAVE___U64	1
+#cmakedefine HAVE___S64	1
+
+#cmakedefine HAVE_SETPIPE_SZ

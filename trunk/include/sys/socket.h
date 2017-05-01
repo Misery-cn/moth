@@ -17,11 +17,11 @@
 
 // SYS_NS_BEGIN
 
-class CSocket
+class Socket
 {
 public:
-    CSocket();
-    virtual ~CSocket();
+    Socket();
+    virtual ~Socket();
 	
 	enum SOCKET_STATE
 	{
@@ -30,23 +30,23 @@ public:
 	};
 
     // 创建套接字
-    int s_open() throw (CSysCallException);
+    int s_open() throw (SysCallException);
     // 关闭套接字
-    int s_close() throw (CSysCallException);
+    int s_close() throw (SysCallException);
 	// 关闭调用open返回的套接字
-	int s_close(size_t fd) throw (CSysCallException);
+	int s_close(size_t fd) throw (SysCallException);
     // 监听端口,MaxConn为同时处理的最大连接数
-    int s_listen() throw (CSysCallException);
+    int s_listen() throw (SysCallException);
     // 绑定端口
-    int s_bind(IN char* ip, IN int port) throw (CSysCallException);
+    int s_bind(IN char* ip, IN int port) throw (SysCallException);
     // 请求建立连接
-    int s_connect(IN char* ip, IN int port) throw (CSysCallException);
+    int s_connect(IN char* ip, IN int port) throw (SysCallException);
     // 接收连接
-    int s_accept(OUT int* fd, OUT struct sockaddr_in* addr) throw (CSysCallException);
+    int s_accept(OUT int* fd, OUT struct sockaddr_in* addr) throw (SysCallException);
     // 读取数据
-    int s_read(IN int fd, OUT char* buff, OUT int len) throw (CSysCallException);
+    int s_read(IN int fd, OUT char* buff, OUT int len) throw (SysCallException);
     // 写入数据
-    int s_write(IN int fd, IN char* buff) throw (CSysCallException);
+    int s_write(IN int fd, IN char* buff) throw (SysCallException);
 	
 	inline size_t getfd() {return _fd;}
 private:

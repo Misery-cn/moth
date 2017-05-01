@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string>
 #include <vector>
-#include "define.h"
+#include "int_types.h"
 #include "exception.h"
 
 // 新创建文件的默认权限
@@ -23,14 +23,14 @@
 
 // UTILS_NS_BEGIN
 
-class CDirUtils
+class DirUtils
 {
 public:
-    static void list(const std::string& dirpath, std::vector<std::string>* subdir_names, std::vector<std::string>* file_names, std::vector<std::string>* link_names = NULL) throw (CSysCallException);
+    static void list(const std::string& dirpath, std::vector<std::string>* subdir_names, std::vector<std::string>* file_names, std::vector<std::string>* link_names = NULL) throw (SysCallException);
 
-    static void remove(const std::string& dirpath) throw (CSysCallException);
+    static void remove(const std::string& dirpath) throw (SysCallException);
 
-    static bool exist(const std::string& dirpath) throw (CSysCallException);
+    static bool exist(const std::string& dirpath) throw (SysCallException);
 
     static void create_directory(const char* dirpath, mode_t permissions = DIRECTORY_DEFAULT_PERM);
 

@@ -1,4 +1,21 @@
 include(CheckIncludeFiles)
 CHECK_INCLUDE_FILES(stdint.h HAVE_STDINT_H)
 CHECK_INCLUDE_FILES(sys/uio.h HAVE_UIO_H)
-CONFIGURE_FILE(config.h.in include/common/config.h)
+CHECK_INCLUDE_FILES(inttypes.h HAVE_INTTYPES_H)
+CHECK_INCLUDE_FILES(linux/types.h HAVE_LINUX_TYPES_H)
+CHECK_INCLUDE_FILES(sys/types.h HAVE_SYS_TYPES_H)
+CHECK_INCLUDE_FILES(glib.h HAVE_GLIB)
+
+#CHECK_LIBRARY_EXISTS
+include(CheckSymbolExists)
+CHECK_SYMBOL_EXISTS(F_SETPIPE_SZ "linux/fcntl.h" HAVE_SETPIPE_SZ)
+CHECK_SYMBOL_EXISTS(__u8 "sys/types.h;linux/types.h" HAVE___U8)
+CHECK_SYMBOL_EXISTS(__u8 "sys/types.h;linux/types.h" HAVE___U8)
+
+include(CheckIncludeFileCXX)
+include(CheckFunctionExists)
+CHECK_FUNCTION_EXISTS(pwritev HAVE_PWRITEV)
+CHECK_FUNCTION_EXISTS(splice HAVE_SPLICE)
+
+
+#CONFIGURE_FILE(config.h.in include/common/config.h)

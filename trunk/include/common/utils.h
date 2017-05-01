@@ -12,30 +12,31 @@
 #include "const.h"
 #include "exception.h"
 #include "error.h"
+#include "define.h"
 
 // UTILS_NS_BEGIN
 
 
 template<typename T>
-class CPointGuard
+class PointGuard
 {
 public:
-    CPointGuard(T* p, bool is_arrary = false);
-    virtual ~CPointGuard();
+    PointGuard(T* p, bool is_arrary = false);
+    virtual ~PointGuard();
 private:
     T* _point;
 	bool _is_arrary;
 };
 
 template<typename T>
-CPointGuard<T>::CPointGuard(T * p, bool is_arrary)
+PointGuard<T>::PointGuard(T * p, bool is_arrary)
 {
 	_point = p;
 	_is_arrary = is_arrary;
 }
 
 template<typename T>
-CPointGuard<T>::~CPointGuard()
+PointGuard<T>::~PointGuard()
 {
 	if (!_is_arrary)
 	{
@@ -176,56 +177,61 @@ private:
 
 
 template <typename DataType>
-class CArrayList
+class ArrayList
 {       
 public:
-    CArrayList(uint32_t list_max) : _head(0), _tail(0), _list_size(0)
+    ArrayList(uint32_t size) : _head(0), _tail(0), _list_size(0)
     {
-        _list_max = list_max;
-        if (0 == _list_max)
+        _max_size = size;
+		
+        if (0 == _max_size)
         {
             _items = NULL;
         }
         else
         {
-            _items = new DataType[_list_max];        
-            memset(_items, 0, _list_max);
+            _items = new DataType[_max_size];        
+            // memset(_items, 0, _max_size);
         }
     }
 
-    ~CArrayList()
+    ~ArrayList()
     {
-        delete []_items;
+        DELETE_ARRAY(_items)
     }
 
 	
-    bool is_full() const 
+    bool is_full() const
     {
-        return (_list_max == _list_size);
+        return (_max_size == _list_size);
     }
     
-    bool is_empty() const 
+    bool is_empty() const
     {
         return (0 == _list_size);
     }
 
-    DataType front() const 
+    DataType front() const
     {
         return _items[_head];
     }
-    
-    DataType pop_front() 
+
+	// 对列表中弹出一个元素
+    DataType pop_front()
     {
         DataType item = _items[_head];
-        _head = (_head + 1) % _list_max;
+		// 头指针向后移,确保不越界
+        _head = (_head + 1) % _max_size;
+		// 当前列表大小减一
         --_list_size;
         return item;
     }
 
-    void push_back(DataType item) 
+    void push_back(DataType item)
     {
         _items[_tail] = item;
-        _tail = (_tail + 1) % _list_max; 
+		// 确保不越界
+        _tail = (_tail + 1) % _max_size;
         ++_list_size;
     }
 
@@ -234,31 +240,35 @@ public:
         return _list_size;
     }
 
-	DataType& operator[](uint32_t pos)
+	DataType& operator[](uint32_t index)
 	{
-		if (_list_size < pos)
+		if (_list_size < index)
 		{
 			return _items[_list_size];
 		}
 
-		return _items[pos];
+		return _items[index];
 	}
     
     uint32_t capacity() const
     {
-        return _list_max;
+        return _max_size;
     }
 
 private:
+	// 列表头指针
 	volatile uint32_t _head;
+	// 列表尾指针
     volatile uint32_t _tail;
+	// 列表当前大小
     volatile uint32_t _list_size;
-    uint32_t _list_max;
+	// 列表总大小
+    uint32_t _max_size;
     DataType* _items;
 };
 
 
-class CUtils
+class Utils
 {
 public:
 	// 毫秒级sleep函数
@@ -378,7 +388,7 @@ public:
         while (!vec.empty())
         {
             typename std::vector<T>::size_type max_size = vec.size();
-            typename std::vector<T>::size_type random_number = CUtils::get_random_number(j, max_size);
+            typename std::vector<T>::size_type random_number = Utils::get_random_number(j, max_size);
 
             typename std::vector<T>::iterator iter = vec.begin() + random_number;
             tmp.push_back(*iter);

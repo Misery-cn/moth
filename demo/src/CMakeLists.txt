@@ -6,10 +6,9 @@ include_directories(../../trunk/include/sys)
 include_directories(../../trunk/include/common)
 include_directories(../../trunk/include/exception)
 include_directories(../../trunk/include/log)
-include_directories(../../trunk/include/message)
+include_directories(../../trunk/include/net)
 
 SET(SRC_LIST moth.cpp
-    ../../trunk/tools/ftp_client/ftp.cpp
     ../../trunk/src/sys/socket.cpp
     ../../trunk/src/sys/thread.cpp
     ../../trunk/src/sys/thread_pool.cpp
@@ -23,12 +22,11 @@ SET(SRC_LIST moth.cpp
     ../../trunk/src/common/dir_utils.cpp
     ../../trunk/src/common/file_utils.cpp
     ../../trunk/src/log/logger.cpp
-    ../../trunk/src/log/log.cpp
     ../../trunk/src/log/log_appender.cpp
-    ../../trunk/src/message/messenger.cpp
-    ../../trunk/src/message/message.cpp
-    ../../trunk/src/message/dispatcher.cpp
-    ../../trunk/src/message/connection.cpp
+    ../../trunk/src/net/messenger.cpp
+    ../../trunk/src/net/message.cpp
+    ../../trunk/src/net/dispatcher.cpp
+    ../../trunk/src/net/connection.cpp
 )
 
 ADD_EXECUTABLE(moth ${SRC_LIST})

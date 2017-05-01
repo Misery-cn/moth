@@ -6,8 +6,8 @@
 
 // UTILS_NS_BEGIN
 
-void CDirUtils::list(const std::string& dirpath, std::vector<std::string>* subdir_names, 
-						std::vector<std::string>* file_names, std::vector<std::string>* link_names) throw (CSysCallException)
+void DirUtils::list(const std::string& dirpath, std::vector<std::string>* subdir_names, 
+						std::vector<std::string>* file_names, std::vector<std::string>* link_names) throw (SysCallException)
 {
     DIR* dir = opendir(dirpath.c_str());
     if (NULL == dir)
@@ -70,7 +70,7 @@ void CDirUtils::list(const std::string& dirpath, std::vector<std::string>* subdi
     closedir(dir);
 }
 
-void CDirUtils::remove(const std::string& dirpath) throw (CSysCallException)
+void DirUtils::remove(const std::string& dirpath) throw (SysCallException)
 {
     if (-1 == rmdir(dirpath.c_str()))
     {
@@ -78,7 +78,7 @@ void CDirUtils::remove(const std::string& dirpath) throw (CSysCallException)
     }
 }
 
-bool CDirUtils::exist(const std::string& dirpath) throw (CSysCallException)
+bool DirUtils::exist(const std::string& dirpath) throw (SysCallException)
 {
     struct stat buf;
 
@@ -101,7 +101,7 @@ bool CDirUtils::exist(const std::string& dirpath) throw (CSysCallException)
     return S_ISDIR(buf.st_mode);
 }
 
-void CDirUtils::create_directory(const char* dirpath, mode_t permissions)
+void DirUtils::create_directory(const char* dirpath, mode_t permissions)
 {
     if (-1 == mkdir(dirpath, permissions))
     {
@@ -112,7 +112,7 @@ void CDirUtils::create_directory(const char* dirpath, mode_t permissions)
     }
 }
 
-void CDirUtils::create_directory_recursive(const char* dirpath, mode_t permissions)
+void DirUtils::create_directory_recursive(const char* dirpath, mode_t permissions)
 {
     char* slash;
     char* pathname = strdupa(dirpath); // _GNU_SOURCE
@@ -159,9 +159,9 @@ void CDirUtils::create_directory_recursive(const char* dirpath, mode_t permissio
     }
 }
 
-void CDirUtils::create_directory_byfilepath(const char* filepath, mode_t permissions)
+void DirUtils::create_directory_byfilepath(const char* filepath, mode_t permissions)
 {
-    std::string dirpath = CStringUtils::extract_dirpath(filepath);
+    std::string dirpath = StringUtils::extract_dirpath(filepath);
     create_directory_recursive(dirpath.c_str(),  permissions);
 }
 

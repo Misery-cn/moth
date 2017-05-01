@@ -6,44 +6,44 @@
 
 
 template <typename T>
-class CSingleton
+class Singleton
 {
 public:
         static T& instance();
         virtual void update() {};
 
 protected:
-		CSingleton();
+		Singleton();
 
 private:
 	
-	CSingleton(const CSingleton&);
-	CSingleton& operator=(const CSingleton&);
+	Singleton(const Singleton&);
+	Singleton& operator=(const Singleton&);
 
 	static void destroy_singleton();
 
 private:
-	static CMutex _lock;
+	static Mutex _lock;
 	static T *_instance;
 	static bool _destroyed;
 };
 
 
 template<typename T>
-CMutex CSingleton<T>::_lock;
+Mutex Singleton<T>::_lock;
 
 template<typename T>
-T* CSingleton<T>::_instance = NULL;
+T* Singleton<T>::_instance = NULL;
 
 template<typename T>
-bool CSingleton<T>::_destroyed = false;
+bool Singleton<T>::_destroyed = false;
 
 template<typename T>
-T& CSingleton<T>::instance()
+T& Singleton<T>::instance()
 {
     if (!_instance)
     {
-        CMutexGuard guard(_lock);
+        MutexGuard guard(_lock);
 
         if (!_instance)
         {
@@ -56,7 +56,7 @@ T& CSingleton<T>::instance()
 }
 
 template<typename T>
-void CSingleton<T>::destroy_singleton()
+void Singleton<T>::destroy_singleton()
 {
     if (NULL != _instance)
     {

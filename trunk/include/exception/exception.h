@@ -6,23 +6,22 @@
 #include <string.h>
 #include <sstream>
 #include <errno.h>
-#include "define.h"
 #include "const.h"
 
 #define THROW_EXCEPTION(errmsg, errcode) \
-	throw CException(errmsg, errcode, __FILE__, __LINE__)
+	throw Exception(errmsg, errcode, __FILE__, __LINE__)
 
 #define THROW_SYSCALL_EXCEPTION(errmsg, errcode, syscall) \
-    throw CSysCallException(errmsg, errcode, __FILE__, __LINE__, syscall)
+    throw SysCallException(errmsg, errcode, __FILE__, __LINE__, syscall)
 
 // SYS_NS_BEGIN
 
 // 所有异常继承该类
-class CException : public std::exception
+class Exception : public std::exception
 {
 public:
-	CException(const char* errmsg, int errcode, const char* filename, int linenum) throw ();
-	virtual ~CException() throw ();
+	Exception(const char* errmsg, int errcode, const char* filename, int linenum) throw ();
+	virtual ~Exception() throw ();
 
 	// 重写
 	virtual const char* what() const throw ();
@@ -51,11 +50,11 @@ protected:
 
 
 // 系统调用异常
-class CSysCallException : public CException
+class SysCallException : public Exception
 {
 public:
-	CSysCallException(const char* errmsg, int errcode, const char* filename, int linenum, const char* syscall) throw ();
-	virtual ~CSysCallException() throw ();
+	SysCallException(const char* errmsg, int errcode, const char* filename, int linenum, const char* syscall) throw ();
+	virtual ~SysCallException() throw ();
 	
 	virtual std::string to_string() const throw ();
 	

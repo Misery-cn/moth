@@ -5,32 +5,31 @@
 #include <sys/time.h>
 #include <errno.h>
 #include "exception.h"
-#include "define.h"
 
 // SYS_NS_BEGIN
 
-class CMutex
+class Mutex
 {
-	friend class CCond;
+	friend class Cond;
 public:
 	// 默认构造一个递归互斥锁
-	CMutex(bool recursive = true) throw (CSysCallException);
-	virtual ~CMutex() throw ();
+	Mutex(bool recursive = true) throw (SysCallException);
+	virtual ~Mutex() throw ();
 	
 	// 加锁
-	void lock() throw (CSysCallException);
+	void lock() throw (SysCallException);
 	// 解锁
-	void unlock() throw (CSysCallException);
+	void unlock() throw (SysCallException);
 	// 尝试加锁,加锁成功返回true,否则false
-	bool try_lock() throw (CSysCallException);
+	bool try_lock() throw (SysCallException);
 	// 如果在指定的毫秒时间内加锁成功则返回true,否则返回false
-	bool timed_lock(uint32_t millisecond) throw (CSysCallException);
+	bool timed_lock(uint32_t millisecond) throw (SysCallException);
 
 public:
 	class Locker 
 	{
 	public:
-		explicit Locker(CMutex& m) : _mutex(m)
+		explicit Locker(Mutex& m) : _mutex(m)
 		{
 			_mutex.lock();
 		}
@@ -40,7 +39,7 @@ public:
 			_mutex.unlock();
 		}
 	private:
-		CMutex& _mutex;
+		Mutex& _mutex;
 	};
 	
 private:
@@ -48,19 +47,19 @@ private:
 	pthread_mutex_t _mutex;
 };
 
-class CMutexGuard
+class MutexGuard
 {
 public:
-	CMutexGuard(CMutex& lock) : _lock(lock)
+	MutexGuard(Mutex& lock) : _lock(lock)
 	{
 		lock.lock();
 	}
-	virtual ~CMutexGuard()
+	virtual ~MutexGuard()
 	{
 		_lock.unlock();
 	}
 private:
-	CMutex& _lock;
+	Mutex& _lock;
 };
 
 // SYS_NS_END

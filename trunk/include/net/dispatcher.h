@@ -3,11 +3,11 @@
 
 #include "connection.h"
 
-class CDispatcher
+class Dispatcher
 {
 public:
-	CDispatcher();
-	virtual ~CDispatcher();
+	Dispatcher();
+	virtual ~Dispatcher();
 
 	virtual bool ms_dispatch(Message* msg) = 0;
 

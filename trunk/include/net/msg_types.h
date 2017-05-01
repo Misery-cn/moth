@@ -1,7 +1,7 @@
 #ifndef _MSG_TYPES_H_
 #define _MSG_TYPES_H_
 
-#include "define.h"
+#include "int_types.h"
 #include "socket.h"
 
 // 通信实体名

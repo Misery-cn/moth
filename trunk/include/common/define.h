@@ -4,36 +4,6 @@
 #include <stdarg.h>
 #include "config.h"
 
-#if defined(HAVE_STDINT_H)
-#include <stdint.h>
-#else
-typedef signed char		int8_t;
-typedef short int		int16_t;
-typedef int			int32_t;
-#if __WORDSIZE == 64
-typedef long int		int64_t;
-#else
-__extension__
-typedef long long int		int64_t;
-#endif
-
-/* Unsigned.  */
-typedef unsigned char		uint8_t;
-typedef unsigned short int	uint16_t;
-#ifndef __uint32_t_defined
-typedef unsigned int		uint32_t;
-#define __uint32_t_defined
-#endif
-#if __WORDSIZE == 64
-typedef unsigned long int	uint64_t;
-#else
-__extension__
-typedef unsigned long long int	uint64_t;
-#endif
-// #define INT64_MAX  9223372036854775807
-#endif /* HAVE_STDINT */
-
-
 #define IN
 #define OUT
 
@@ -52,7 +22,7 @@ typedef unsigned long long int	uint64_t;
 			delete p; \
 			p = NULL; \
 		} \
-	} while(0)
+	} while(0);
 
 /*static inline void 
 DELETE_P(void* p)
@@ -64,8 +34,17 @@ DELETE_P(void* p)
 	}
 }*/
 
+#define DELETE_ARRAY(array) \
+	do { \
+		if (array) \
+		{ \
+			delete[] array; \
+			array = NULL; \
+		} \
+	} while(0);
 
-// list_entry
+
+
 // 计算成员在结构体中的偏移量
 #ifndef offsetof
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
@@ -75,6 +54,24 @@ DELETE_P(void* p)
 #define get_struct_head_address(struct_type, member_name, member_address) \
                 ((struct_type *)((char *)(member_address) - offsetof(struct_type, member_name)))
 
+
+#ifndef TEMP_FAILURE_RETRY
+#define TEMP_FAILURE_RETRY(expression) ({     \
+	__typeof(expression) __result;              \
+	do {                                        \
+		__result = (expression);                  \
+	} while (__result == -1 && errno == EINTR); \
+	__result; })
+#endif
+
+
+#ifdef __cplusplus
+# define VOID_TEMP_FAILURE_RETRY(expression) \
+   static_cast<void>(TEMP_FAILURE_RETRY(expression))
+#else
+# define VOID_TEMP_FAILURE_RETRY(expression) \
+   do { (void)TEMP_FAILURE_RETRY(expression); } while (0)
+#endif
 
 
 // 文件全名最大字节数

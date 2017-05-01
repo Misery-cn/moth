@@ -21,33 +21,33 @@ const char* get_log_level_name(log_level_t log_level)
 }
 
 
-CLogEvent::CLogEvent()
+LogEvent::LogEvent()
 {
 	memset(_content, 0, LOG_LINE_SIZE);
 }
 
-CLogEvent::~CLogEvent()
+LogEvent::~LogEvent()
 {
 	// TODO
 }
 
-CRunLogEvent::CRunLogEvent(log_level_t level)
+RunLogEvent::RunLogEvent(log_level_t level)
 {
 	// TODO
 	_level = level;
 }
 
-CRunLogEvent::~CRunLogEvent()
+RunLogEvent::~RunLogEvent()
 {
 	// TODO
 }
 
-std::string CRunLogEvent::format()
+std::string RunLogEvent::format()
 {
 	std::ostringstream message;
 
 	message << "[" << get_formatted_current_datetime() << "]";
-	message << "[" << CThread::get_current_thread_id() << "]";
+	message << "[" << Thread::get_current_thread_id() << "]";
 	message << "[" << get_log_level_name(_level) << "]:";
 	message << _content;
 	if('\n' != _content[strlen(_content) - 1])
@@ -58,17 +58,17 @@ std::string CRunLogEvent::format()
 	return message.str();
 }
 
-CAppender::CAppender()
+Appender::Appender()
 {
 	// TODO
 }
 
-CAppender::~CAppender()
+Appender::~Appender()
 {
 	// TODO
 }
 
-CFileAppender::CFileAppender(const char* filename)
+FileAppender::FileAppender(const char* filename)
 {
 	_log_fd = -1;
 	_log_file_seq = 0;
@@ -81,7 +81,7 @@ CFileAppender::CFileAppender(const char* filename)
 	init();
 }
 
-CFileAppender::~CFileAppender()
+FileAppender::~FileAppender()
 {
 	// TODO
 	if (_log_fd)
@@ -91,10 +91,10 @@ CFileAppender::~CFileAppender()
 	}
 }
 
-void CFileAppender::init()
+void FileAppender::init()
 {
 	// 获取进程执行路径
-	std::string work_path = CUtils::get_program_path();
+	std::string work_path = Utils::get_program_path();
 	
 	int pos = work_path.rfind('/');
 	if (0 < pos)
@@ -105,9 +105,9 @@ void CFileAppender::init()
 	snprintf(_log_path, PATH_MAX, "%s/log/", work_path.c_str());
 
 	// 日志路径不存在则创建
-	if (!CDirUtils::exist(_log_path))
+	if (!DirUtils::exist(_log_path))
 	{
-		CDirUtils::create_directory(_log_path);
+		DirUtils::create_directory(_log_path);
 	}
 
 	for (int i = 0; i < MAX_LOG_FILE_SEQ; i++)
@@ -115,7 +115,7 @@ void CFileAppender::init()
 		memset(_current_file_name, 0, FILENAME_MAX);
 		snprintf(_current_file_name, FILENAME_MAX, "%s/%s.%d.log", _log_path, _log_file_name, i);
 		// 文件不存在
-		if (!CFileUtils::exist(_current_file_name))
+		if (!FileUtils::exist(_current_file_name))
 		{
 			_log_file_seq = i;
 			break;
@@ -127,7 +127,7 @@ void CFileAppender::init()
 			_log_file_seq = 0;
 			snprintf(_current_file_name, FILENAME_MAX, "%s/%s.%d.log", _log_path, _log_file_name, _log_file_seq);
 			// 删除第一个文件,重新写
-			CFileUtils::remove(_current_file_name);
+			FileUtils::remove(_current_file_name);
 		}
 	}
 
@@ -141,7 +141,7 @@ void CFileAppender::init()
     // current_bytes_ = st.st_size;
 }
 
-void CFileAppender::create_log_file()
+void FileAppender::create_log_file()
 {
 	// 打开文件
 	_log_fd = open(_current_file_name, O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
@@ -153,9 +153,9 @@ void CFileAppender::create_log_file()
 }
 
 
-void CFileAppender::check_log_file()
+void FileAppender::check_log_file()
 {
-	off_t logsize = CFileUtils::get_file_size(_current_file_name);
+	off_t logsize = FileUtils::get_file_size(_current_file_name);
 
 	// 大于日志文件最大值
 	if (MAX_LOG_FILE_SIZE <= logsize)
@@ -171,21 +171,21 @@ void CFileAppender::check_log_file()
 
 		snprintf(_current_file_name, FILENAME_MAX, "%s/%s.%d.log", _log_path, _log_file_name, _log_file_seq);
 		// 如果文件存在,删除并重新打开
-		if (CFileUtils::exist(_current_file_name))
+		if (FileUtils::exist(_current_file_name))
 		{
-			CFileUtils::remove(_current_file_name);
+			FileUtils::remove(_current_file_name);
 		}
 		
 		create_log_file();
 	}
 }
 
-void CFileAppender::do_appender(CLogEvent* event)
+void FileAppender::do_appender(LogEvent* event)
 {
 	// 日志路径不存在则创建
-	if (!CDirUtils::exist(_log_path))
+	if (!DirUtils::exist(_log_path))
 	{
-		CDirUtils::create_directory(_log_path);
+		DirUtils::create_directory(_log_path);
 	}
 
 	check_log_file();

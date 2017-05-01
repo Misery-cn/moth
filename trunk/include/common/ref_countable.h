@@ -7,22 +7,22 @@
 class CRefCountable
 {
 public:
-	CRefCountable() { atomic_set(&_refcount, 0); }
+	CRefCountable() { atomic_set(&_ref, 0); }
 
 	virtual ~CRefCountable() {}
 
 	// 获取当前引用数
-	int get_refcount() const { return atomic_read(&_refcount); }
+	int get_ref() const { return atomic_read(&_ref); }
 
 	// +1
-	void inc_refcount() { atomic_inc(&_refcount); }
+	void inc() { atomic_inc(&_ref); }
 
 	// -1
-	bool dec_refcount()
+	bool dec()
 	{
 		volatile bool deleted = false;
 		// 减一如果等于0返回true
-		if (atomic_dec_and_test(&_refcount))
+		if (atomic_dec_and_test(&_ref))
 		{
 			deleted = true;
 			delete this;
@@ -35,13 +35,13 @@ public:
 	CRefCountable* get()
 	{
 		// +1
-		inc_refcount();
+		inc();
 		
 		return this;
 	}
 	
 private:
-	atomic_t _refcount;
+	atomic_t _ref;
 };
 
 #endif

@@ -2,7 +2,7 @@
 
 // SYS_NS_BEGIN
 
-CRWLock::CRWLock() throw (CSysCallException)
+RWLock::RWLock() throw (SysCallException)
 {
 	pthread_rwlockattr_init(&_attr);
 	
@@ -14,13 +14,13 @@ CRWLock::CRWLock() throw (CSysCallException)
 	}
 }
 
-CRWLock::~CRWLock() throw ()
+RWLock::~RWLock() throw ()
 {
 	pthread_rwlockattr_destroy(&_attr);	
 	pthread_rwlock_destroy(&_rwlock);
 }
 
-void CRWLock::unlock() throw (CSysCallException)
+void RWLock::unlock() throw (SysCallException)
 {
 	int r = pthread_rwlock_unlock(&_rwlock);
 	if (0 != r)
@@ -29,7 +29,7 @@ void CRWLock::unlock() throw (CSysCallException)
 	}
 }
 
-void CRWLock::lock_read() throw (CSysCallException)
+void RWLock::lock_read() throw (SysCallException)
 {
 	int r = pthread_rwlock_rdlock(&_rwlock);
 	if (0 != r)
@@ -38,7 +38,7 @@ void CRWLock::lock_read() throw (CSysCallException)
 	}
 }
 
-void CRWLock::lock_write() throw (CSysCallException)
+void RWLock::lock_write() throw (SysCallException)
 {
 	int r = pthread_rwlock_wrlock(&_rwlock);
 	if (0 != r)
@@ -47,7 +47,7 @@ void CRWLock::lock_write() throw (CSysCallException)
 	}
 }
 
-bool CRWLock::try_lock_read() throw (CSysCallException)
+bool RWLock::try_lock_read() throw (SysCallException)
 {
 	int r = pthread_rwlock_tryrdlock(&_rwlock);
 
@@ -64,7 +64,7 @@ bool CRWLock::try_lock_read() throw (CSysCallException)
 	THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_rwlock_tryrdlock");
 }
 
-bool CRWLock::try_lock_write() throw (CSysCallException)
+bool RWLock::try_lock_write() throw (SysCallException)
 {
 	int r = pthread_rwlock_trywrlock(&_rwlock);
 	
@@ -81,7 +81,7 @@ bool CRWLock::try_lock_write() throw (CSysCallException)
 	THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_rwlock_trywrlock");
 }
 
-bool CRWLock::timed_lock_read(uint32_t millisecond) throw (CSysCallException)
+bool RWLock::timed_lock_read(uint32_t millisecond) throw (SysCallException)
 {
 	int r = 0;
 
@@ -113,7 +113,7 @@ bool CRWLock::timed_lock_read(uint32_t millisecond) throw (CSysCallException)
 	THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_rwlock_timedrdlock");
 }
 
-bool CRWLock::timed_lock_write(uint32_t millisecond) throw (CSysCallException)
+bool RWLock::timed_lock_write(uint32_t millisecond) throw (SysCallException)
 {
 	int r = 0;
 

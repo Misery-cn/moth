@@ -3,7 +3,6 @@
 
 #include <errno.h>
 #include <string.h>
-#include "define.h"
 
 // SYS_NS_BEGIN
 
@@ -34,30 +33,30 @@ private:
 
 namespace Error
 {
-inline int code()
-{
-    return errno;
-}
+	inline int code()
+	{
+	    return errno;
+	}
 
-inline void set(int errcode)
-{
-    errno = errcode;
-}
+	inline void set(int errcode)
+	{
+	    errno = errcode;
+	}
 
-inline std::string to_string()
-{
-    return strerror(errno);
-}
+	inline std::string to_string()
+	{
+	    return strerror(errno);
+	}
 
-inline std::string to_string(int errcode)
-{
-    return strerror(errcode);
-}
+	inline std::string to_string(int errcode)
+	{
+	    return strerror(errcode);
+	}
 
-inline bool is_not(int errcode)
-{
-    return errno != errcode;
-}
+	inline bool is_not(int errcode)
+	{
+	    return errno != errcode;
+	}
 }
 
 // SYS_NS_END

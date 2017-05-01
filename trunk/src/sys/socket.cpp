@@ -3,13 +3,13 @@
 // SYS_NS_BEGIN
 
 
-CSocket::CSocket()
+Socket::Socket()
 {
 	_state = SOCKET_CLOSE;
     _fd = -1;
 }
 
-CSocket::~CSocket()
+Socket::~Socket()
 {
     if (0 < _fd)
     {
@@ -18,7 +18,7 @@ CSocket::~CSocket()
     }
 }
 
-int CSocket::s_open() throw (CSysCallException)
+int Socket::s_open() throw (SysCallException)
 {
     // 创建一个套接字
     _fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -30,7 +30,7 @@ int CSocket::s_open() throw (CSysCallException)
     return 0;
 }
 
-int CSocket::s_close() throw (CSysCallException)
+int Socket::s_close() throw (SysCallException)
 {
     // 关闭连接
     shutdown(_fd, SHUT_RDWR);
@@ -45,7 +45,7 @@ int CSocket::s_close() throw (CSysCallException)
     return 0;
 }
 
-int CSocket::s_close(size_t fd) throw (CSysCallException)
+int Socket::s_close(size_t fd) throw (SysCallException)
 {
     // 关闭连接
     shutdown(fd, SHUT_RDWR);
@@ -60,7 +60,7 @@ int CSocket::s_close(size_t fd) throw (CSysCallException)
     return 0;
 }
 
-int CSocket::s_bind(char* ip, int port) throw (CSysCallException)
+int Socket::s_bind(char* ip, int port) throw (SysCallException)
 {
     int	op = 1;
     struct sockaddr_in addr;
@@ -94,7 +94,7 @@ int CSocket::s_bind(char* ip, int port) throw (CSysCallException)
     return 0;
 }
 
-int CSocket::s_listen() throw (CSysCallException)
+int Socket::s_listen() throw (SysCallException)
 {
     if (0 != listen(_fd, MAX_CONN))
     {
@@ -104,7 +104,7 @@ int CSocket::s_listen() throw (CSysCallException)
     return 0;
 }
 
-int CSocket::s_accept(int* fd, struct sockaddr_in* addr) throw (CSysCallException)
+int Socket::s_accept(int* fd, struct sockaddr_in* addr) throw (SysCallException)
 {
     int newfd = -1;
     int size = sizeof(struct sockaddr_in);
@@ -120,7 +120,7 @@ int CSocket::s_accept(int* fd, struct sockaddr_in* addr) throw (CSysCallExceptio
     return 0;
 }
 
-int CSocket::s_connect(char* ip, int port) throw (CSysCallException)
+int Socket::s_connect(char* ip, int port) throw (SysCallException)
 {
     struct sockaddr_in addr;
 
@@ -137,7 +137,7 @@ int CSocket::s_connect(char* ip, int port) throw (CSysCallException)
     return 0;
 }
 
-int CSocket::s_read(int fd, char* buff, int len) throw (CSysCallException)
+int Socket::s_read(int fd, char* buff, int len) throw (SysCallException)
 {
     /*
 	fd_set readfds;
@@ -198,7 +198,7 @@ int CSocket::s_read(int fd, char* buff, int len) throw (CSysCallException)
 	}
 }
 
-int CSocket::s_write(int fd, char* buff) throw (CSysCallException)
+int Socket::s_write(int fd, char* buff) throw (SysCallException)
 {
 	/*
     fd_set writefds;

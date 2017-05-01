@@ -8,11 +8,11 @@
 
 // 模版实现,由用户特化自己的线程
 template <class ThreadClass>
-class CThreadPool
+class ThreadPool
 {
 public:
     // 构造函数
-    CThreadPool() : _next_thread(0), _thread_count(0), _thread_array(NULL)
+    ThreadPool() : _next_thread(0), _thread_count(0), _thread_array(NULL)
     {
 		
     }

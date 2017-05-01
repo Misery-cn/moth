@@ -17,25 +17,30 @@
 #define INT2PTR(x)	((void *)(x))
 #define PTR2INT(x)	((int)(x))
 #define PTR2UINT(x)	((unsigned int)(x))
-#endif
+#endif // __x86_64__
 
 
 #if __x86_64__
 #define F64	"l"
 #else
 #define F64	"ll"
+#endif // __x86_64__
+
+// #if __GNUC__ < 3
+// #error You need GCC 3.0 or above to compile.
+// #endif // __GNUC__ < 3
+
+#ifndef __GNUC__
+#define	__attribute__(x)
 #endif
 
-#if __GNUC__ < 3
-#error You need GCC 3.0 or above to compile.
-#endif
 
 #undef __attr_cdecl__
 #if __x86_64__
 #define __attr_cdecl__ /* */
 #else
 #define __attr_cdecl__ __attribute__((__cdecl__))
-#endif
+#endif // __x86_64__
 
 #undef __attr_regparm__
 #define __attr_regparm__(x) __attribute__((__regparm__(x)))
@@ -67,13 +72,20 @@
 #define __align__  __attribute__((__aligned__(8)))
 #else
 #define __align__  __attribute__((__aligned__(4)))
-#endif
+#endif // __WORDSIZE==64
 
 #if USE_LINKSCRIPT
 #define __init__ __attribute__((section(".hdata")))
 #else
 #define __init__ /* */
 #endif
+
+#undef __attr_inline__
+#define __attr_inline__ 	__attribute__((always_inline))
+
+#undef __attr_warn_unused_result__
+#define __attr_warn_unused_result__ __attribute__((warn_unused_result))
+
 
 #ifndef likely
 #define likely(x)  __builtin_expect(!!(x), 1)
@@ -88,7 +100,7 @@ typedef struct stat stat64_t;
 #else
 struct stat64;
 typedef struct stat64 stat64_t;
-#endif
+#endif // __WORDSIZE==64
 
 #define BADADDR(x) ((unsigned long )x > (unsigned long)-4096)
 
@@ -96,7 +108,6 @@ typedef struct stat64 stat64_t;
 static inline void barrier(void) { __asm__ volatile("":::"memory"); }
 #else
 static inline void barrier(void) { __sync_synchronize (); }
-#endif
+#endif // __GNUC__ < 4
 
 #endif
-

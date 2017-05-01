@@ -3,16 +3,16 @@
 #include <set>
 #include <string>
 
-class CConfLine
+class ConfLine
 {
 public:
-	CConfLine(const std::string& key, const std::string val,
+	ConfLine(const std::string& key, const std::string val,
 		const std::string section, const std::string comment, int lineno);
 		
-	bool operator<(const CConfLine& oth) const;
+	bool operator<(const ConfLine& oth) const;
 	
 public:
-	friend std::ostream& operator<<(std::ostream& oss, const CConfLine& line);
+	friend std::ostream& operator<<(std::ostream& oss, const ConfLine& line);
 	
 public:
 	// 配置项名
@@ -24,22 +24,22 @@ public:
 };
 
 
-class CConfSection
+class ConfSection
 {
 public:
-	typedef std::set<CConfLine>::const_iterator const_line_iter_t;
+	typedef std::set<ConfLine>::const_iterator const_line_iter_t;
 
-	std::set<CConfLine> _lines;
+	std::set<ConfLine> _lines;
 };
 
-class CConfFile
+class ConfFile
 {
 public:
-	typedef std::map<std::string, CConfSection>::iterator section_iter_t;
-	typedef std::map<std::string, CConfSection>::const_iterator const_section_iter_t;
+	typedef std::map<std::string, ConfSection>::iterator section_iter_t;
+	typedef std::map<std::string, ConfSection>::const_iterator const_section_iter_t;
 
-	CConfFile();
-	~CConfFile();
+	ConfFile();
+	~ConfFile();
 	
 	void clear();
 
@@ -55,13 +55,13 @@ public:
 	static std::string normalize_key_name(const std::string& key);
 	
 public:
-	friend std::ostream& operator<<(std::ostream& oss, const CConfFile& cf);
+	friend std::ostream& operator<<(std::ostream& oss, const ConfFile& cf);
 
 private:
 	void load_from_buffer(const char* buf, size_t sz);
 
 	// 解析一行配置文件
-	static CConfLine* process_line(int line_no, const char* line);
+	static ConfLine* process_line(int line_no, const char* line);
 
-	std::map<std::string, CConfSection> _sections;
+	std::map<std::string, ConfSection> _sections;
 };

@@ -5,25 +5,25 @@
 
 // SYS_NS_BEGIN
 
-class CCond
+class Cond
 {
 public:
-    CCond() throw (CSysCallException);
+    Cond() throw (SysCallException);
 
 	// 不会抛出异常
-    ~CCond() throw ();
+    ~Cond() throw ();
 
 	// 线程挂起,等待被唤醒
-    void wait(CMutex& lock) throw (CSysCallException);
+    void wait(Mutex& lock) throw (SysCallException);
 
 	// 线程挂起,被唤醒或者超时
-    bool timed_wait(CMutex& lock, uint32_t millisecond) throw (CSysCallException);
+    bool timed_wait(Mutex& lock, uint32_t millisecond) throw (SysCallException);
 
 	// 唤醒挂起的线程
-    void signal() throw (CSysCallException);
+    void signal() throw (SysCallException);
 
 	// 唤醒所有的挂起线程
-    void broadcast() throw (CSysCallException);
+    void broadcast() throw (SysCallException);
     
 private:
 	pthread_condattr_t _attr;

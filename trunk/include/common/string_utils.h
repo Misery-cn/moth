@@ -3,14 +3,14 @@
 
 #include <math.h>
 #include <sstream>
-#include "define.h"
+#include "int_types.h"
 #include "utils.h"
 #include "scoped_ptr.h"
 
 
 // UTILS_NS_BEGIN
 
-class CStringUtils
+class StringUtils
 {
 public:
 	// 删除字符串尾部从指定字符开始的内容

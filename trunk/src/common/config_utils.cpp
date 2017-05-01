@@ -7,13 +7,13 @@
 #include <iostream>
 #include "config_utils.h"
 
-CConfLine::CConfLine(const std::string& key, const std::string val,
+ConfLine::ConfLine(const std::string& key, const std::string val,
       const std::string section, const std::string comment, int lineno)
 	: _key(key), _val(val), _section(section)
 {
 }
 
-bool CConfLine::operator<(const CConfLine& oth) const
+bool ConfLine::operator<(const ConfLine& oth) const
 {
 	if (_key < oth._key)
 	{
@@ -25,26 +25,26 @@ bool CConfLine::operator<(const CConfLine& oth) const
 	}
 }
 
-std::ostream& operator<<(std::ostream& oss, const CConfLine& line)
+std::ostream& operator<<(std::ostream& oss, const ConfLine& line)
 {
 	oss << line._key << line._val << line._section;
 	return oss;
 }
 
-CConfFile::CConfFile()
+ConfFile::ConfFile()
 {
 }
 
-CConfFile::~CConfFile()
+ConfFile::~ConfFile()
 {
 }
 
-void CConfFile::clear()
+void ConfFile::clear()
 {
 	_sections.clear();
 }
 
-int CConfFile::parse_file(const std::string& filename)
+int ConfFile::parse_file(const std::string& filename)
 {
 	clear();
 	int r = 0;
@@ -114,7 +114,7 @@ int CConfFile::parse_file(const std::string& filename)
 	return r;
 }
 
-void CConfFile::load_from_buffer(const char* buf, size_t sz)
+void ConfFile::load_from_buffer(const char* buf, size_t sz)
 {
 	section_iter_t cur_section;
 
@@ -180,7 +180,7 @@ void CConfFile::load_from_buffer(const char* buf, size_t sz)
 		acc.append(b, line_len);
 		
 		// 解析该行
-		CConfLine* cline = process_line(line_no, acc.c_str());
+		ConfLine* cline = process_line(line_no, acc.c_str());
 		
 		acc.clear();
 
@@ -195,7 +195,7 @@ void CConfFile::load_from_buffer(const char* buf, size_t sz)
 		if (!csection.empty())
 		{
 			// 保存该section
-			std::map<std::string, CConfSection>::value_type vt(csection, CConfSection());
+			std::map<std::string, ConfSection>::value_type vt(csection, ConfSection());
 			std::pair<section_iter_t, bool> nr(_sections.insert(vt));
 			cur_section = nr.first;
 		}
@@ -224,7 +224,7 @@ void CConfFile::load_from_buffer(const char* buf, size_t sz)
 	}	
 }
 
-CConfLine* CConfFile::process_line(int line_no, const char* line)
+ConfLine* ConfFile::process_line(int line_no, const char* line)
 {
 	enum acceptor_state_t
 	{
@@ -354,7 +354,7 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 			{
 				if ('\0' == c)
 				{
-					return new CConfLine(key, val, section, comment, line_no);
+					return new ConfLine(key, val, section, comment, line_no);
 				}
 				else if ('#' == c || ';' == c)
 				{
@@ -386,7 +386,7 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 					}
 					
 					trim_whitespace(val, false);
-					return new CConfLine(key, val, section, comment, line_no);
+					return new ConfLine(key, val, section, comment, line_no);
 				}
 				else if ((('#' == c) || (';' == c)) && !escaping)
 				{
@@ -431,7 +431,7 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 			{
 				if ('\0' == c)
 				{
-					return new CConfLine(key, val, section, comment, line_no);
+					return new ConfLine(key, val, section, comment, line_no);
 				}
 				else if ('#' == c || ';' == c)
 				{
@@ -450,7 +450,7 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 			{
 				if ('\0' == c)
 				{
-					return new CConfLine(key, val, section, comment, line_no);
+					return new ConfLine(key, val, section, comment, line_no);
 				}
 				else
 				{
@@ -466,7 +466,7 @@ CConfLine* CConfFile::process_line(int line_no, const char* line)
 	}
 }
 
-void CConfFile::trim_whitespace(std::string& str, bool strip_internal)
+void ConfFile::trim_whitespace(std::string& str, bool strip_internal)
 {
 	const char* in = str.c_str();
 	// 去掉头部空格
@@ -534,16 +534,16 @@ void CConfFile::trim_whitespace(std::string& str, bool strip_internal)
 	str.assign(output2);
 }
 
-std::string CConfFile::normalize_key_name(const std::string& key)
+std::string ConfFile::normalize_key_name(const std::string& key)
 {
 	std::string k(key);
-	CConfFile::trim_whitespace(k, true);
+	ConfFile::trim_whitespace(k, true);
 	// 配置项名空格替换为下划线
 	std::replace(k.begin(), k.end(), ' ', '_');
 	return k;
 }
 
-int CConfFile::read(const std::string& section, const std::string& key, std::string& val) const
+int ConfFile::read(const std::string& section, const std::string& key, std::string& val) const
 {
 	std::string k(normalize_key_name(key));
 	const_section_iter_t s = _sections.find(section);
@@ -552,8 +552,8 @@ int CConfFile::read(const std::string& section, const std::string& key, std::str
 		return -ENOENT;
 	}
 
-	CConfLine line(k, "", "", "", 0);
-	CConfSection::const_line_iter_t l = s->second._lines.find(line);
+	ConfLine line(k, "", "", "", 0);
+	ConfSection::const_line_iter_t l = s->second._lines.find(line);
 	if (l == s->second._lines.end())
 	{
 		return -ENOENT;
@@ -563,12 +563,12 @@ int CConfFile::read(const std::string& section, const std::string& key, std::str
 	return 0;
 }
 
-CConfFile::const_section_iter_t CConfFile::sections_begin()
+ConfFile::const_section_iter_t ConfFile::sections_begin()
 {
 	return _sections.begin();
 }
 
-CConfFile::const_section_iter_t CConfFile::sections_end()
+ConfFile::const_section_iter_t ConfFile::sections_end()
 {
 	return _sections.end();
 }

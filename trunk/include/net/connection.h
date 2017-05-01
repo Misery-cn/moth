@@ -4,12 +4,12 @@
 #include "ref_countable.h"
 #include "mutex.h"
 
-class CMessenger;
+class Messenger;
 
-class Connection : public CRefCountable
+class Connection : public RefCountable
 {
 public:
-	Connection(CMessenger* m) : _msger(m), _ref(NULL)
+	Connection(Messenger* m) : _msger(m), _ref(NULL)
 	{
 	}
 
@@ -17,29 +17,29 @@ public:
 	{
 		if (_ref)
 		{
-			_ref->dec_refcount();
+			_ref->dec();
 		}
 	}
 
-	CMessenger* get_messenger() { return _msger; }
+	Messenger* get_messenger() { return _msger; }
 
-	void set_ref(CRefCountable* ref)
+	void set_ref(RefCountable* ref)
 	{
-		// CMutexGuard(_lock);
-		CMutex::Locker l(_lock);
+		// MutexGuard(_lock);
+		Mutex::Locker l(_lock);
 		// 之前的引用-1
 		if (_ref)
 		{
-			_ref->dec_refcount();
+			_ref->dec();
 		}
 
 		_ref = ref;
 	}
 
-	CRefCountable* get_ref()
+	RefCountable* get_ref()
 	{
-		// CMutexGuard(_lock);
-		CMutex::Locker l(_lock);
+		// MutexGuard(_lock);
+		Mutex::Locker l(_lock);
 
 		if (_ref)
 		{
@@ -56,9 +56,9 @@ public:
 	virtual void mark_down() = 0;
 
 private:
-	mutable CMutex _lock;
-	CMessenger* _msger;
-	CRefCountable* _ref;
+	mutable Mutex _lock;
+	Messenger* _msger;
+	RefCountable* _ref;
 	int _type;
 	entity_addr_t _addr;
 	time_t last_keepalive;

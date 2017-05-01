@@ -6,7 +6,7 @@
 
 // UTILS_NS_BEGIN
 
-size_t CFileUtils::file_copy(int src_fd, int dst_fd) throw (CSysCallException)
+size_t FileUtils::file_copy(int src_fd, int dst_fd) throw (SysCallException)
 {
     char buf[IO_BUFFER_MAX] = {0};
     size_t file_size = 0;
@@ -49,7 +49,7 @@ size_t CFileUtils::file_copy(int src_fd, int dst_fd) throw (CSysCallException)
     return file_size;
 }
 
-size_t CFileUtils::file_copy(int src_fd, const char* dst_filename) throw (CSysCallException)
+size_t FileUtils::file_copy(int src_fd, const char* dst_filename) throw (SysCallException)
 {    
     int dst_fd = open(dst_filename, O_WRONLY|O_CREAT|O_EXCL);
     if (-1 == src_fd)
@@ -61,7 +61,7 @@ size_t CFileUtils::file_copy(int src_fd, const char* dst_filename) throw (CSysCa
     return file_copy(src_fd, dst_fd);
 }
 
-size_t CFileUtils::file_copy(const char* src_filename, int dst_fd) throw (CSysCallException)
+size_t FileUtils::file_copy(const char* src_filename, int dst_fd) throw (SysCallException)
 {
     int src_fd = open(src_filename, O_RDONLY);
     if (-1 == src_fd)
@@ -73,7 +73,7 @@ size_t CFileUtils::file_copy(const char* src_filename, int dst_fd) throw (CSysCa
     return file_copy(src_fd, dst_fd);
 }
 
-size_t CFileUtils::file_copy(const char* src_filename, const char* dst_filename) throw (CSysCallException)
+size_t FileUtils::file_copy(const char* src_filename, const char* dst_filename) throw (SysCallException)
 { 
     int src_fd = open(src_filename, O_RDONLY);
     if (-1 == src_fd)
@@ -92,7 +92,7 @@ size_t CFileUtils::file_copy(const char* src_filename, const char* dst_filename)
     return file_copy(src_fd, dst_fd);
 }
 
-off_t CFileUtils::get_file_size(int fd) throw (CSysCallException)
+off_t FileUtils::get_file_size(int fd) throw (SysCallException)
 {
     struct stat buf;
     if (-1 == fstat(fd, &buf))
@@ -108,7 +108,7 @@ off_t CFileUtils::get_file_size(int fd) throw (CSysCallException)
     return buf.st_size;
 }
 
-off_t CFileUtils::get_file_size(const char* filepath) throw (CSysCallException)
+off_t FileUtils::get_file_size(const char* filepath) throw (SysCallException)
 {
     int fd = open(filepath, O_RDONLY);
     if (-1 == fd)
@@ -120,12 +120,12 @@ off_t CFileUtils::get_file_size(const char* filepath) throw (CSysCallException)
     return get_file_size(fd);
 }
 
-uint32_t CFileUtils::crc32_file(int fd) throw (CSysCallException)
+uint32_t FileUtils::crc32_file(int fd) throw (SysCallException)
 {
     uint32_t crc = 0;
-    int page_size = CUtils::get_page_size();
+    int page_size = Utils::get_page_size();
     char* buffer = new char[page_size];
-    CPointGuard<char> dh(buffer, true);
+    PointGuard<char> dh(buffer, true);
 
     if (-1 == lseek(fd, 0, SEEK_SET))
     {
@@ -157,7 +157,7 @@ uint32_t CFileUtils::crc32_file(int fd) throw (CSysCallException)
     return crc;
 }
 
-uint32_t CFileUtils::crc32_file(const char* filepath) throw (CSysCallException)
+uint32_t FileUtils::crc32_file(const char* filepath) throw (SysCallException)
 {
     int fd = open(filepath, O_RDONLY);
     if (-1 == fd)
@@ -169,7 +169,7 @@ uint32_t CFileUtils::crc32_file(const char* filepath) throw (CSysCallException)
     return crc32_file(fd);
 }
 
-uint32_t CFileUtils::get_file_mode(int fd) throw (CSysCallException)
+uint32_t FileUtils::get_file_mode(int fd) throw (SysCallException)
 {
     struct stat st;
     if (-1 == fstat(fd, &st))
@@ -180,7 +180,7 @@ uint32_t CFileUtils::get_file_mode(int fd) throw (CSysCallException)
     return st.st_mode;
 }
 
-void CFileUtils::remove(const char* filepath) throw (CSysCallException)
+void FileUtils::remove(const char* filepath) throw (SysCallException)
 {
     if (-1 == unlink(filepath))
     {
@@ -191,7 +191,7 @@ void CFileUtils::remove(const char* filepath) throw (CSysCallException)
     }
 }
 
-void CFileUtils::rename(const char* from_filepath, const char* to_filepath) throw (CSysCallException)
+void FileUtils::rename(const char* from_filepath, const char* to_filepath) throw (SysCallException)
 {
     if (-1 == ::rename(from_filepath, to_filepath))
     {
@@ -199,7 +199,7 @@ void CFileUtils::rename(const char* from_filepath, const char* to_filepath) thro
     }
 }
 
-bool CFileUtils::exist(const char * filepath)
+bool FileUtils::exist(const char * filepath)
 {
 	return !access(filepath, F_OK);
 }

@@ -115,7 +115,7 @@ static bool fast_string2int(const char* str, IntType& dst, uint8_t max_length, u
     return true;
 }
 
-void CStringUtils::remove_last(std::string& source, char c)
+void StringUtils::remove_last(std::string& source, char c)
 {
     std::string::size_type pos = source.rfind(c);
     if (pos + 1 != source.length())
@@ -124,7 +124,7 @@ void CStringUtils::remove_last(std::string& source, char c)
     }
 }
 
-void CStringUtils::remove_last(std::string& source, const std::string& sep)
+void StringUtils::remove_last(std::string& source, const std::string& sep)
 {
     std::string::size_type pos = source.rfind(sep);
     if (pos != std::string::npos)
@@ -133,7 +133,7 @@ void CStringUtils::remove_last(std::string& source, const std::string& sep)
     }
 }
 
-void CStringUtils::to_upper(char* source)
+void StringUtils::to_upper(char* source)
 {
     char* tmp_source = source;
     while ('\0' != *tmp_source)
@@ -147,7 +147,7 @@ void CStringUtils::to_upper(char* source)
     }
 }
 
-void CStringUtils::to_lower(char* source)
+void StringUtils::to_lower(char* source)
 {
     char* tmp_source = source;
     while ('\0' != *tmp_source)
@@ -161,25 +161,25 @@ void CStringUtils::to_lower(char* source)
     }
 }
 
-void CStringUtils::to_upper(std::string& source)
+void StringUtils::to_upper(std::string& source)
 {
     char* tmp_source = (char *)source.c_str();
     to_upper(tmp_source);
 }
 
-void CStringUtils::to_lower(std::string& source)
+void StringUtils::to_lower(std::string& source)
 {
     char* tmp_source = (char *)source.c_str();
     to_lower(tmp_source);
 }
 
 // 判断字符是否为空格或TAB符(\t)或回车符(\r)或换行符(\n)
-bool CStringUtils::is_space(char c)
+bool StringUtils::is_space(char c)
 {
     return (' ' == c) || ('\t' == c) || ('\r' == c) || ('\n' == c);
 }
 
-void CStringUtils::trim(char* source)
+void StringUtils::trim(char* source)
 {
     char* space = NULL;
     char* tmp_source = source;
@@ -218,7 +218,7 @@ void CStringUtils::trim(char* source)
     }
 }
 
-void CStringUtils::trim_left(char* source)
+void StringUtils::trim_left(char* source)
 {
     char* tmp_source = source;
     while (is_space(*tmp_source)) ++tmp_source;
@@ -236,7 +236,7 @@ void CStringUtils::trim_left(char* source)
     }
 }
 
-void CStringUtils::trim_right(char* source)
+void StringUtils::trim_right(char* source)
 {
     char* space = NULL;
     char* tmp_source = source;
@@ -268,18 +268,18 @@ void CStringUtils::trim_right(char* source)
     }
 }
 
-void CStringUtils::trim(std::string& source)
+void StringUtils::trim(std::string& source)
 {
     trim_left(source);
     trim_right(source);
 }
 
-void CStringUtils::trim_left(std::string& source)
+void StringUtils::trim_left(std::string& source)
 {
     // 不能直接对c_str()进行修改，因为长度发生了变化
     size_t length = source.length();
     char* tmp_source = new char[length + 1];
-    CPointGuard<char> guard(tmp_source, true);
+    PointGuard<char> guard(tmp_source, true);
 
     strncpy(tmp_source, source.c_str(), length);
     tmp_source[length] = '\0';
@@ -288,12 +288,12 @@ void CStringUtils::trim_left(std::string& source)
     source = tmp_source;
 }
 
-void CStringUtils::trim_right(std::string& source)
+void StringUtils::trim_right(std::string& source)
 {
     // 不能直接对c_str()进行修改，因为长度发生了变化
     size_t length = source.length();
     char* tmp_source = new char[length + 1];
-    CPointGuard<char> guard(tmp_source, true);
+    PointGuard<char> guard(tmp_source, true);
 
     strncpy(tmp_source, source.c_str(), length);
     tmp_source[length] = '\0';
@@ -302,12 +302,12 @@ void CStringUtils::trim_right(std::string& source)
     source = tmp_source;
 }
 
-bool CStringUtils::string2int8(const char* source, int8_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2int8(const char* source, int8_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, dst, converted_length, ignored_zero);
 }
 
-bool CStringUtils::string2int(const char* source, int8_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2int(const char* source, int8_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     int16_t value = 0;
 
@@ -327,12 +327,12 @@ bool CStringUtils::string2int(const char* source, int8_t& dst, uint8_t converted
     return true;
 }
 
-bool CStringUtils::string2int16(const char* source, int16_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2int16(const char* source, int16_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, dst, converted_length, ignored_zero);
 }
 
-bool CStringUtils::string2int(const char* source, int16_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2int(const char* source, int16_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     int32_t value = 0;
 
@@ -352,12 +352,12 @@ bool CStringUtils::string2int(const char* source, int16_t& dst, uint8_t converte
     return true;
 }
 
-bool CStringUtils::string2int32(const char* source, int32_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2int32(const char* source, int32_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, dst, converted_length, ignored_zero);
 }
 
-bool CStringUtils::string2int(const char* source, int32_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2int(const char* source, int32_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     if (NULL == source)
 	{
@@ -381,12 +381,12 @@ bool CStringUtils::string2int(const char* source, int32_t& dst, uint8_t converte
     return true;
 }
 
-bool CStringUtils::string2int64(const char* source, int64_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2int64(const char* source, int64_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, dst, converted_length, ignored_zero);
 }
 
-bool CStringUtils::string2int(const char* source, int64_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2int(const char* source, int64_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     long long value;
     if (!fast_string2int<long long>(source, value, sizeof("-9223372036854775808")-1, converted_length, ignored_zero))
@@ -399,12 +399,12 @@ bool CStringUtils::string2int(const char* source, int64_t& dst, uint8_t converte
     return true;
 }
 
-bool CStringUtils::string2uint8(const char* source, uint8_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2uint8(const char* source, uint8_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, dst, converted_length, ignored_zero);
 }
 
-bool CStringUtils::string2int(const char* source, uint8_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2int(const char* source, uint8_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     uint16_t value = 0;
 	
@@ -423,12 +423,12 @@ bool CStringUtils::string2int(const char* source, uint8_t& dst, uint8_t converte
     return true;
 }
 
-bool CStringUtils::string2uint16(const char* source, uint16_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2uint16(const char* source, uint16_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, dst, converted_length, ignored_zero);
 }
 
-bool CStringUtils::string2int(const char* source, uint16_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2int(const char* source, uint16_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     uint32_t value = 0;
 	
@@ -447,12 +447,12 @@ bool CStringUtils::string2int(const char* source, uint16_t& dst, uint8_t convert
     return true;
 }
 
-bool CStringUtils::string2uint32(const char* source, uint32_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2uint32(const char* source, uint32_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, dst, converted_length, ignored_zero);
 }
 
-bool CStringUtils::string2int(const char* source, uint32_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2int(const char* source, uint32_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     unsigned long value;
 	
@@ -466,12 +466,12 @@ bool CStringUtils::string2int(const char* source, uint32_t& dst, uint8_t convert
     return true;
 }
 
-bool CStringUtils::string2uint64(const char* source, uint64_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2uint64(const char* source, uint64_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     return string2int(source, dst, converted_length, ignored_zero);
 }
 
-bool CStringUtils::string2int(const char* source, uint64_t& dst, uint8_t converted_length, bool ignored_zero)
+bool StringUtils::string2int(const char* source, uint64_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     unsigned long long value;
 	
@@ -485,12 +485,12 @@ bool CStringUtils::string2int(const char* source, uint64_t& dst, uint8_t convert
     return true;
 }
 
-std::string CStringUtils::int16_tostring(int16_t source)
+std::string StringUtils::int16_tostring(int16_t source)
 {
     return int_tostring(source);
 }
 
-std::string CStringUtils::int_tostring(int16_t source)
+std::string StringUtils::int_tostring(int16_t source)
 {
     char str[sizeof("065535")]; // 0xFFFF
     
@@ -499,12 +499,12 @@ std::string CStringUtils::int_tostring(int16_t source)
     return str;
 }
 
-std::string CStringUtils::int32_tostring(int32_t source)
+std::string StringUtils::int32_tostring(int32_t source)
 {
     return int_tostring(source);
 }
 
-std::string CStringUtils::int_tostring(int32_t source)
+std::string StringUtils::int_tostring(int32_t source)
 {
     char str[sizeof("04294967295")]; // 0xFFFFFFFF
     
@@ -513,12 +513,12 @@ std::string CStringUtils::int_tostring(int32_t source)
     return str;
 }
 
-std::string CStringUtils::int64_tostring(int64_t source)
+std::string StringUtils::int64_tostring(int64_t source)
 {
     return int_tostring(source);
 }
 
-std::string CStringUtils::int_tostring(int64_t source)
+std::string StringUtils::int_tostring(int64_t source)
 {
     char str[sizeof("018446744073709551615")]; // 0xFFFFFFFFFFFFFFFF
     // snprintf(str, sizeof(str), "%"PRId64, source);
@@ -531,12 +531,12 @@ std::string CStringUtils::int_tostring(int64_t source)
     return str;
 }
 
-std::string CStringUtils::uint16_tostring(uint16_t source)
+std::string StringUtils::uint16_tostring(uint16_t source)
 {
     return int_tostring(source);
 }
 
-std::string CStringUtils::int_tostring(uint16_t source)
+std::string StringUtils::int_tostring(uint16_t source)
 {
     char str[sizeof("065535")]; // 0xFFFF
     
@@ -545,12 +545,12 @@ std::string CStringUtils::int_tostring(uint16_t source)
     return str;
 }
 
-std::string CStringUtils::uint32_tostring(uint32_t source)
+std::string StringUtils::uint32_tostring(uint32_t source)
 {
     return int_tostring(source);
 }
 
-std::string CStringUtils::int_tostring(uint32_t source)
+std::string StringUtils::int_tostring(uint32_t source)
 {
     char str[sizeof("04294967295")]; // 0xFFFFFFFF
     
@@ -559,12 +559,12 @@ std::string CStringUtils::int_tostring(uint32_t source)
     return str;
 }
 
-std::string CStringUtils::uint64_tostring(uint64_t source)
+std::string StringUtils::uint64_tostring(uint64_t source)
 {
     return int_tostring(source);
 }
 
-std::string CStringUtils::int_tostring(uint64_t source)
+std::string StringUtils::int_tostring(uint64_t source)
 {
     char str[sizeof("018446744073709551615")]; // 0xFFFFFFFFFFFFFFFF
 #if __WORDSIZE==64
@@ -575,7 +575,7 @@ std::string CStringUtils::int_tostring(uint64_t source)
     return str;
 }
 
-char* CStringUtils::skip_spaces(char* buffer)
+char* StringUtils::skip_spaces(char* buffer)
 {
     char* iter = buffer;
     while (' ' == *iter)
@@ -586,7 +586,7 @@ char* CStringUtils::skip_spaces(char* buffer)
     return iter;
 }
 
-const char* CStringUtils::skip_spaces(const char* buffer)
+const char* StringUtils::skip_spaces(const char* buffer)
 {
     const char* iter = buffer;
     while (' ' == *iter)
@@ -597,7 +597,7 @@ const char* CStringUtils::skip_spaces(const char* buffer)
     return iter;
 }
 
-uint32_t CStringUtils::hash(const char *str, int len)
+uint32_t StringUtils::hash(const char *str, int len)
 {
     uint32_t g = 0;
     uint32_t h = 0;
@@ -616,7 +616,7 @@ uint32_t CStringUtils::hash(const char *str, int len)
     return h;
 }
 
-int CStringUtils::fix_snprintf(char *str, size_t size, const char *format, ...)
+int StringUtils::fix_snprintf(char *str, size_t size, const char *format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -626,7 +626,7 @@ int CStringUtils::fix_snprintf(char *str, size_t size, const char *format, ...)
     return expected;
 }
 
-int CStringUtils::fix_vsnprintf(char *str, size_t size, const char *format, va_list ap)
+int StringUtils::fix_vsnprintf(char *str, size_t size, const char *format, va_list ap)
 {
     int expected = vsnprintf(str, size, format, ap);
 
@@ -638,11 +638,11 @@ int CStringUtils::fix_vsnprintf(char *str, size_t size, const char *format, va_l
     return static_cast<int>(size);
 }
 
-std::string CStringUtils::path2filename(const std::string& path, const std::string& join_string)
+std::string StringUtils::path2filename(const std::string& path, const std::string& join_string)
 {
     std::string filename;
     std::list<std::string> tokens;
-    CTokener::split(&tokens, path, "/");
+    Tokener::split(&tokens, path, "/");
 
     if (!tokens.empty())
     {
@@ -659,19 +659,19 @@ std::string CStringUtils::path2filename(const std::string& path, const std::stri
     return filename;
 }
 
-int CStringUtils::chr_index(const char* str, char c) 
+int StringUtils::chr_index(const char* str, char c) 
 {
     const char* c_position = strchr(str, c);
     return (NULL == c_position) ? -1 : c_position - str;
 }
 
-int CStringUtils::chr_rindex(const char* str, char c) 
+int StringUtils::chr_rindex(const char* str, char c) 
 {
     const char* c_position = strrchr(str, c);
     return (NULL == c_position) ? -1 : c_position - str;
 }
 
-std::string CStringUtils::extract_dirpath(const char* filepath)
+std::string StringUtils::extract_dirpath(const char* filepath)
 {
     std::string dirpath;
 	
@@ -686,7 +686,7 @@ std::string CStringUtils::extract_dirpath(const char* filepath)
 }
 
 // 解析出文件名
-std::string CStringUtils::extract_filename(const std::string& filepath)
+std::string StringUtils::extract_filename(const std::string& filepath)
 {
     std::string filename;
     const char* slash_position = strrchr(filepath.c_str(), '/');
@@ -703,7 +703,7 @@ std::string CStringUtils::extract_filename(const std::string& filepath)
     return filename;
 }
 
-const char* CStringUtils::extract_filename(const char* filepath)
+const char* StringUtils::extract_filename(const char* filepath)
 {
     const char* slash_position = strrchr(filepath, '/');
 	
@@ -715,7 +715,7 @@ const char* CStringUtils::extract_filename(const char* filepath)
     return slash_position + 1;
 }
 
-std::string CStringUtils::format_string(const char* format, ...)
+std::string StringUtils::format_string(const char* format, ...)
 {
     va_list ap;
     size_t size = 8192;
@@ -748,7 +748,7 @@ std::string CStringUtils::format_string(const char* format, ...)
     return buffer.get();
 }
 
-bool CStringUtils::is_numeric_string(const char* str)
+bool StringUtils::is_numeric_string(const char* str)
 {
     const char* p = str;
 
@@ -765,7 +765,7 @@ bool CStringUtils::is_numeric_string(const char* str)
     return true;
 }
 
-bool CStringUtils::is_alphabetic_string(const char* str)
+bool StringUtils::is_alphabetic_string(const char* str)
 {
     const char* p = str;
 
@@ -782,7 +782,7 @@ bool CStringUtils::is_alphabetic_string(const char* str)
     return true;
 }
 
-bool CStringUtils::is_variable_string(const char* str)
+bool StringUtils::is_variable_string(const char* str)
 {
     const char* p = str;
 
@@ -812,7 +812,7 @@ bool CStringUtils::is_variable_string(const char* str)
     return true;
 }
 
-bool CStringUtils::is_regex_string(const char* str)
+bool StringUtils::is_regex_string(const char* str)
 {
     const char* p = str;
 
@@ -889,7 +889,7 @@ bool CStringUtils::is_regex_string(const char* str)
     return true;
 }
 
-std::string CStringUtils::remove_suffix(const std::string& filename)
+std::string StringUtils::remove_suffix(const std::string& filename)
 {
     std::string::size_type pos = filename.find('.');
 	
@@ -903,7 +903,7 @@ std::string CStringUtils::remove_suffix(const std::string& filename)
     }
 }
 
-std::string CStringUtils::replace_suffix(const std::string& filepath, const std::string& new_suffix)
+std::string StringUtils::replace_suffix(const std::string& filepath, const std::string& new_suffix)
 {
     std::string::size_type pos = filepath.find('.');
 	
@@ -946,7 +946,7 @@ std::string CStringUtils::replace_suffix(const std::string& filepath, const std:
     }
 }
 
-std::string CStringUtils::to_hex(const std::string& source, bool lowercase)
+std::string StringUtils::to_hex(const std::string& source, bool lowercase)
 {
     std::string hex;
     hex.resize(source.size()*2);
@@ -972,12 +972,12 @@ std::string CStringUtils::to_hex(const std::string& source, bool lowercase)
 }
 
 // 一个汉字,GBK编码时占2字节,UTF8编码时占3字节
-std::string CStringUtils::encode_url(const std::string& url, bool space2plus)
+std::string StringUtils::encode_url(const std::string& url, bool space2plus)
 {
     return encode_url(url.c_str(), url.size(), space2plus);
 }
 
-std::string CStringUtils::encode_url(const char* url, size_t url_length, bool space2plus)
+std::string StringUtils::encode_url(const char* url, size_t url_length, bool space2plus)
 {
     static char hex[] = "0123456789ABCDEF";
     std::string result(url_length * 3 + 1, '\0');
@@ -1025,12 +1025,12 @@ std::string CStringUtils::encode_url(const char* url, size_t url_length, bool sp
     return result;
 }
 
-std::string CStringUtils::decode_url(const std::string& encoded_url)
+std::string StringUtils::decode_url(const std::string& encoded_url)
 {
     return decode_url(encoded_url.c_str(), encoded_url.size());
 }
 
-std::string CStringUtils::decode_url(const char* encoded_url, size_t encoded_url_length)
+std::string StringUtils::decode_url(const char* encoded_url, size_t encoded_url_length)
 {
     std::string result(encoded_url_length+1, '\0');
 
@@ -1075,7 +1075,7 @@ std::string CStringUtils::decode_url(const char* encoded_url, size_t encoded_url
 
 // CR: Carriage Return
 // LF: Line Feed
-void CStringUtils::trim_CR(char* line)
+void StringUtils::trim_CR(char* line)
 {
     if (NULL != line)
     {
@@ -1087,7 +1087,7 @@ void CStringUtils::trim_CR(char* line)
     }
 }
 
-void CStringUtils::trim_CR(std::string& line)
+void StringUtils::trim_CR(std::string& line)
 {
     std::string::size_type tail = line.size() - 1;
 	
@@ -1097,7 +1097,7 @@ void CStringUtils::trim_CR(std::string& line)
     }
 }
 
-std::string CStringUtils::char2hex(unsigned char c)
+std::string StringUtils::char2hex(unsigned char c)
 {
     static unsigned char hex_table[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
     std::string hex(2, '\0');
@@ -1108,7 +1108,7 @@ std::string CStringUtils::char2hex(unsigned char c)
     return hex;
 }
 
-unsigned char CStringUtils::hex2char(const std::string& hex)
+unsigned char StringUtils::hex2char(const std::string& hex)
 {
     unsigned char c = 0;
 

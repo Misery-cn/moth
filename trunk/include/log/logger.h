@@ -5,14 +5,14 @@
 #include "log_appender.h"
 
 
-class CLogger;
+class Logger;
 
 // 日志类
-class CLog
+class Log
 {
 public:
-	CLog();
-	virtual ~CLog();
+	Log();
+	virtual ~Log();
 
 	bool init();
 
@@ -21,23 +21,23 @@ public:
 private:
 	
 	// 运行时日志
-	CLogger* _run;
+	Logger* _run;
 };
 
 
 // 日志记录器
-class CLogger
+class Logger
 {
 public:
-	CLogger();
-	virtual ~CLogger();
+	Logger();
+	virtual ~Logger();
 
-	void set_appender(CAppender* appender)
+	void set_appender(Appender* appender)
 	{
 		_appenders->push_back(appender);
 	}
 
-	void call_appender(CLogEvent* event);
+	void call_appender(LogEvent* event);
 
 	void set_log_level(log_level_t level)
 	{
@@ -56,12 +56,12 @@ private:
 	// 模块ID
 
 	// 日志目的地列表
-    CArrayList<CAppender*>* _appenders;
+    ArrayList<Appender*>* _appenders;
 
 	// 共享内存
 
 	// 线程互斥
-	CMutex _lock;
+	Mutex _lock;
 };
 
 #endif

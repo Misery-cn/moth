@@ -8,7 +8,7 @@
 #include "logger.h"
 #include "singleton.h"
 
-#define slog CSingleton<CLog>::instance()
+#define slog Singleton<Log>::instance()
 
 
 #define RUNLOG(LEVEL, FORMAT, ...) \

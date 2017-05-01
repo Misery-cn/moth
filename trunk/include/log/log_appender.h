@@ -8,7 +8,7 @@
 #include "string_utils.h"
 #include "dir_utils.h"
 #include "file_utils.h"
-#include "datetime_utils.h"
+#include "time_utils.h"
 
 typedef enum
 {
@@ -27,11 +27,11 @@ const int MAX_LOG_FILE_SIZE = 10 * M;
 const int MAX_LOG_FILE_SEQ = 10;
 
 
-class CLogEvent
+class LogEvent
 {
 public:
-	CLogEvent();
-	virtual ~CLogEvent();
+	LogEvent();
+	virtual ~LogEvent();
 
 	virtual std::string format() = 0;
 
@@ -42,23 +42,23 @@ public:
 };
 
 // 运行时日志
-class CRunLogEvent : public CLogEvent
+class RunLogEvent : public LogEvent
 {
 public:
-	CRunLogEvent(log_level_t level);
-	virtual ~CRunLogEvent();
+	RunLogEvent(log_level_t level);
+	virtual ~RunLogEvent();
 
 	std::string format();
 };
 
 
-class CAppender
+class Appender
 {
 public:
-	CAppender();
-	virtual ~CAppender();
+	Appender();
+	virtual ~Appender();
 
-	virtual void do_appender(CLogEvent* logevent) = 0;
+	virtual void do_appender(LogEvent* logevent) = 0;
 	
 protected:
 	// 进程名
@@ -66,11 +66,11 @@ protected:
 };
 
 
-class CFileAppender : public CAppender
+class FileAppender : public Appender
 {
 public:
-	CFileAppender(const char* filename);
-	virtual ~CFileAppender();
+	FileAppender(const char* filename);
+	virtual ~FileAppender();
 
 	void init();
 
@@ -80,7 +80,7 @@ public:
 	void create_log_file();
 
 	// 写文件
-	void do_appender(CLogEvent* logevent);
+	void do_appender(LogEvent* logevent);
 
 private:
 	int _log_fd;
