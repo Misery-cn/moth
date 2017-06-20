@@ -8,7 +8,7 @@
 #define CRC32CH(crc, value) __asm__("crc32ch %w[c], %w[c], %w[v]":[c]"+r"(crc):[v]"r"(value))
 #define CRC32CB(crc, value) __asm__("crc32cb %w[c], %w[c], %w[v]":[c]"+r"(crc):[v]"r"(value))
 
-uint32_t crc32c_aarch64(uint32_t crc, unsigned char const *buffer, unsigned len)
+uint32_t crc32c_aarch64(uint32_t crc, unsigned char const* buffer, unsigned len)
 {
 	int64_t length = len;
 

@@ -6,55 +6,6 @@
 
 #ifndef SCTP_USE_ADLER32
 
-
-/**
- *
- * Routine Description:
- *
- * Computes the CRC32c checksum for the specified buffer using the slicing by 8
- * algorithm over 64 bit quantities.
- *
- * Arguments:
- *
- *		p_running_crc - pointer to the initial or final remainder value
- *				used in CRC computations. It should be set to
- *				non-NULL if the mode argument is equal to CONT or END
- *		p_buf - the packet buffer where crc computations are being performed
- *		length - the length of p_buf in bytes
- *		init_bytes - the number of initial bytes that need to be procesed before
- *					 aligning p_buf to multiples of 4 bytes
- *		mode - can be any of the following: BEGIN, CONT, END, BODY, ALIGN
- *
- * Return value:
- *
- *		The computed CRC32c value
- */
-
-
-/*
- * Copyright (c) 2004-2006 Intel Corporation - All Rights Reserved
- *
- *
- * This software program is licensed subject to the BSD License, available at
- * http://www.opensource.org/licenses/bsd-license.html.
- *
- * Abstract:
- *
- * Tables for software CRC generation
- */
-
-/*
- * The following CRC lookup table was generated automagically using the
- * following model parameters:
- *
- * Generator Polynomial = ................. 0x1EDC6F41 Generator Polynomial
- * Length = .......... 32 bits Reflected Bits = ....................... TRUE
- * Table Generation Offset = .............. 32 bits Number of Slices =
- * ..................... 8 slices Slice Lengths = ........................ 8
- * 8 8 8 8 8 8 8 Directory Name = ....................... .\ File Name =
- * ............................ 8x256_tables.c
- */
-
 uint32_t sctp_crc_tableil8_o32[256] =
 {
 	0x00000000, 0xF26B8303, 0xE13B70F7, 0x1350F3F4, 0xC79A971F, 0x35F1141C, 0x26A1E7E8, 0xD4CA64EB,
@@ -90,24 +41,6 @@ uint32_t sctp_crc_tableil8_o32[256] =
 	0xF36E6F75, 0x0105EC76, 0x12551F82, 0xE03E9C81, 0x34F4F86A, 0xC69F7B69, 0xD5CF889D, 0x27A40B9E,
 	0x79B737BA, 0x8BDCB4B9, 0x988C474D, 0x6AE7C44E, 0xBE2DA0A5, 0x4C4623A6, 0x5F16D052, 0xAD7D5351
 };
-
-/*
- * end of the CRC lookup table crc_tableil8_o32
- */
-
-
-
-/*
- * The following CRC lookup table was generated automagically using the
- * following model parameters:
- *
- * Generator Polynomial = ................. 0x1EDC6F41 Generator Polynomial
- * Length = .......... 32 bits Reflected Bits = ....................... TRUE
- * Table Generation Offset = .............. 32 bits Number of Slices =
- * ..................... 8 slices Slice Lengths = ........................ 8
- * 8 8 8 8 8 8 8 Directory Name = ....................... .\ File Name =
- * ............................ 8x256_tables.c
- */
 
 uint32_t sctp_crc_tableil8_o40[256] =
 {
@@ -145,24 +78,6 @@ uint32_t sctp_crc_tableil8_o40[256] =
 	0xD98EEDC6, 0xCA2C75B1, 0xFECBDD28, 0xED69455F, 0x97048C1A, 0x84A6146D, 0xB041BCF4, 0xA3E32483
 };
 
-/*
- * end of the CRC lookup table crc_tableil8_o40
- */
-
-
-
-/*
- * The following CRC lookup table was generated automagically using the
- * following model parameters:
- *
- * Generator Polynomial = ................. 0x1EDC6F41 Generator Polynomial
- * Length = .......... 32 bits Reflected Bits = ....................... TRUE
- * Table Generation Offset = .............. 32 bits Number of Slices =
- * ..................... 8 slices Slice Lengths = ........................ 8
- * 8 8 8 8 8 8 8 Directory Name = ....................... .\ File Name =
- * ............................ 8x256_tables.c
- */
-
 uint32_t sctp_crc_tableil8_o48[256] =
 {
 	0x00000000, 0xA541927E, 0x4F6F520D, 0xEA2EC073, 0x9EDEA41A, 0x3B9F3664, 0xD1B1F617, 0x74F06469,
@@ -198,24 +113,6 @@ uint32_t sctp_crc_tableil8_o48[256] =
 	0xDDA47104, 0x78E5E37A, 0x92CB2309, 0x378AB177, 0x437AD51E, 0xE63B4760, 0x0C158713, 0xA954156D,
 	0xE5F54FC1, 0x40B4DDBF, 0xAA9A1DCC, 0x0FDB8FB2, 0x7B2BEBDB, 0xDE6A79A5, 0x3444B9D6, 0x91052BA8
 };
-
-/*
- * end of the CRC lookup table crc_tableil8_o48
- */
-
-
-
-/*
- * The following CRC lookup table was generated automagically using the
- * following model parameters:
- *
- * Generator Polynomial = ................. 0x1EDC6F41 Generator Polynomial
- * Length = .......... 32 bits Reflected Bits = ....................... TRUE
- * Table Generation Offset = .............. 32 bits Number of Slices =
- * ..................... 8 slices Slice Lengths = ........................ 8
- * 8 8 8 8 8 8 8 Directory Name = ....................... .\ File Name =
- * ............................ 8x256_tables.c
- */
 
 uint32_t sctp_crc_tableil8_o56[256] =
 {
@@ -253,24 +150,6 @@ uint32_t sctp_crc_tableil8_o56[256] =
 	0x31035088, 0xEC46FA30, 0x8E647309, 0x5321D9B1, 0x4A21617B, 0x9764CBC3, 0xF54642FA, 0x2803E842
 };
 
-/*
- * end of the CRC lookup table crc_tableil8_o56
- */
-
-
-
-/*
- * The following CRC lookup table was generated automagically using the
- * following model parameters:
- *
- * Generator Polynomial = ................. 0x1EDC6F41 Generator Polynomial
- * Length = .......... 32 bits Reflected Bits = ....................... TRUE
- * Table Generation Offset = .............. 32 bits Number of Slices =
- * ..................... 8 slices Slice Lengths = ........................ 8
- * 8 8 8 8 8 8 8 Directory Name = ....................... .\ File Name =
- * ............................ 8x256_tables.c
- */
-
 uint32_t sctp_crc_tableil8_o64[256] =
 {
 	0x00000000, 0x38116FAC, 0x7022DF58, 0x4833B0F4, 0xE045BEB0, 0xD854D11C, 0x906761E8, 0xA8760E44,
@@ -306,24 +185,6 @@ uint32_t sctp_crc_tableil8_o64[256] =
 	0xCD796B76, 0xF56804DA, 0xBD5BB42E, 0x854ADB82, 0x2D3CD5C6, 0x152DBA6A, 0x5D1E0A9E, 0x650F6532,
 	0x081E60E7, 0x300F0F4B, 0x783CBFBF, 0x402DD013, 0xE85BDE57, 0xD04AB1FB, 0x9879010F, 0xA0686EA3
 };
-
-/*
- * end of the CRC lookup table crc_tableil8_o64
- */
-
-
-
-/*
- * The following CRC lookup table was generated automagically using the
- * following model parameters:
- *
- * Generator Polynomial = ................. 0x1EDC6F41 Generator Polynomial
- * Length = .......... 32 bits Reflected Bits = ....................... TRUE
- * Table Generation Offset = .............. 32 bits Number of Slices =
- * ..................... 8 slices Slice Lengths = ........................ 8
- * 8 8 8 8 8 8 8 Directory Name = ....................... .\ File Name =
- * ............................ 8x256_tables.c
- */
 
 uint32_t sctp_crc_tableil8_o72[256] =
 {
@@ -361,24 +222,6 @@ uint32_t sctp_crc_tableil8_o72[256] =
 	0x37F2D291, 0xD8C2B988, 0xEC7E7252, 0x034E194B, 0x8507E5E6, 0x6A378EFF, 0x5E8B4525, 0xB1BB2E3C
 };
 
-/*
- * end of the CRC lookup table crc_tableil8_o72
- */
-
-
-
-/*
- * The following CRC lookup table was generated automagically using the
- * following model parameters:
- *
- * Generator Polynomial = ................. 0x1EDC6F41 Generator Polynomial
- * Length = .......... 32 bits Reflected Bits = ....................... TRUE
- * Table Generation Offset = .............. 32 bits Number of Slices =
- * ..................... 8 slices Slice Lengths = ........................ 8
- * 8 8 8 8 8 8 8 Directory Name = ....................... .\ File Name =
- * ............................ 8x256_tables.c
- */
-
 uint32_t sctp_crc_tableil8_o80[256] =
 {
 	0x00000000, 0x68032CC8, 0xD0065990, 0xB8057558, 0xA5E0C5D1, 0xCDE3E919, 0x75E69C41, 0x1DE5B089,
@@ -414,24 +257,6 @@ uint32_t sctp_crc_tableil8_o80[256] =
 	0x2ED97095, 0x46DA5C5D, 0xFEDF2905, 0x96DC05CD, 0x8B39B544, 0xE33A998C, 0x5B3FECD4, 0x333CC01C,
 	0x60F48DC6, 0x08F7A10E, 0xB0F2D456, 0xD8F1F89E, 0xC5144817, 0xAD1764DF, 0x15121187, 0x7D113D4F
 };
-
-/*
- * end of the CRC lookup table crc_tableil8_o80
- */
-
-
-
-/*
- * The following CRC lookup table was generated automagically using the
- * following model parameters:
- *
- * Generator Polynomial = ................. 0x1EDC6F41 Generator Polynomial
- * Length = .......... 32 bits Reflected Bits = ....................... TRUE
- * Table Generation Offset = .............. 32 bits Number of Slices =
- * ..................... 8 slices Slice Lengths = ........................ 8
- * 8 8 8 8 8 8 8 Directory Name = ....................... .\ File Name =
- * ............................ 8x256_tables.c
- */
 
 uint32_t sctp_crc_tableil8_o88[256] =
 {
@@ -469,11 +294,7 @@ uint32_t sctp_crc_tableil8_o88[256] =
 	0xE54C35A1, 0xAC704886, 0x7734CFEF, 0x3E08B2C8, 0xC451B7CC, 0x8D6DCAEB, 0x56294D82, 0x1F1530A5
 };
 
-/*
- * end of the CRC lookup table crc_tableil8_o88
- */
-
-static uint32_t sctp_crc32c_sb8_64_bit(uint32_t crc, unsigned char const *p_buf, uint32_t length, uint32_t offset)
+static uint32_t sctp_crc32c_sb8_64_bit(uint32_t crc, unsigned char const* p_buf, uint32_t length, uint32_t offset)
 {
 	uint32_t li;
 	uint32_t term1, term2;
@@ -582,33 +403,23 @@ static uint32_t sctp_crc32c_sb8_64_bit_zero(uint32_t crc, uint32_t length, uint3
 }
 
 
-/**
- *
- * Routine Description:
- *
- * warms the tables
- *
- * Arguments:
- *
- *		none
- *
- * Return value:
- *
- *		none
- */
-static uint32_t update_crc32(uint32_t crc32c, unsigned char const *buffer, unsigned int length)
+static uint32_t update_crc32(uint32_t crc32c, unsigned char const* buffer, unsigned int length)
 {
 	uint32_t offset;
 
-	if (length == 0)
+	if (0 == length)
 	{
 		return (crc32c);
 	}
 	offset = ((uintptr_t) buffer) & 0x3;
 	if (buffer)
+	{
 		return (sctp_crc32c_sb8_64_bit(crc32c, buffer, length, offset));
+	}
 	else
+	{
 		return (sctp_crc32c_sb8_64_bit_zero(crc32c, length, offset));
+	}
 }
 
 uint32_t sctp_crc_c[256] = {
@@ -681,56 +492,7 @@ uint32_t sctp_crc_c[256] = {
 
 #define SCTP_CRC32C(c,d) (c=(c>>8)^sctp_crc_c[(c^(d))&0xFF])
 
-#if 0
-static uint32_t
-old_update_crc32(uint32_t crc32c,
-    unsigned char const *buffer,
-    unsigned int length)
-{
-	unsigned int i;
-
-	for (i = 0; i < length; i++) {
-		SCTP_CRC32C(crc32c, buffer[i]);
-	}
-	return (crc32c);
-}
-
-
-static uint32_t
-sctp_csum_finalize(uint32_t crc32c)
-{
-	uint32_t result;
-
-#if BYTE_ORDER == BIG_ENDIAN
-	uint8_t byte0, byte1, byte2, byte3;
-
-#endif
-	/* Complement the result */
-	result = ~crc32c;
-#if BYTE_ORDER == BIG_ENDIAN
-	/*
-	 * For BIG-ENDIAN.. aka Motorola byte order the result is in
-	 * little-endian form. So we must manually swap the bytes. Then we
-	 * can call htonl() which does nothing...
-	 */
-	byte0 = result & 0x000000ff;
-	byte1 = (result >> 8) & 0x000000ff;
-	byte2 = (result >> 16) & 0x000000ff;
-	byte3 = (result >> 24) & 0x000000ff;
-	crc32c = ((byte0 << 24) | (byte1 << 16) | (byte2 << 8) | byte3);
-#else
-	/*
-	 * For INTEL platforms the result comes out in network order. No
-	 * htonl is required or the swap above. So we optimize out both the
-	 * htonl and the manual swap above.
-	 */
-	crc32c = result;
-#endif
-	return (crc32c);
-}
-#endif
-
-uint32_t ceph_crc32c_sctp(uint32_t crc, unsigned char const *data, unsigned length)
+uint32_t crc32c_sctp(uint32_t crc, unsigned char const* data, unsigned length)
 {
 	return update_crc32(crc, data, length);
 }

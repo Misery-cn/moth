@@ -22,6 +22,6 @@ aux_source_directory(sys SYS_SRCS)
 aux_source_directory(db DB_SRCS)
 aux_source_directory(exception EX_SRCS)
 aux_source_directory(log LOG_SRCS)
-aux_source_directory(net MSG_SRCS)
+aux_source_directory(net NET_SRCS)
 
 add_library(moth STATIC ${COMMON_SRCS} ${SYS_SRCS})

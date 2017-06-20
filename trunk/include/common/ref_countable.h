@@ -4,12 +4,12 @@
 #include "atomic.h"
 
 // 引用计数基类
-class CRefCountable
+class RefCountable
 {
 public:
-	CRefCountable() { atomic_set(&_ref, 0); }
+	RefCountable() { atomic_set(&_ref, 0); }
 
-	virtual ~CRefCountable() {}
+	virtual ~RefCountable() {}
 
 	// 获取当前引用数
 	int get_ref() const { return atomic_read(&_ref); }
@@ -32,7 +32,7 @@ public:
 	}
 
 	// 获取当前引用计数指针
-	CRefCountable* get()
+	RefCountable* get()
 	{
 		// +1
 		inc();

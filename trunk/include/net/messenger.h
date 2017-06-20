@@ -3,7 +3,7 @@
 
 #include <list>
 #include <set>
-#include "msg_types.h"
+#include <map>
 #include "message.h"
 #include "dispatcher.h"
 
@@ -73,7 +73,7 @@ public:
 
 	virtual double get_dispatch_queue_max_age(utime_t now) = 0;
 
-	virtual void set_protocol(int p) = 0;
+	// virtual void set_protocol(int p) = 0;
 
 	virtual void set_default_policy(Policy p) = 0;
 
@@ -112,7 +112,7 @@ public:
 
 	const entity_name_t& get_entity_name() { return _entity._name; }
 
-	void set_entity_name(const entity_name_t m) { _entity._name = m}
+	void set_entity_name(const entity_name_t m) { _entity._name = m; }
 
 	int get_default_send_priority() { return _default_send_priority; }
 
@@ -151,7 +151,7 @@ public:
 
 	void ms_fast_dispatch(Message* m)
 	{
-		m->set_dispatch_stamp(ceph_clock_now(cct));
+		m->set_dispatch_stamp(clock_now());
 		for (std::list<Dispatcher*>::iterator iter = _fast_dispatchers.begin();
 			iter != _fast_dispatchers.end(); ++iter)
 		{
@@ -174,7 +174,7 @@ public:
 
 	void ms_deliver_dispatch(Message* m)
 	{
-		m->set_dispatch_stamp(ceph_clock_now(cct));
+		m->set_dispatch_stamp(clock_now());
 		for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin(); 
 			iter != _dispatchers.end(); ++iter)
 		{
@@ -245,34 +245,38 @@ public:
 		for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin();
 			iter != _dispatchers.end(); ++iter)
 		{
-			if ((*p)->ms_handle_refused(con))
+			if ((*iter)->ms_handle_refused(con))
+			{
 				return;
+			}
 		}
 	}
 
 	/*
 	AuthAuthorizer* ms_deliver_get_authorizer(int peer_type, bool force_new)
 	{
-		AuthAuthorizer* auth = NULL;
-		for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin();
-			iter != _dispatchers.end(); ++iter)
+		AuthAuthorizer* auth = 0;
+		for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin(); iter != _dispatchers.end(); ++iter)
 		{
 			if ((*iter)->ms_get_authorizer(peer_type, &auth, force_new))
+			{
 				return auth;
+			}
 		}
-			
+		
 		return NULL;
 	}
 
-	bool ms_deliver_verify_authorizer(Connection* con, int peer_type,
-			int protocol, buffer& authorizer, buffer& authorizer_reply, bool& isvalid, CryptoKey& session_key)
+	bool ms_deliver_verify_authorizer(Connection* con, int peer_type, int protocol, buffer& authorizer, buffer& authorizer_reply, bool& isvalid, CryptoKey& session_key)
 	{
-		for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin();
-			iter != _dispatchers.end(); ++iter)
+		for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin(); iter != _dispatchers.end(); ++iter)
 		{
 			if ((*iter)->ms_verify_authorizer(con, peer_type, protocol, authorizer, authorizer_reply, isvalid, session_key))
+			{
 				return true;
+			}
 		}
+		
 		return false;
 	}
 	*/
@@ -301,5 +305,76 @@ private:
 	// 快速消息分发器
 	std::list<Dispatcher*> _fast_dispatchers;
 };
+
+
+
+class PolicyMessenger : public Messenger
+{
+private:
+	Mutex _lock;
+	Policy _default_policy;
+	std::map<int, Policy> _policy_map;
+
+public:
+	PolicyMessenger(entity_name_t name, std::string mname, uint64_t nonce) : Messenger(name)
+	{
+	}
+
+	~PolicyMessenger()
+	{
+	}
+
+	Policy get_policy(int t)
+	{
+		Mutex::Locker locker(_lock);
+		std::map<int, Policy>::iterator iter = _policy_map.find(t);
+		
+		if (iter != _policy_map.end())
+		{
+			return iter->second;
+		}
+		else
+		{
+			return _default_policy;
+		}
+	}
+
+	Policy get_default_policy()
+	{
+		Mutex::Locker locker(_lock);
+		return _default_policy;
+	}
+	
+	void set_default_policy(Policy p)
+	{
+		Mutex::Locker locker(_lock);
+		_default_policy = p;
+	}
+
+	void set_policy(int type, Policy p)
+	{
+		Mutex::Locker locker(_lock);
+		_policy_map[type] = p;
+	}
+
+	void set_policy_throttlers(int type, Throttle* byte_throttle, Throttle* msg_throttle)
+	{
+    	Mutex::Locker locker(_lock);
+		std::map<int, Policy>::iterator iter = _policy_map.find(type);
+		
+		if (iter != _policy_map.end())
+		{
+			iter->second._throttler_bytes = byte_throttle;
+			iter->second._throttler_messages = msg_throttle;
+		}
+		else
+		{
+			_default_policy._throttler_bytes = byte_throttle;
+			_default_policy._throttler_messages = msg_throttle;
+		}
+	}
+
+};
+
 
 #endif

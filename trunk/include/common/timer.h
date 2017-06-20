@@ -5,9 +5,6 @@
 #include "time_utils.h"
 #include "callback.h"
 
-
-// 回调函数类型
-// typedef  void (*callback)(void);
 class TimerThread;
 
 // 定时器类

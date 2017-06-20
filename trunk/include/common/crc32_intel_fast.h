@@ -8,16 +8,12 @@ extern "C" {
 extern int crc32c_intel_fast_exists(void);
 
 #ifdef __x86_64__
-
-extern uint32_t crc32c_intel_fast(uint32_t crc, unsigned char const *buffer, unsigned len);
-
+extern uint32_t crc32c_intel_fast(uint32_t crc, unsigned char const* buffer, unsigned len);
 #else
-
-static inline uint32_t crc32c_intel_fast(uint32_t crc, unsigned char const *buffer, unsigned len)
+static inline uint32_t crc32c_intel_fast(uint32_t crc, unsigned char const* buffer, unsigned len)
 {
 	return 0;
 }
-
 #endif
 
 #ifdef __cplusplus

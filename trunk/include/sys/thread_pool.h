@@ -34,7 +34,7 @@ public:
         {
             try
             {                
-                _thread_array[i]->start();
+                _thread_array[i]->create();
                 ++_thread_count;
             }
             catch (...)

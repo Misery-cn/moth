@@ -1,7 +1,6 @@
 #ifndef _PAGE_H_
 #define _PAGE_H_
 
-#include "int_types.h"
 #include "utils.h"
 
 extern uint32_t _page_size;

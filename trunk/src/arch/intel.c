@@ -40,27 +40,27 @@ int arch_intel_probe(void)
 	do_cpuid(&eax, &ebx, &ecx, &edx);
 	if ((ecx & CPUID_PCLMUL) != 0)
 	{
-		ceph_arch_intel_pclmul = 1;
+		arch_intel_pclmul = 1;
 	}
 	if ((ecx & CPUID_SSE42) != 0)
 	{
-		ceph_arch_intel_sse42 = 1;
+		arch_intel_sse42 = 1;
 	}
 	if ((ecx & CPUID_SSE41) != 0)
 	{
-		ceph_arch_intel_sse41 = 1;
+		arch_intel_sse41 = 1;
 	}
 	if ((ecx & CPUID_SSSE3) != 0)
 	{
-	        ceph_arch_intel_ssse3 = 1;
+		arch_intel_ssse3 = 1;
 	}
 	if ((ecx & CPUID_SSE3) != 0)
 	{
-	        ceph_arch_intel_sse3 = 1;
+		arch_intel_sse3 = 1;
 	}
 	if ((edx & CPUID_SSE2) != 0)
 	{
-	        ceph_arch_intel_sse2 = 1;
+		arch_intel_sse2 = 1;
 	}
 
 	return 0;

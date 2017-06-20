@@ -9,10 +9,14 @@
 #include <vector>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "const.h"
 #include "exception.h"
 #include "error.h"
 #include "define.h"
+#include "safe_io.h"
 
 // UTILS_NS_BEGIN
 
@@ -377,6 +381,27 @@ public:
         // RAND_MAX 类似于INT_MAX
         return static_cast<T>(random() % max_number);
     }
+
+	static int get_random_bytes(char* buf, int len)
+	{
+		int fd = TEMP_FAILURE_RETRY(::open("/dev/urandom", O_RDONLY));
+		if (0 > fd)
+		{
+			return -errno;
+		}
+		
+		int ret = safe_read_exact(fd, buf, len);
+		VOID_TEMP_FAILURE_RETRY(::close(fd));
+		return ret;
+	}
+
+	uint64_t get_random(uint64_t min_val, uint64_t max_val)
+	{
+		uint64_t r;
+		get_random_bytes((char *)&r, sizeof(r));
+		r = min_val + r % (max_val - min_val + 1);
+		return r;
+	}
 
     // 将一个vector随机化
     template <typename T>

@@ -1,8 +1,4 @@
-#include <string>
-#include <map>
-#include "mutex.h"
-#include "timer.h"
-#include "log.h"
+#include "forker.h"
 
 int main()
 {

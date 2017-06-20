@@ -25,7 +25,7 @@ void* Thread::thread_proc(void* thread_param)
 {
     Thread* thread = (Thread *)thread_param;
 	// go!
-    thread->run();
+    thread->entry();
 	
     return NULL;
 }
@@ -35,7 +35,7 @@ uint32_t Thread::get_current_thread_id() throw ()
     return pthread_self();
 }
 
-void Thread::start(bool detach) throw (Exception, SysCallException)
+void Thread::create(bool detach) throw (Exception, SysCallException)
 {
     before_start();
 

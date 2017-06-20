@@ -18,8 +18,8 @@ public:
 	virtual ~Thread() throw ();
 	
 	// 由派生类实现
-	// 不能直接调用run,不能直接调用,应该调用start启动线程
-	virtual void run() = 0;
+	// 不能直接调用entry,不能直接调用,应该调用create启动线程
+	virtual void entry() = 0;
 
     // 将stop_成员设置为true，线程可以根据_stop状态来决定是否退出线程      
     // wait_stop: 是否等待线程结束，只有当线程是可Join时才有效
@@ -27,7 +27,7 @@ public:
 
 	// 默认启动一个可join的线程
     // detach: 是否以可分离模式启动线程
-	void start(bool detach = false) throw (Exception, SysCallException);
+	void create(bool detach = false) throw (Exception, SysCallException);
 
     // 设置线程栈大小。应当在start之前调用，否则设置无效，如放在before_start当中
     void set_stack_size(uint32_t stack_size) { _stack_size = stack_size; }

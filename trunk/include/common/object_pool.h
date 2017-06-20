@@ -30,6 +30,7 @@ public:
         return _in_pool;
     }
 
+	// 派生类实现清空对象
 	void reset() = 0;
 
 private:

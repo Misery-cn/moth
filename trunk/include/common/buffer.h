@@ -3,28 +3,31 @@
 
 #include <list>
 #include <string>
+#include <string.h>
 #include <vector>
 #include <map>
 #include <sys/uio.h> // iovec
+#include <limits.h> // IOV_MAX
 #include <sys/mman.h>
 //#include <type_traits>
 //#include <inttypes.h>
 #include <stdlib.h> // size_t ssize_t
 #include "config.h"
+#include "builtin.h"
 #include "page.h"
 #include "exception.h"
 
 
 class raw;
 
-// raw* copy(const char *c, unsigned len);
+raw* copy(const char* c, uint32_t len);
 raw* create(uint32_t len);
 // raw* claim_char(unsigned len, char *buf);
 // raw* create_malloc(unsigned len);
 // raw* claim_malloc(unsigned len, char *buf);
 // raw* create_static(unsigned len, char *buf);
 raw* create_aligned(uint32_t len, uint32_t align);
-// raw* create_page_aligned(unsigned len);
+raw* create_page_aligned(uint32_t len);
 // raw* create_zero_copy(unsigned len, int fd, int64_t *offset);
 // raw* create_unshareable(unsigned len);
 // raw* create_dummy();
@@ -98,6 +101,10 @@ public:
 	const char *c_str() const;
 	
 	char *c_str();
+	
+	const char* end_c_str() const;
+	
+    char* end_c_str();
 
 	uint32_t length() const { return _len; }
 
@@ -156,6 +163,96 @@ public:
 	void zero(uint32_t o, uint32_t l);
 
 	void zero(uint32_t o, uint32_t l, bool crc_reset);
+
+public:
+	class iterator
+	{
+		const ptr* _p;
+		const char* _begin;
+		const char* _pos;
+		const char* _end;
+		bool _deep;
+
+		iterator(const ptr* p, size_t offset, bool d) : _p(p), _begin(p->c_str() + offset), _pos(_begin),
+				_end(p->end_c_str()), _deep(d)
+		{}
+
+		friend class ptr;
+
+	public:
+		const char* get_pos_add(size_t n)
+		{
+			const char* r = _pos;
+			_pos += n;
+			if (_pos > _end)
+			{
+				THROW_SYSCALL_EXCEPTION(NULL, -1, "get_pos_add");
+			}
+			
+			return r;
+		}
+
+		ptr get_ptr(size_t len)
+		{
+			if (_deep)
+			{
+				return copy(get_pos_add(len), len);
+			}
+			else
+			{
+				size_t off = _pos - _p->c_str();
+				_pos += len;
+				if (_pos > _end)
+				{
+					THROW_SYSCALL_EXCEPTION(NULL, -1, "get_ptr");
+				}
+				
+				return ptr(*_p, off, len);
+			}
+		}
+		
+		ptr get_preceding_ptr(size_t len)
+		{
+			if (_deep)
+			{
+				return copy(get_pos() - len, len);
+			}
+			else
+			{
+				size_t off = _pos - _p->c_str();
+				return ptr(*_p, off - len, len);
+			}
+		}
+
+		void advance(size_t len)
+		{
+			_pos += len;
+			if (_pos > _end)
+			{
+				THROW_SYSCALL_EXCEPTION(NULL, -1, "advance");
+			}
+		}
+
+		const char* get_pos()
+		{
+			return _pos;
+		}
+		
+		const char* get_end()
+		{
+			return _end;
+		}
+
+		size_t get_offset()
+		{
+			return _pos - _begin;
+		}
+
+		bool end() const
+		{
+			return _pos == _end;
+		}
+    };
 	
 
 private:
@@ -251,7 +348,7 @@ public:
 	class iterator : public iterator_impl<false>
 	{
 	public:
-		iterator();
+		iterator() {};
 		iterator(bl_t *l, uint32_t o = 0);
 		iterator(bl_t *l, uint32_t o, list_iter_t ip, uint32_t po);
 
@@ -282,6 +379,227 @@ public:
 		}
 		
 	};
+
+	class page_aligned_appender
+	{
+		buffer* _buf;
+		size_t _offset;
+		uint32_t _min_alloc;
+		ptr _p;
+		char* _pos;
+		char* _end;
+
+		page_aligned_appender(buffer* b, uint32_t min_pages) : _buf(b), _min_alloc(min_pages * PAGE_SIZE), _pos(NULL), _end(NULL)
+		{}
+
+		friend class buffer;
+
+	public:
+		~page_aligned_appender()
+		{
+			flush();
+		}
+
+		void flush()
+		{
+			if (_pos && _pos != _p.c_str())
+			{
+				size_t len = _pos - _p.c_str();
+				_buf->append(_p, 0, len);
+				_p.set_length(_p.length() - len);
+				_p.set_offset(_p.offset() + len);
+			}
+		}
+
+		void append(const char* buf, size_t len)
+		{
+			while (0 < len)
+			{
+				if (!_pos)
+				{
+					size_t alloc = (len + PAGE_SIZE - 1) & PAGE_MASK;
+					if (alloc < _min_alloc)
+					{
+						alloc = _min_alloc;
+					}
+					
+					_p = create_page_aligned(alloc);
+					_pos = _p.c_str();
+					_end = _p.end_c_str();
+				}
+				
+				size_t l = len;
+				if (l > (size_t)(_end - _pos))
+				{
+					l = _end - _pos;
+				}
+				
+				memcpy(_pos, buf, l);
+				_pos += l;
+				buf += l;
+				len -= l;
+				
+				if (_pos == _end)
+				{
+					_buf->append(_p, 0, _p.length());
+					_pos = _end = NULL;
+				}
+			}
+		}
+	};
+
+	page_aligned_appender get_page_aligned_appender(uint32_t min_pages = 1)
+	{
+		return page_aligned_appender(this, min_pages);
+	}
+
+	
+	class contiguous_appender
+	{
+		buffer* _buf;
+		char* _pos;
+		ptr _p;
+		bool _deep;
+	
+		size_t out_of_band_offset = 0;
+	
+		contiguous_appender(buffer* b, size_t len, bool d) : _buf(b), _deep(d)
+		{
+			size_t unused = _buf->_append_buffer.unused_tail_length();
+			if (len > unused)
+			{
+				_p = create(len);
+				_pos = _p.c_str();
+			}
+			else
+			{
+				_pos = _buf->_append_buffer.end_c_str();
+			}
+		}
+	
+		void flush_and_continue()
+		{
+			if (_p.have_raw())
+			{
+				size_t l = _pos - _p.c_str();
+				_buf->append(ptr(_p, 0, l));
+				_p.set_length(_p.length() - l);
+				_p.set_offset(_p.offset() + l);
+			}
+			else
+			{
+				size_t l = _pos - _buf->_append_buffer.end_c_str();
+				if (l)
+				{
+					_buf->_append_buffer.set_length(_buf->_append_buffer.length() + l);
+					_buf->append(_buf->_append_buffer, _buf->_append_buffer.end() - l, l);
+					_pos = _buf->_append_buffer.end_c_str();
+				}
+			}
+		}
+	
+		friend class buffer;
+	
+	public:
+		~contiguous_appender()
+		{
+			if (_p.have_raw())
+			{
+				_p.set_length(_pos - _p.c_str());
+				_buf->append(std::move(_p));
+			}
+			else
+			{
+				size_t l = _pos - _buf->_append_buffer.end_c_str();
+				if (l)
+				{
+					_buf->_append_buffer.set_length(_buf->_append_buffer.length() + l);
+					_buf->append(_buf->_append_buffer, _buf->_append_buffer.end() - l, l);
+				}
+			}
+		}
+	
+		size_t get_out_of_band_offset() const
+		{
+			return out_of_band_offset;
+		}
+		
+		void append(const char* p, size_t l)
+		{
+			maybe_inline_memcpy(_pos, p, l, 16);
+			_pos += l;
+		}
+		
+		char* get_pos_add(size_t len)
+		{
+			char* r = _pos;
+			_pos += len;
+			return r;
+		}
+		
+		char* get_pos()
+		{
+			return _pos;
+		}
+	
+		void append(const ptr& p)
+		{
+			if (!p.length())
+			{
+				return;
+			}
+			
+			if (_deep)
+			{
+				append(p.c_str(), p.length());
+			}
+			else
+			{
+				flush_and_continue();
+				_buf->append(p);
+				out_of_band_offset += p.length();
+			}
+		}
+		
+		void append(const buffer& l)
+		{
+			if (!l.length())
+			{
+				return;
+			}
+			
+			if (_deep)
+			{
+				for (const auto &p : l._buffers)
+				{
+					append(p.c_str(), p.length());
+				}
+			}
+			else
+			{
+				flush_and_continue();
+				_buf->append(l);
+				out_of_band_offset += l.length();
+			}
+		}
+	
+		size_t get_logical_offset()
+		{
+			if (_p.have_raw())
+			{
+				return out_of_band_offset + (_pos - _p.c_str());
+			}
+			else
+			{
+				return out_of_band_offset + (_pos - _buf->_append_buffer.end_c_str());
+			}
+		}
+	};
+	
+	contiguous_appender get_contiguous_appender(size_t len, bool deep = false)
+	{
+		return contiguous_appender(this, len, deep);
+	}
 
 public:
 	buffer() : _len(0), _memcopy_count(0), _last_p(this) {}

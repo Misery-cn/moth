@@ -1,6 +1,7 @@
 #ifndef _SYS_ERROR_H_
 #define _SYS_ERROR_H_
 
+#include <sstream>
 #include <errno.h>
 #include <string.h>
 
@@ -50,7 +51,26 @@ namespace Error
 
 	inline std::string to_string(int errcode)
 	{
-	    return strerror(errcode);
+	    char buf[256] = {0};
+		char* errmsg = NULL;
+
+		if (0 > errcode)
+		{
+			errcode = -errcode;
+		}
+
+		std::ostringstream oss;
+
+	#ifdef STRERROR_R_CHAR_P
+		errmsg = strerror_r(errcode, buf, sizeof(buf));
+	#else
+		strerror_r(errcode, buf, sizeof(buf));
+		errmsg = buf;
+	#endif
+
+		oss << "(" << errcode << ") " << errmsg;
+	
+		return oss.str();
 	}
 
 	inline bool is_not(int errcode)

@@ -1,5 +1,5 @@
-#ifndef _PROBE_H_
-#define _PROBE_H_
+#ifndef _ARCH_PROBE_H_
+#define _ARCH_PROBE_H_
 
 #ifdef __cplusplus
 extern "C" {

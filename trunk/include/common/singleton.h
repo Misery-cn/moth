@@ -9,11 +9,11 @@ template <typename T>
 class Singleton
 {
 public:
-        static T& instance();
-        virtual void update() {};
+	static T& instance();
+	virtual void update() {};
 
 protected:
-		Singleton();
+	Singleton();
 
 private:
 	
@@ -24,7 +24,7 @@ private:
 
 private:
 	static Mutex _lock;
-	static T *_instance;
+	static T* _instance;
 	static bool _destroyed;
 };
 

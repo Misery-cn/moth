@@ -6,25 +6,25 @@ typedef std::map<Callback*, scheduled_map_t::iterator> event_lookup_map_t;
 class TimerThread : public Thread
 {
 public:
-	TimerThread(Timer* t) : timer(t)
+	TimerThread(Timer* t) : _timer(t)
 	{
 	}
 	
-	void run()
+	void entry()
 	{
-		timer->timer_thread();
+		_timer->timer_thread();
 		return;
 	}
 	
 private:
-	Timer* timer;
+	Timer* _timer;
 };
 
 void Timer::init()
 {
 	_stopping = false;
 	_thread = new TimerThread(this);
-	_thread->start();
+	_thread->create();
 }
 
 void Timer::shutdown()
@@ -54,7 +54,7 @@ void Timer::timer_thread()
 		while (!_schedule.empty())
 		{
 			scheduled_map_t::iterator p = _schedule.begin();
-			// 时间还没到
+
 			if (p->first > now)
 			{
 				break;

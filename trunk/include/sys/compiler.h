@@ -74,6 +74,9 @@
 #define __align__  __attribute__((__aligned__(4)))
 #endif // __WORDSIZE==64
 
+#undef __attr_packed__
+#define __attr_packed__ __attribute__((packed))
+
 #if USE_LINKSCRIPT
 #define __init__ __attribute__((section(".hdata")))
 #else

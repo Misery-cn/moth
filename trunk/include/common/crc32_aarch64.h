@@ -9,11 +9,11 @@ extern "C" {
 
 #ifdef HAVE_ARMV8_CRC
 
-extern uint32_t crc32c_aarch64(uint32_t crc, unsigned char const *buffer, unsigned len);
+extern uint32_t crc32c_aarch64(uint32_t crc, unsigned char const* buffer, unsigned len);
 
 #else
 
-static inline uint32_t crc32c_aarch64(uint32_t crc, unsigned char const *buffer, unsigned len)
+static inline uint32_t crc32c_aarch64(uint32_t crc, unsigned char const* buffer, unsigned len)
 {
 	return 0;
 }

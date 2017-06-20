@@ -32,15 +32,6 @@ else(no_yasm)
 		if(not_arch_x32)
 			message("we are not x32")
 			set(HAVE_GOOD_YASM_ELF64 1)
-			#execute_process(COMMAND yasm -f elf64 -i
-			#	${CMAKE_SOURCE_DIR}/src/erasure-code/isa/isa-l/include/
-			#	${CMAKE_SOURCE_DIR}/src/erasure-code/isa/isa-l/erasure_code/gf_vect_dot_prod_avx2.asm.s
-			#	-o /dev/null
-			#	RESULT_VARIABLE rc OUTPUT_QUIET)
-			#if(NOT rc)
-			#	set(HAVE_BETTER_YASM_ELF64 1)
-			#	message("yasm can also build the isa-l stuff")
-			#endif(NOT rc)
 		else(not_arch_x32)
 			message("we are x32; no yasm for you")
 		endif(not_arch_x32)
