@@ -18,4 +18,4 @@ CHECK_FUNCTION_EXISTS(pwritev HAVE_PWRITEV)
 CHECK_FUNCTION_EXISTS(splice HAVE_SPLICE)
 
 
-#CONFIGURE_FILE(config.h.in include/common/config.h)
+#CONFIGURE_FILE(config.h.in include/common/acconfig.h)

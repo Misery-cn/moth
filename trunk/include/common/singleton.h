@@ -16,7 +16,7 @@ protected:
 	Singleton();
 
 private:
-	
+	// 禁掉构造函数和赋值运算符,以防构造多个实例
 	Singleton(const Singleton&);
 	Singleton& operator=(const Singleton&);
 

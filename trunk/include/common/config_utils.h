@@ -39,18 +39,19 @@ public:
 	typedef std::map<std::string, ConfSection>::const_iterator const_section_iter_t;
 
 	ConfFile();
-	~ConfFile();
+	ConfFile(const std::string& filename);
+	virtual ~ConfFile();
 	
 	void clear();
 
 	int parse_file(const std::string& filename);
 
-	int read(const std::string& section, const std::string& key, std::string& val) const;
+	int get_val(const std::string& section, const std::string& key, std::string& val) const;
 	
 	const_section_iter_t sections_begin();
 	const_section_iter_t sections_end();
 	
-	static void trim_whitespace(std::string& str, bool strip_internal);
+	static void trim(std::string& str, bool strip_internal);
 
 	static std::string normalize_key_name(const std::string& key);
 	

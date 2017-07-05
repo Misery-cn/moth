@@ -1,4 +1,4 @@
-#include "config.h"
+#include "acconfig.h"
 #include "int_types.h"
 #include "crc32_aarch64.h"
 

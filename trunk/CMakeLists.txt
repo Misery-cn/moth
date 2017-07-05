@@ -49,6 +49,6 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|AARCH64")
 	endif()
 endif()
 
-CONFIGURE_FILE(config.h.in include/common/config.h)
+CONFIGURE_FILE(config.h.in include/common/acconfig.h)
 
 add_subdirectory(src)

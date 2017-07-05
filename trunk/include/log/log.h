@@ -14,22 +14,27 @@
 #define RUNLOG(LEVEL, FORMAT, ...) \
 	do \
 	{ \
-		slog.do_log(LEVEL, FORMAT, ##__VA_ARGS__);\
+		slog.do_log(LEVEL, FORMAT, ##__VA_ARGS__); \
 	} while(0)
 
 
 #define DEBUG_LOG(FORMAT, ...) \
 	do \
 	{ \
-		slog.do_log(Log_Debug, FORMAT, ##__VA_ARGS__);\
+		slog.do_log(Log_Debug, FORMAT, ##__VA_ARGS__); \
 	} while(0)
 
 
 #define INFO_LOG(FORMAT, ...) \
 	do \
 	{ \
-		slog.do_log(Log_Info, FORMAT, ##__VA_ARGS__);\
+		slog.do_log(Log_Info, FORMAT, ##__VA_ARGS__); \
 	} while(0)
 
+#define ERROR_LOG(FORMAT, ...) \
+	do \
+	{ \
+		slog.do_log(Log_Error, FORMAT, ##__VA_ARGS__); \
+	} while(0)
 
 #endif

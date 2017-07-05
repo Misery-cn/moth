@@ -2,7 +2,7 @@
 #define _DEFINE_H_
 
 #include <stdarg.h>
-#include "config.h"
+#include "acconfig.h"
 
 #define IN
 #define OUT

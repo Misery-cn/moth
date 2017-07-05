@@ -17,6 +17,7 @@ endif(HAVE_GOOD_YASM_ELF64)
 
 
 SET(SRC_LIST moth.cpp
+	master.cpp
     ../../trunk/src/arch/arm.c
     ../../trunk/src/arch/intel.c
     ../../trunk/src/arch/probe.cpp

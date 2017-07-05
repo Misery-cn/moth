@@ -12,6 +12,11 @@ set(CMAKE_ASM_FLAGS "-f elf64")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wtype-limits -Wignored-qualifiers -Winit-self")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wpointer-arith -Werror=format-security -fno-strict-aliasing -fsigned-char")
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+    message(STATUS "optional:-std=c++11")   
+endif(CMAKE_COMPILER_IS_GNUCXX)
+
 execute_process(
         COMMAND yasm -f elf64 ${CMAKE_SOURCE_DIR}/../trunk/src/common/crc32c_intel_fast_asm.S -o /dev/null
         RESULT_VARIABLE no_yasm
@@ -52,6 +57,6 @@ if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|AARCH64")
 	endif()
 endif()
 
-CONFIGURE_FILE(../trunk/config.h.in ../trunk/include/common/config.h)
+CONFIGURE_FILE(../trunk/config.h.in ../trunk/include/common/acconfig.h)
 
 add_subdirectory(src)

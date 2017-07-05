@@ -35,6 +35,12 @@ ConfFile::ConfFile()
 {
 }
 
+ConfFile::ConfFile(const std::string& filename)
+{
+	parse_file(filename);
+}
+
+
 ConfFile::~ConfFile()
 {
 }
@@ -295,7 +301,7 @@ ConfLine* ConfFile::process_line(int line_no, const char* line)
 				else if ((']' == c) && (!escaping))
 				{
 					// 去除空格
-					trim_whitespace(section, true);
+					trim(section, true);
 					if (section.empty())
 					{
 						return NULL;
@@ -385,12 +391,12 @@ ConfLine* ConfFile::process_line(int line_no, const char* line)
 						return NULL;
 					}
 					
-					trim_whitespace(val, false);
+					trim(val, false);
 					return new ConfLine(key, val, section, comment, line_no);
 				}
 				else if ((('#' == c) || (';' == c)) && !escaping)
 				{
-					trim_whitespace(val, false);
+					trim(val, false);
 					state = ACCEPT_COMMENT_TEXT;
 				}
 				else if ('\\' == c && !escaping)
@@ -466,7 +472,7 @@ ConfLine* ConfFile::process_line(int line_no, const char* line)
 	}
 }
 
-void ConfFile::trim_whitespace(std::string& str, bool strip_internal)
+void ConfFile::trim(std::string& str, bool strip_internal)
 {
 	const char* in = str.c_str();
 	// 去掉头部空格
@@ -537,13 +543,13 @@ void ConfFile::trim_whitespace(std::string& str, bool strip_internal)
 std::string ConfFile::normalize_key_name(const std::string& key)
 {
 	std::string k(key);
-	ConfFile::trim_whitespace(k, true);
+	ConfFile::trim(k, true);
 	// 配置项名空格替换为下划线
 	std::replace(k.begin(), k.end(), ' ', '_');
 	return k;
 }
 
-int ConfFile::read(const std::string& section, const std::string& key, std::string& val) const
+int ConfFile::get_val(const std::string& section, const std::string& key, std::string& val) const
 {
 	std::string k(normalize_key_name(key));
 	const_section_iter_t s = _sections.find(section);

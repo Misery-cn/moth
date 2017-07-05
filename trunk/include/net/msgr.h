@@ -7,7 +7,9 @@
 #include "byteorder.h"
 
 #define ENTITY_TYPE_CLIENT	0x01
-#define ENTITY_TYPE_SERVER	0X02
+#define ENTITY_TYPE_SERVER	0x02
+#define ENTITY_TYPE_MASTER	0x03
+#define ENTITY_TYPE_SLAVE	0x04
 
 #define MSGR_TAG_MSG				1
 #define MSGR_TAG_KEEPALIVE		2

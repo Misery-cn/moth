@@ -17,10 +17,17 @@ public:
 
 	static const int TYPE_CLIENT = ENTITY_TYPE_CLIENT;
 	static const int TYPE_SERVER = ENTITY_TYPE_SERVER;
+	static const int TYPE_MASTER = ENTITY_TYPE_MASTER;
+	static const int TYPE_SLAVE = ENTITY_TYPE_SLAVE;
 
 	entity_name_t() : _type(0), _num(0) {}
 	entity_name_t(uint8_t t, int64_t n) : _type(t), _num(n) {}
 	explicit entity_name_t(const entity_name& e) : _type(e.type), _num(e.num) {}
+	
+	static entity_name_t SVR(int64_t i) { return entity_name_t(TYPE_SERVER, i); }
+	static entity_name_t CLI(int64_t i) { return entity_name_t(TYPE_CLIENT, i); }
+	static entity_name_t MASTER(int64_t i) { return entity_name_t(TYPE_MASTER, i); }
+	static entity_name_t SLAVE(int64_t i) { return entity_name_t(TYPE_SLAVE, i); }
 
 	int64_t num() const { return _num; }
 
@@ -141,6 +148,11 @@ public:
 	};
 
 	entity_addr_t() : _type(0), _nonce(0)
+	{ 
+		memset(&_addr, 0, sizeof(_addr));
+	}
+
+	entity_addr_t(const char* str)
 	{ 
 		memset(&_addr, 0, sizeof(_addr));
 	}

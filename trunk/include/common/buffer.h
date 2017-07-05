@@ -12,7 +12,7 @@
 //#include <type_traits>
 //#include <inttypes.h>
 #include <stdlib.h> // size_t ssize_t
-#include "config.h"
+#include "acconfig.h"
 #include "builtin.h"
 #include "page.h"
 #include "exception.h"
