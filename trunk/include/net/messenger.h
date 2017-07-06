@@ -13,7 +13,7 @@ class Messenger
 public:
 	Messenger();
 
-	Messenger(entity_name_t entityname) : _entity(), _magic(0)
+	Messenger(entity_name_t entityname) : _entity(), _started(false), _magic(0)
 	{
 		_entity._name = entityname;
 	}

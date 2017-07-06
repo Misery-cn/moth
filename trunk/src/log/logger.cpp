@@ -58,7 +58,6 @@ void Logger::call_appender(LogEvent* event)
 		return;
 	}
 
-	_lock.lock();
 	// ÍÐ¹Ü
 	MutexGuard guard(_lock);
 

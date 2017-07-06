@@ -153,8 +153,11 @@ public:
 	}
 
 	entity_addr_t(const char* str)
-	{ 
-		memset(&_addr, 0, sizeof(_addr));
+	{
+		if (!parse(str))
+		{
+			memset(this, 0, sizeof(*this));
+		}
 	}
 	
 	explicit entity_addr_t(const entity_addr& a)
@@ -354,6 +357,105 @@ public:
 				return true;
 			}
 		}
+	}
+	
+	bool parse(const char* str)
+	{
+		// ipv6最大长度39
+		char ipv4[39 + 39] = {0};
+		char* tmp = ipv4;
+		const char* s = str;
+		bool brackets = false;
+		
+		// ipv6地址间使用:分隔
+		// 如果配置了端口号,可配置为如下格式,不然不好区分地址和端口
+		// [0000:0000:0000:0000:0000:0000:0000:0000]:9999
+		if ('[' == *s)
+		{
+			s++;
+			brackets = true;
+		}
+		
+		while (tmp < ipv4 + sizeof(ipv4))
+		{
+			if ('.' == *s || ('0' <= *s && '9' >= *s))
+			{
+				*tmp++ = *s++;
+			}
+			else
+			{
+				tmp++;
+			}
+		}
+		
+		char ipv6[39 + 39] = {0};
+		tmp = ipv6;
+		s = str;
+		while (tmp < ipv6 + sizeof(ipv6))
+		{
+			if (':' == *s || ('0' <= *s && '9' >= *s)
+				|| ('a' <= *s && 'f' >= *s)
+				|| ('A' <= *s && 'F' >= *s))
+			{
+				*tmp++ = *s++;
+			}
+			else
+			{
+				tmp++;	
+			}
+		}
+		
+		struct in_addr a4;
+		struct in6_addr a6;
+		if (inet_pton(AF_INET, ipv4, &a4))
+		{
+			_addr4.sin_addr.s_addr = a4.s_addr;
+			_addr.ss_family = AF_INET;
+			s = str + strlen(ipv4);
+		}
+		else if (inet_pton(AF_INET6, ipv6, &a6))
+		{
+			_addr.ss_family = AF_INET6;
+			memcpy(&_addr6.sin6_addr, &a6, sizeof(a6));
+			s = str + strlen(ipv6);
+		}
+		else
+		{
+			return false;
+		}
+		
+		if (brackets)
+		{
+			if (*s != ']')
+			{
+				return false;
+			}
+			s++;
+		}
+		
+		if (':' == *s)
+		{
+			s++;
+			int port = atoi(s);
+			set_port(port);
+			while (*s && *s >= '0' && *s <= '9')
+			{
+				s++;
+			}
+		}
+		
+		if ('/' == *s)
+		{
+			s++;
+			int non = atoi(s);
+			set_nonce(non);
+			while (*s && *s >= '0' && *s <= '9')
+			{
+				s++;
+			}
+		}
+		
+		return true;
 	}
 
 	void encode(buffer& buf) const

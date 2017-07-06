@@ -13,43 +13,61 @@ ssize_t safe_read(int fd, void* buf, size_t count)
 	while (cnt < count)
 	{
 		ssize_t r = read(fd, buf, count - cnt);
-		if (r <= 0)
+		if (0 >= r)
 		{
-			if (r == 0) {
+			// 读完了
+			if (0 == r)
+			{
 				// EOF
 				return cnt;
 			}
-			if (errno == EINTR)
+			// 中断
+			if (EINTR == errno)
+			{
 				continue;
+			}
+			
 			return -errno;
 		}
 		cnt += r;
 		buf = (char *)buf + r;
 	}
+	
 	return cnt;
 }
 
 ssize_t safe_read_exact(int fd, void* buf, size_t count)
 {
 	ssize_t ret = safe_read(fd, buf, count);
-	if (ret < 0)
+	if (0 > ret)
+	{
 		return ret;
+	}
+	
 	if ((size_t)ret != count)
+	{
 		return -EDOM;
+	}
+	
 	return 0;
 }
  
 ssize_t safe_write(int fd, const void* buf, size_t count)
 {
-	while (count > 0)
+	while (0 < count)
 	{
 		ssize_t r = write(fd, buf, count);
-		if (r < 0)
+		if (0 > r)
 		{
+			// 中断,继续尝试
 			if (errno == EINTR)
+			{
 				continue;
+			}
+			
 			return -errno;
 		}
+		
 		count -= r;
 		buf = (char *)buf + r;
 	}
@@ -64,15 +82,18 @@ ssize_t safe_pread(int fd, void* buf, size_t count, off_t offset)
 	while (cnt < count)
 	{
 		ssize_t r = pread(fd, b + cnt, count - cnt, offset + cnt);
-		if (r <= 0)
+		if (0 >= r)
 		{
-			if (r == 0)
+			if (0 == r)
 			{
 				// EOF
 				return cnt;
 			}
-			if (errno == EINTR)
+			if (EINTR == errno)
+			{
 				continue;
+			}
+			
 			return -errno;
 		}
 
@@ -84,22 +105,31 @@ ssize_t safe_pread(int fd, void* buf, size_t count, off_t offset)
 ssize_t safe_pread_exact(int fd, void* buf, size_t count, off_t offset)
 {
 	ssize_t ret = safe_pread(fd, buf, count, offset);
-	if (ret < 0)
+	if (0 > ret)
+	{
 		return ret;
+	}
+	
 	if ((size_t)ret != count)
+	{
 		return -EDOM;
+	}
+	
 	return 0;
 }
 
 ssize_t safe_pwrite(int fd, const void* buf, size_t count, off_t offset)
 {
-	while (count > 0)
+	while (0 < count)
 	{
 		ssize_t r = pwrite(fd, buf, count, offset);
-		if (r < 0)
+		if (0 > r)
 		{
-			if (errno == EINTR)
+			if (EINTR == errno)
+			{
 				continue;
+			}
+			
 			return -errno;
 		}
 		count -= r;
@@ -117,17 +147,23 @@ ssize_t safe_splice(int fd_in, off_t* off_in, int fd_out, off_t* off_out, size_t
 	while (cnt < len)
 	{
 	    ssize_t r = splice(fd_in, off_in, fd_out, off_out, len - cnt, flags);
-	    if (r <= 0)
+	    if (0 >= r)
 		{
-			if (r == 0)
+			if (0 == r)
 			{
 				// EOF
 				return cnt;
 			}
-			if (errno == EINTR)
+			
+			if (EINTR == errno)
+			{
 				continue;
-			if (errno == EAGAIN)
+			}
+			
+			if (EAGAIN == errno)
+			{
 				break;
+			}
 			
 			return -errno;
 	    }
@@ -140,10 +176,16 @@ ssize_t safe_splice(int fd_in, off_t* off_in, int fd_out, off_t* off_out, size_t
 ssize_t safe_splice_exact(int fd_in, off_t* off_in, int fd_out, off_t* off_out, size_t len, unsigned int flags)
 {
 	ssize_t ret = safe_splice(fd_in, off_in, fd_out, off_out, len, flags);
-	if (ret < 0)
+	if (0 > ret)
+	{
 		return ret;
+	}
+	
 	if ((size_t)ret != len)
+	{
 		return -EDOM;
+	}
+	
 	return 0;
 }
 #endif
@@ -157,13 +199,15 @@ int safe_write_file(const char* base, const char* file, const char* val, size_t 
 
 	char oldval[80];
 	ret = safe_read_file(base, file, oldval, sizeof(oldval));
-	if (ret == (int)vallen && memcmp(oldval, val, vallen) == 0)
+	if (ret == (int)vallen && 0 == memcmp(oldval, val, vallen))
+	{
 		return 0;
+	}
 
 	snprintf(fn, sizeof(fn), "%s/%s", base, file);
 	snprintf(tmp, sizeof(tmp), "%s/%s.tmp", base, file);
 	fd = open(tmp, O_WRONLY|O_CREAT|O_TRUNC, 0644);
-	if (fd < 0)
+	if (0 > fd)
 	{
 		ret = errno;
 		return -ret;
@@ -177,18 +221,21 @@ int safe_write_file(const char* base, const char* file, const char* val, size_t 
 	}
 
 	ret = fsync(fd);
-	if (ret < 0)
+	if (0 > ret)
+	{
 		ret = -errno;
+	}
+	
 	VOID_TEMP_FAILURE_RETRY(close(fd));
 		
-	if (ret < 0)
+	if (0 > ret)
 	{
 		unlink(tmp);
 		return ret;
 	}
 	
 	ret = rename(tmp, fn);
-	if (ret < 0)
+	if (0 > ret)
 	{
 		ret = -errno;
 		unlink(tmp);
@@ -196,7 +243,7 @@ int safe_write_file(const char* base, const char* file, const char* val, size_t 
 	}
 
 	fd = open(base, O_RDONLY);
-	if (fd < 0)
+	if (0 > fd)
 	{
 		ret = -errno;
 		return ret;
@@ -204,7 +251,10 @@ int safe_write_file(const char* base, const char* file, const char* val, size_t 
 	
 	ret = fsync(fd);
 	if (ret < 0)
+	{
 		ret = -errno;
+	}
+	
 	VOID_TEMP_FAILURE_RETRY(close(fd));
 
 	return ret;
@@ -217,13 +267,13 @@ int safe_read_file(const char* base, const char* file, char* val, size_t vallen)
 
 	snprintf(fn, sizeof(fn), "%s/%s", base, file);
 	fd = open(fn, O_RDONLY);
-	if (fd < 0)
+	if (0 > fd)
 	{
 		return -errno;
 	}
 	
 	len = safe_read(fd, val, vallen);
-	if (len < 0)
+	if (0 > len)
 	{
 		VOID_TEMP_FAILURE_RETRY(close(fd));
 		return len;

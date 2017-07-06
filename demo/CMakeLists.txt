@@ -6,6 +6,8 @@ project(moth)
 
 include(CMake.common)
 
+SET(CMAKE_BUILD_TYPE "Debug") 
+
 set(CMAKE_ASM_COMPILER  ${PROJECT_SOURCE_DIR}/../trunk/yasm-wrapper)
 set(CMAKE_ASM_FLAGS "-f elf64")
 

@@ -48,6 +48,12 @@ public:
 
 	int get_val(const std::string& section, const std::string& key, std::string& val) const;
 	
+	// int get_val_as_int(const std::string& section, const std::string& key) const;
+	
+	// double get_val_as_double() const;
+	
+	// std::string get_val_as_string(const std::string& section, const std::string& key) const;
+	
 	const_section_iter_t sections_begin();
 	const_section_iter_t sections_end();
 	

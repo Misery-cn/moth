@@ -35,13 +35,16 @@ int main()
 
 	std::string straddr;
 	sconfig.get_val("global", "addr", straddr);
-	INFO_LOG("addr is %s", straddr.c_str());
-	entity_addr_t addr;
-	
+	entity_addr_t addr(straddr.c_str());
 	
 	Messenger* msgr = Messenger::create("simple", entity_name_t::MASTER(0), "master", 0);
-	RUNLOG(Log_Info, "create messenger succssful");
-	
+	INFO_LOG("starting bind %s", straddr.c_str());
+	err = msgr->bind(addr);
+	if (err < 0)
+	{
+		std::cerr << "unable to bind to " << straddr << std::endl;
+		forker.exit(1);
+	}
 	
 	forker.daemonize();
 	
