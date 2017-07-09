@@ -1,7 +1,9 @@
 #include <deque>
 #include <map>
 #include <set>
+#include <vector>
 #include <string>
+#include "mutex.h"
 
 class ConfLine
 {
@@ -15,6 +17,8 @@ public:
 	friend std::ostream& operator<<(std::ostream& oss, const ConfLine& line);
 	
 public:
+	
+	Mutex _lock;
 	// 配置项名
 	std::string _key;
 	// 配置项的值
@@ -28,6 +32,8 @@ class ConfSection
 {
 public:
 	typedef std::set<ConfLine>::const_iterator const_line_iter_t;
+
+	Mutex _lock;
 
 	std::set<ConfLine> _lines;
 };
@@ -48,7 +54,7 @@ public:
 
 	int get_val(const std::string& section, const std::string& key, std::string& val) const;
 	
-	// int get_val_as_int(const std::string& section, const std::string& key) const;
+	bool get_val_as_int(const std::string& section, const std::string& key, uint32_t& val) const;
 	
 	// double get_val_as_double() const;
 	
@@ -56,6 +62,8 @@ public:
 	
 	const_section_iter_t sections_begin();
 	const_section_iter_t sections_end();
+
+	std::vector<std::string> get_all_sections();
 	
 	static void trim(std::string& str, bool strip_internal);
 
@@ -65,6 +73,8 @@ public:
 	friend std::ostream& operator<<(std::ostream& oss, const ConfFile& cf);
 
 private:
+	Mutex _lock;
+	
 	void load_from_buffer(const char* buf, size_t sz);
 
 	// 解析一行配置文件

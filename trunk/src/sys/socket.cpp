@@ -1058,9 +1058,7 @@ int Socket::connect()
 			goto fail;
 		}
   	}
-
-	_msgr->learned_addr(peer_addr_for_me);
-
+	
 	::encode(_msgr->_entity._addr, myaddrbl, 0);
 
 	memset(&msg, 0, sizeof(msg));

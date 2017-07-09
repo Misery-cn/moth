@@ -3,6 +3,7 @@
 #include "socket.h"
 #include "simple_messenger.h"
 
+// 设置文件描述符旗标防止异常关闭
 static int set_close_on_exec(int fd)
 {
 	int flags = fcntl(fd, F_GETFD, 0);
@@ -53,6 +54,7 @@ int Accepter::bind(const entity_addr_t& bind_addr, const std::set<int>& avoid_po
 		}
 	}
 
+	// 创建一个socket用于监听
 	_listen_fd = ::socket(family, SOCK_STREAM, 0);
 	
 	if (0 > _listen_fd)
@@ -62,7 +64,7 @@ int Accepter::bind(const entity_addr_t& bind_addr, const std::set<int>& avoid_po
 
 	if (set_close_on_exec(_listen_fd))
 	{
-		// 
+		ERROR_LOG("set close on exec flag failed!");
 	}
   
 	entity_addr_t listen_addr = bind_addr;
@@ -71,13 +73,11 @@ int Accepter::bind(const entity_addr_t& bind_addr, const std::set<int>& avoid_po
 	int rc = -1;
 	int r = -1;
 
-	// config
+	// 如果失败尝试绑定3次
 	for (int i = 0; i < 3; ++i)
 	{
-
 		if (0 < i)
 		{
-			// config
 			sleep(5);
 		}
 
@@ -98,10 +98,10 @@ int Accepter::bind(const entity_addr_t& bind_addr, const std::set<int>& avoid_po
 				continue;
 			}
 		}
+		// 如果没有配置监听端口
 		else
 		{
-			// config
-			for (int port = 6800; port <= 7300; port++)
+			for (int port = 9000; port <= 9999; port++)
 			{
 				if (avoid_ports.count(port))
 				{
@@ -131,6 +131,7 @@ int Accepter::bind(const entity_addr_t& bind_addr, const std::set<int>& avoid_po
 		}
 	}
 
+	// 绑定端口失败
 	if (0 > rc)
 	{
 		::close(_listen_fd);
@@ -150,20 +151,28 @@ int Accepter::bind(const entity_addr_t& bind_addr, const std::set<int>& avoid_po
 	}
 	listen_addr.set_sockaddr((sockaddr*)&ss);
 
-	// config
-	if (0)
+	// 设置接收缓冲大小
+	int size = 4096;
+	rc = ::setsockopt(_listen_fd, SOL_SOCKET, SO_RCVBUF, (void*)&size, sizeof(size));
+	if (0 > rc)
 	{
-		int size = 0;
-		rc = ::setsockopt(_listen_fd, SOL_SOCKET, SO_RCVBUF, (void*)&size, sizeof(size));
-		if (0 > rc)
-		{
-			rc = -errno;
-			::close(_listen_fd);
-			_listen_fd = -1;
-			return rc;
-		}
+		rc = -errno;
+		::close(_listen_fd);
+		_listen_fd = -1;
+		return rc;
+	}
+	
+	// 设置发送缓冲大小
+	rc = ::setsockopt(_listen_fd, SOL_SOCKET, SO_SNDBUF , (void*)&size, sizeof(size));
+	if (0 > rc)
+	{
+		rc = -errno;
+		::close(_listen_fd);
+		_listen_fd = -1;
+		return rc;
 	}
 
+	// 开始监听
 	rc = ::listen(_listen_fd, 128);
 	if (0 > rc)
 	{
@@ -173,24 +182,8 @@ int Accepter::bind(const entity_addr_t& bind_addr, const std::set<int>& avoid_po
 		return rc;
 	}
   
-	_msgr->set_entity_addr(bind_addr);
-	if (bind_addr != entity_addr_t())
-	{
-		_msgr->learned_addr(bind_addr);
-	}
-	else
-	{
-	}
-
-	if (0 == _msgr->get_entity_addr().get_port())
-	{
-		_msgr->set_entity_addr(listen_addr);
-	}
-	
-	entity_addr_t addr = _msgr->get_entity_addr();
-	addr._nonce = _nonce;
-	_msgr->set_entity_addr(addr);
-
+	listen_addr._nonce = _nonce;
+	_msgr->set_entity_addr(listen_addr);
 	_msgr->init_local_connection();
 
 	rc = create_socket(&_shutdown_rd_fd, &_shutdown_wr_fd);
@@ -223,6 +216,8 @@ int Accepter::rebind(const std::set<int>& avoid_ports)
 
 int Accepter::start()
 {
+	DEBUG_LOG("Accepter start");
+	
 	create();
 
 	return 0;
@@ -230,6 +225,8 @@ int Accepter::start()
 
 void Accepter::entry()
 {
+	DEBUG_LOG("Accepter entry");
+	
 	int errors = 0;
 	int ch;
 
@@ -275,13 +272,13 @@ void Accepter::entry()
 		}
 
 		sockaddr_storage ss;
-		socklen_t slen = sizeof(ss);
-		int fd = ::accept(_listen_fd, (sockaddr*)&ss, &slen);
+		socklen_t len = sizeof(ss);
+		int fd = ::accept(_listen_fd, (sockaddr*)&ss, &len);
 		if (0 <= fd)
 		{
-			int r = set_close_on_exec(fd);
-			if (r)
+			if (set_close_on_exec(fd))
 			{
+				ERROR_LOG("set close on exec flag failed while accept");
 			}
 			
 			errors = 0;

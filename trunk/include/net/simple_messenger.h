@@ -5,6 +5,7 @@
 #include <set>
 #include <map>
 #include <unordered_map>
+#include "log.h"
 #include "spinlock.h"
 #include "msg_features.h"
 #include "messenger.h"
@@ -104,10 +105,6 @@ private:
 
 	uint64_t _nonce;
 	Mutex _lock;
-	bool _need_addr;
-	
-public:
-  bool get_need_addr() const { return _need_addr; }
 
 private:
 
@@ -159,11 +156,6 @@ public:
 	int _timeout;
 
 	Connection* _local_connection;
-
-	// AuthAuthorizer* get_authorizer(int peer_type, bool force_new);
-
-	// bool verify_authorizer(Connection* con, int peer_type, int protocol, buffer& auth, buffer& auth_reply,
-	//								bool& isvalid, CryptoKey& session_key);
 	
 	uint32_t get_global_seq(uint32_t old = 0)
 	{
@@ -179,11 +171,7 @@ public:
 		return ret;
 	}
 
-	// int get_proto_version(int peer_type, bool connect);
-
 	void init_local_connection();
-
-	void learned_addr(const entity_addr_t& peer_addr_for_me);
 	
 	void reaper_entry();
 

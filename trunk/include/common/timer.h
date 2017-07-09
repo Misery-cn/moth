@@ -11,8 +11,13 @@ class TimerThread;
 class Timer
 {
 public:
-	Timer(){};
-	~Timer(){};
+	Timer() : _stopping(false), _lock(), _cond(), _thread(NULL)
+	{
+	}
+	
+	~Timer() 
+	{
+	}
 	
 	void init();
 	

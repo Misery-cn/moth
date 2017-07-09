@@ -20,6 +20,19 @@ bool Log::init()
 	return true;
 }
 
+void Log::set_log_level(uint32_t level)
+{
+	if (Log_Off <= level && Log_Debug >= level)
+	{
+		_run->set_log_level((log_level_t)level);
+	}
+	else
+	{
+		// 默认info级别的日志
+		_run->set_log_level(Log_Info);
+	}
+}
+
 void Log::do_log(log_level_t level, const char* format, ...)
 {
 	if (NULL == _run)

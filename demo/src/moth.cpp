@@ -2,12 +2,41 @@
 #include "messenger.h"
 #include "forker.h"
 #include "master.h"
+#include "mastermap.h"
 #include "global.h"
 
 Master* master = NULL;
 
-int main()
+void usage(bool et = true)
 {
+	std::cerr << "usage: moth -i id" << std::endl;
+
+	// 是否直接退出
+	if (et)
+	{
+		exit(1);
+	}
+}
+
+int main(int argc, const char* argv[])
+{
+	if (3 > argc)
+	{
+		usage();
+	}
+
+	if (0 != strcasecmp(argv[1], "-i") || !StringUtils::is_numeric_string(argv[2]))
+	{
+		usage();
+	}
+	
+	uint32_t rank = 0;
+
+	if (!StringUtils::string2int(argv[2], rank))
+	{
+		usage();
+	}
+	
 	int err = 0;
 
 	global_init();
@@ -33,22 +62,39 @@ int main()
 		forker.exit(err);
 	}
 
-	std::string straddr;
-	sconfig.get_val("global", "addr", straddr);
-	entity_addr_t addr(straddr.c_str());
+	MasterMap master_map;
+	master_map.build_initial();
+
+	entity_addr_t addr;
+
+	if (!master_map.contains(rank))
+	{
+		std::cerr << "master id no exits" << std::endl;
+		forker.exit(1);
+	}
+	else
+	{
+		addr = master_map.get_addr_by_rank(rank);
+	}
 	
-	Messenger* msgr = Messenger::create("simple", entity_name_t::MASTER(0), "master", 0);
-	INFO_LOG("starting bind %s", straddr.c_str());
+	Messenger* msgr = Messenger::create("simple", entity_name_t::MASTER(rank), "master", 0);
+
 	err = msgr->bind(addr);
 	if (err < 0)
 	{
-		std::cerr << "unable to bind to " << straddr << std::endl;
+		std::cerr << "unable to bind to " << addr.get_sockaddr()->sa_data << std::endl;
 		forker.exit(1);
 	}
 	
+	master = new Master(msgr, &master_map);
+	
 	forker.daemonize();
 	
-	while (true) {}
+	msgr->start();
+	
+	master->init();
+	
+	msgr->wait();
 	
 	return 0;
 }

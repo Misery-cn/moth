@@ -1,4 +1,5 @@
 #include "timer.h"
+#include "log.h"
 
 typedef std::multimap<utime_t, Callback*> scheduled_map_t;
 typedef std::map<Callback*, scheduled_map_t::iterator> event_lookup_map_t;
@@ -47,6 +48,8 @@ void Timer::timer_thread()
 {
 	_lock.lock();
 
+	DEBUG_LOG("timer thread starting");
+
 	while (!_stopping)
 	{
 		utime_t now = clock_now();
@@ -81,8 +84,11 @@ void Timer::timer_thread()
 		}
 		else
 		{
-			_cond.timed_wait(_lock, _schedule.begin()->first - now);
+			// 注意需要转成毫秒
+			_cond.timed_wait(_lock, (_schedule.begin()->first - now).to_msec());
 		}
+
+		DEBUG_LOG("timer thread awake");
 	}
 	
 	_lock.unlock();
@@ -103,6 +109,8 @@ void Timer::add_event_at(utime_t when, Callback* cb)
 	event_lookup_map_t::value_type e_val(cb, i);
 	std::pair<event_lookup_map_t::iterator, bool> rval(_events.insert(e_val));
 
+	// 如果只有一个任务待执行,则需要唤醒执行线程
+	// 如果有多个任务,执行线程只会time_wait
 	if (i == _schedule.begin())
 	{
 		_cond.signal();

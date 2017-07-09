@@ -36,5 +36,12 @@
 	{ \
 		slog.do_log(Log_Error, FORMAT, ##__VA_ARGS__); \
 	} while(0)
+		
+
+#define ENTER_FUNC() \
+	do \
+	{ \
+		DEBUG_LOG("%s", __func__); \
+	} while(0)
 
 #endif

@@ -4,7 +4,6 @@
 #include "mutex.h"
 #include "log_appender.h"
 
-
 class Logger;
 
 // »’÷æ¿‡
@@ -17,6 +16,8 @@ public:
 	bool init();
 
 	void do_log(log_level_t level, const char* format, ...);
+	
+	void set_log_level(uint32_t level);
 
 private:
 	

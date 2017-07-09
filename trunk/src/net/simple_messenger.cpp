@@ -6,7 +6,7 @@ SimpleMessenger::SimpleMessenger(entity_name_t name, std::string mname, uint64_t
     _dispatch_queue(this, mname),
     _reaper_thread(this),
 	_nonce(nonce),
-    _lock(), _need_addr(true), _did_bind(false),
+    _lock(), _did_bind(false),
     _global_seq(0),
     _dispatch_throttler(std::string("msgr_dispatch_throttler_") + mname),
     _reaper_started(false), _reaper_stop(false),
@@ -22,6 +22,8 @@ SimpleMessenger::~SimpleMessenger()
 
 void SimpleMessenger::ready()
 {
+	DEBUG_LOG("messenger ready");
+	
 	_dispatch_queue.start();
 
 	Mutex::Locker locker(_lock);
@@ -94,6 +96,8 @@ void SimpleMessenger::set_addr_unknowns(entity_addr_t& addr)
 
 void SimpleMessenger::reaper_entry()
 {
+	DEBUG_LOG("socket reaper start");
+	
 	Mutex::Locker locker(_lock);
 	while (!_reaper_stop)
 	{
@@ -107,12 +111,17 @@ void SimpleMessenger::reaper_entry()
 	}
 }
 
+
 void SimpleMessenger::reaper()
 {
+	DEBUG_LOG("reaper start");
+	
 	while (!_socket_reap_queue.empty())
 	{
 		Socket* socket = _socket_reap_queue.front();
 		_socket_reap_queue.pop_front();
+		
+		DEBUG_LOG("reaping socket");
 
 		socket->_lock.lock();
 		socket->discard_out_queue();
@@ -163,7 +172,7 @@ bool SimpleMessenger::is_connected(Connection* con)
 }
 
 int SimpleMessenger::bind(const entity_addr_t& bind_addr)
-{
+{	
 	{
 		Mutex::Locker locker(_lock);
 
@@ -192,6 +201,8 @@ int SimpleMessenger::rebind(const std::set<int>& avoid_ports)
 
 int SimpleMessenger::start()
 {
+	DEBUG_LOG("messenger start");
+	
 	Mutex::Locker locker(_lock);
 
 	_started = true;
@@ -242,20 +253,6 @@ Socket* SimpleMessenger::connect_rank(const entity_addr_t& addr, int type, Socke
 
 	return socket;
 }
-
-/*
-AuthAuthorizer* SimpleMessenger::get_authorizer(int peer_type, bool force_new)
-{
-	return ms_deliver_get_authorizer(peer_type, force_new);
-}
-
-bool SimpleMessenger::verify_authorizer(Connection* con, int peer_type, int protocol, buffer& authorizer, buffer& authorizer_reply,
-												bool& isvalid, CryptoKey& session_key)
-{
-	return ms_deliver_verify_authorizer(con, peer_type, protocol, authorizer, authorizer_reply, isvalid,session_key);
-}
-*/
-
 
 Connection* SimpleMessenger::get_connection(const entity_inst_t& dest)
 {
@@ -375,8 +372,6 @@ int SimpleMessenger::send_keepalive(Connection* con)
 	
 	return ret;
 }
-
-
 
 void SimpleMessenger::wait()
 {
@@ -543,25 +538,6 @@ void SimpleMessenger::mark_disposable(Connection* con)
 	}
 	else
 	{
-	}
-}
-
-void SimpleMessenger::learned_addr(const entity_addr_t& peer_addr_for_me)
-{
-	if (!_need_addr)
-	{
-		return;
-	}
-
-	Mutex::Locker locker(_lock);
-	if (_need_addr)
-	{
-	    entity_addr_t t = peer_addr_for_me;
-	    t.set_port(_entity._addr.get_port());
-	    t.set_nonce(_entity._addr.get_nonce());
-	    _entity._addr = t;
-	    _need_addr = false;
-	    init_local_connection();
 	}
 }
 

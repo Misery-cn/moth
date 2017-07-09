@@ -6,6 +6,7 @@
 #include <string.h>
 #include <iostream>
 #include "config_utils.h"
+#include "string_utils.h"
 
 ConfLine::ConfLine(const std::string& key, const std::string val,
       const std::string section, const std::string comment, int lineno)
@@ -569,6 +570,24 @@ int ConfFile::get_val(const std::string& section, const std::string& key, std::s
 	return 0;
 }
 
+bool ConfFile::get_val_as_int(const std::string& section, const std::string& key, uint32_t& val) const
+{
+	std::string strval;
+	
+	if (get_val(section, key, strval))
+	{
+		return false;
+	}
+
+	// ²»ÊÇÊý×Ö
+	if (!StringUtils::is_numeric_string(strval.c_str()))
+	{
+		return false;
+	}
+	
+	return StringUtils::string2int(strval.c_str(), val);
+}
+
 ConfFile::const_section_iter_t ConfFile::sections_begin()
 {
 	return _sections.begin();
@@ -578,3 +597,20 @@ ConfFile::const_section_iter_t ConfFile::sections_end()
 {
 	return _sections.end();
 }
+
+std::vector<std::string> ConfFile::get_all_sections()
+{
+	Mutex::Locker locker(_lock);
+	
+	std::vector<std::string> secs;
+
+	const_section_iter_t l = sections_begin();
+
+	for (; l != sections_end(); l++)
+	{
+		secs.push_back(l->first);
+	}
+
+	return secs;
+}
+
