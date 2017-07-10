@@ -1,9 +1,6 @@
 #include "timer.h"
 #include "log.h"
 
-typedef std::multimap<utime_t, Callback*> scheduled_map_t;
-typedef std::map<Callback*, scheduled_map_t::iterator> event_lookup_map_t;
-
 class TimerThread : public Thread
 {
 public:
@@ -56,16 +53,16 @@ void Timer::timer_thread()
 
 		while (!_schedule.empty())
 		{
-			scheduled_map_t::iterator p = _schedule.begin();
+			schedule_iter i = _schedule.begin();
 
-			if (p->first > now)
+			if (i->first > now)
 			{
 				break;
 			}
 
-			Callback* cb = p->second;
+			Callback* cb = i->second;
 			_events.erase(cb);
-			_schedule.erase(p);
+			_schedule.erase(i);
 			
 			// 执行回调函数
 			cb->complete(0);
@@ -80,6 +77,7 @@ void Timer::timer_thread()
 		// 挂起
 		if (_schedule.empty())
 		{
+			DEBUG_LOG("timer will wait");
 			_cond.wait(_lock);
 		}
 		else
@@ -101,13 +99,18 @@ void Timer::add_event_after(int64_t seconds, Callback* cb)
 	add_event_at(when, cb);
 }
 
+
 void Timer::add_event_at(utime_t when, Callback* cb)
 {
-	scheduled_map_t::value_type s_val(when, cb);
-	scheduled_map_t::iterator i = _schedule.insert(s_val);
+	std::multimap<utime_t, Callback*>::value_type sval(when, cb);
+	schedule_iter i = _schedule.insert(sval);
 
-	event_lookup_map_t::value_type e_val(cb, i);
-	std::pair<event_lookup_map_t::iterator, bool> rval(_events.insert(e_val));
+	std::map<Callback*, schedule_iter>::value_type eval(cb, i);
+	std::pair<event_iter, bool> ret = _events.insert(eval);
+	if (!ret.second)
+	{
+		// ERROR
+	}
 
 	// 如果只有一个任务待执行,则需要唤醒执行线程
 	// 如果有多个任务,执行线程只会time_wait
@@ -119,16 +122,19 @@ void Timer::add_event_at(utime_t when, Callback* cb)
 
 bool Timer::cancel_event(Callback* cb)
 {
-	std::map<Callback*, std::multimap<utime_t, Callback*>::iterator>::iterator p = _events.find(cb);
-	if (p == _events.end())
+	event_iter i = _events.find(cb);
+	if (i == _events.end())
 	{
 		return false;
 	}
 
-	// delete p->first;
+	if (i->first)
+	{
+		delete i->first;
+	}
 
-	_schedule.erase(p->second);
-	_events.erase(p);
+	_schedule.erase(i->second);
+	_events.erase(i);
 	
 	return true;
 }
@@ -137,9 +143,14 @@ void Timer::cancel_all_events()
 {
 	while (!_events.empty())
 	{
-		std::map<Callback*, std::multimap<utime_t, Callback*>::iterator>::iterator p = _events.begin();
-		// delete p->first;
-		_schedule.erase(p->second);
-		_events.erase(p);
+		event_iter i = _events.begin();
+		
+		if (i->first)
+		{
+			delete i->first;
+		}
+		
+		_schedule.erase(i->second);
+		_events.erase(i);
 	}
 }

@@ -1,6 +1,6 @@
 #include "master.h"
 
-Master::Master(Messenger* msgr, MasterMap* mmap) : _msgr(msgr), _master_map(mmap)
+Master::Master(Messenger* msgr, MasterMap* mmap, uint32_t rank) : _msgr(msgr), _master_map(mmap), _rank(rank)
 {
 
 }
@@ -43,7 +43,7 @@ int Master::init()
 }
 
 void Master::new_tick()
-{
+{
 	Master::MasterTick* mt = new Master::MasterTick(this);
 	_timer.add_event_after(3, mt);
 }
@@ -54,4 +54,24 @@ void Master::tick()
 
 	// 再次添加定时回调函数
 	new_tick();
+}
+
+void Master::boot()
+{
+	_state = STATE_PROBING;
+	
+	if (1 == _master_map->size())
+	{
+		return;
+	}
+	
+	DEBUG_LOG("probing other master");
+	
+	for (uint32_t i = 0; i < _master_map->size(); i++)
+	{
+		if ((int)i != _rank)
+		{
+			_msgr->send_message(new MMonProbe(MMonProbe::OP_PROBE, name, has_ever_joined), monmap->get_inst(i));
+		}
+	}
 }

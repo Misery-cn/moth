@@ -35,7 +35,8 @@ bool Cond::timed_wait(Mutex& lock, uint32_t millisecond) throw (SysCallException
 
 	if (0 == millisecond)
 	{
-		r = pthread_cond_wait(&_cond, &lock._mutex);
+		// r = pthread_cond_wait(&_cond, &lock._mutex);
+		return false;
 	}
 	else
 	{

@@ -44,6 +44,11 @@ public:
 		}
 	}
 
+	unsigned size()
+	{
+		return _name_addr.size();
+	}
+
 	bool contains(const std::string& name)
 	{
 		return _name_addr.count(name);

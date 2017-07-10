@@ -11,7 +11,7 @@
 class Master : public Dispatcher
 {
 public:
-	Master(Messenger* msgr, MasterMap* mmap);
+	Master(Messenger* msgr, MasterMap* mmap, uint32_t rank);
 	virtual ~Master();
 	
 	virtual bool ms_dispatch(Message* m);
@@ -25,8 +25,23 @@ public:
 	int init();
 
 	void tick();
+	
+	void boot();
 
 private:
+	
+	enum
+	{
+		STATE_PROBING = 1,
+		STATE_SYNCHRONIZING,
+		STATE_ELECTING,
+		STATE_LEADER,
+		STATE_PEON,
+		STATE_SHUTDOWN
+	};
+	
+	int _state;
+
 	void new_tick();
 	// tick
 	class MasterTick : public Callback
@@ -56,6 +71,8 @@ private:
 
 	// ¶¨Ê±Æ÷
 	Timer _timer;
+
+	uint32_t _rank;
 };
 
 #endif

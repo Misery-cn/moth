@@ -86,7 +86,7 @@ int main(int argc, const char* argv[])
 		forker.exit(1);
 	}
 	
-	master = new Master(msgr, &master_map);
+	master = new Master(msgr, &master_map, rank);
 	
 	forker.daemonize();
 	
