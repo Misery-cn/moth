@@ -172,7 +172,7 @@ public:
 	
 	void queue_refused(Connection* con)
 	{
-			Mutex::Locker locker(_lock);
+		Mutex::Locker locker(_lock);
 		if (_stop)
 		{
 			return;

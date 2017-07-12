@@ -65,13 +65,10 @@ struct entity_inst
 
 struct msg_connect
 {
-	le64 features;
 	le32 host_type;
 	le32 global_seq;
 	le32 connect_seq;
 	le32 protocol_version;
-	// le32 authorizer_protocol;
-	// le32 authorizer_len;
 	uint8_t flags;
 } __attr_packed__;
 
@@ -79,11 +76,9 @@ struct msg_connect
 struct msg_connect_reply
 {
 	uint8_t tag;
-	le64 features;
 	le32 global_seq;
 	le32 connect_seq;
 	le32 protocol_version;
-	// le32 authorizer_len;
 	uint8_t flags;
 } __attr_packed__;
 

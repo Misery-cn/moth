@@ -1,4 +1,5 @@
 #include "master.h"
+#include "mprobe.h"
 
 Master::Master(Messenger* msgr, MasterMap* mmap, uint32_t rank) : _msgr(msgr), _master_map(mmap), _rank(rank)
 {
@@ -27,7 +28,9 @@ void Master::ms_handle_remote_reset(Connection* con)
 
 bool Master::ms_handle_refused(Connection* con)
 {
-	
+	DEBUG_LOG("connect refused");
+
+	return false;
 }
 
 int Master::init()
@@ -35,11 +38,13 @@ int Master::init()
 	DEBUG_LOG("master init");
 
 	_timer.init();
-	new_tick();
+	// new_tick();
 	
 	// 给messenger添加dispatcher
 	// 同时启动dispatch_queue和accpter线程
 	_msgr->add_dispatcher_tail(this);
+	
+	boot();
 }
 
 void Master::new_tick()
@@ -71,7 +76,7 @@ void Master::boot()
 	{
 		if ((int)i != _rank)
 		{
-			_msgr->send_message(new MMonProbe(MMonProbe::OP_PROBE, name, has_ever_joined), monmap->get_inst(i));
+			_msgr->send_message(new MProbe(MProbe::OP_PROBE, _rank, _has_ever_joined), _master_map->get_entity(i));
 		}
 	}
 }

@@ -13,6 +13,8 @@
 #define MSG_CRC_HEADER		(1 << 1)
 #define MSG_CRC_ALL			(MSG_CRC_DATA | MSG_CRC_HEADER)
 
+#define MSG_PROBE			0x00000001
+
 
 class Message : public RefCountable
 {
@@ -23,12 +25,12 @@ public:
 		memset(&_footer, 0, sizeof(_footer));
 	}
 
-	Message(int t, int version = 1, int compat_version = 0)
+	Message(int t)
 	{
 		memset(&_header, 0, sizeof(_header));
 		_header.type = t;
-		_header.version = version;
-		_header.compat_version = compat_version;
+		_header.version = 0;
+		_header.compat_version = 0;
 		_header.priority = 0;
 		_header.data_off = 0;
 		memset(&_footer, 0, sizeof(_footer));
@@ -284,10 +286,10 @@ public:
 	}
 	
 	virtual void decode_payload() = 0;
-	virtual void encode_payload(uint64_t features) = 0;
+	virtual void encode_payload() = 0;
 	virtual const char* get_type_name() const = 0;
 	
-	void encode(uint64_t features, int crcflags);
+	void encode(int crcflags);
 
 protected:
 	msg_header _header;
@@ -315,7 +317,7 @@ protected:
 };
 
 extern Message* decode_message(int crcflags, msg_header& header, msg_footer& footer, buffer& front, buffer& middle, buffer& data);
-extern void encode_message(Message* m, uint64_t features, buffer& buf);
+extern void encode_message(Message* m, buffer& buf);
 extern Message* decode_message(int crcflags, buffer::iterator& it);
 
 

@@ -7,7 +7,6 @@
 #include <unordered_map>
 #include "log.h"
 #include "spinlock.h"
-#include "msg_features.h"
 #include "messenger.h"
 #include "socket.h"
 #include "accepter.h"
@@ -43,15 +42,9 @@ public:
 	
 	int shutdown();
 	
-	int send_message(Message* m, const entity_inst_t& dest)
-	{
-		return _send_message(m, dest);
-	}
+	int send_message(Message* m, const entity_inst_t& dest);
 
-	int send_message(Message* m, Connection* con)
-	{
-		return _send_message(m, con);
-	}
+	int send_message(Message* m, Connection* con);
 	
 	Connection* get_connection(const entity_inst_t& dest);
 
@@ -94,10 +87,6 @@ private:
 	} _reaper_thread;
 
 	Socket* connect_rank(const entity_addr_t& addr, int type, SocketConnection* con, Message* first);
-
-	int _send_message(Message* m, const entity_inst_t& dest);
-
-	int _send_message(Message* m, Connection* con);
 
 	void submit_message(Message* m, SocketConnection* con, const entity_addr_t& addr, int dest_type, bool already_locked);
 

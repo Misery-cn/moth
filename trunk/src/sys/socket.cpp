@@ -26,12 +26,7 @@ Socket::Socket(SimpleMessenger* msgr, int st, SocketConnection* con)
 	{
 		_connection_state = new SocketConnection(msgr);
 		_connection_state->_socket = get();
-	}
-	
-	if (randomize_out_seq())
-	{
-	}
-	  
+	} 
 
 	// ms
 	_msgr->_timeout = SOCKET_TIMEOUT * 1000;
@@ -366,13 +361,9 @@ int Socket::accept()
 	msg_connect_reply reply;
 	Socket* existing = NULL;
 	buffer bp;
-	// buffer authorizer;
-	// buffer authorizer_reply;
-	// bool authorizer_valid;
 	uint64_t feat_missing;
 	bool replaced = false;
 	bool is_reset_from_peer = false;
-	// CryptoKey session_key;
 	int removed;
 
 	int reply_tag = 0;
@@ -390,7 +381,7 @@ int Socket::accept()
 		goto fail_unlocked;
 	}
 
-	::encode(_msgr->_entity._addr, addrs, 0);
+	::encode(_msgr->_entity._addr, addrs);
 
 	_port = _msgr->_entity._addr.get_port();
 
@@ -402,7 +393,7 @@ int Socket::accept()
 		goto fail_unlocked;
 	}
 	socket_addr.set_sockaddr((sockaddr*)&ss);
-	::encode(socket_addr, addrs, 0);
+	::encode(socket_addr, addrs);
 
 	r = tcp_write(addrs.c_str(), addrs.length());
 	if (0 > r)
@@ -450,21 +441,6 @@ int Socket::accept()
 		{
 			goto fail_unlocked;
 		}
-
-		/*
-		authorizer.clear();
-		if (connect.authorizer_len)
-		{
-			// buffer
-			bp = create(connect.authorizer_len);
-			if (0 > tcp_read(bp.c_str(), connect.authorizer_len))
-			{
-				goto fail_unlocked;
-			}
-			authorizer.push_back(std::move(bp));
-			authorizer_reply.clear();
-		}
-		*/
     
 		_msgr->_lock.lock();
 		_lock.lock();
@@ -482,7 +458,6 @@ int Socket::accept()
 		_policy = _msgr->get_policy(connect.host_type);
 
 		memset(&reply, 0, sizeof(reply));
-		// reply.protocol_version = _msgr->get_proto_version(_peer_type, false);
 		_msgr->_lock.unlock();
 
 		if (connect.protocol_version != reply.protocol_version)
@@ -490,51 +465,8 @@ int Socket::accept()
 			reply.tag = MSGR_TAG_BADPROTOVER;
 			goto reply;
 		}
-
-		/*
-		if (connect.authorizer_protocol == AUTH)
-		{
-			if (_peer_type == ENTITY_TYPE_CLIENT)
-			{
-				// config
-				if (false || false)
-				{
-					_policy._features_required |= FEATURE_MSG_AUTH;
-				}
-			}
-			else
-			{
-				if (false || false)
-				{
-					_policy._features_required |= FEATURE_MSG_AUTH;
-				}
-			}
-		}
-		*/
-
-		feat_missing = _policy._features_required & ~(uint64_t)connect.features;
-		if (feat_missing)
-		{
-			reply.tag = MSGR_TAG_FEATURES;
-			goto reply;
-		}
     
 		_lock.unlock();
-
-		/*
-		if (!_msgr->verify_authorizer(_connection_state->get(), _peer_type, connect.authorizer_protocol, authorizer,
-				 authorizer_reply, authorizer_valid, session_key) || !authorizer_valid)
-		{
-			_lock.lock();
-			if (_state != SOCKET_ACCEPTING)
-			{
-				goto shutting_down_msgr_unlocked;
-			}
-			reply.tag = MSGR_TAG_BADAUTHORIZER;
-			_session_security.reset();
-			goto reply;
-		}
-		*/
 
 	retry_existing_lookup:
 		_msgr->_lock.lock();
@@ -662,34 +594,15 @@ int Socket::accept()
 		goto reply;    
 
 	reply:
-		reply.features = ((uint64_t)connect.features & _policy._features_supported) | _policy._features_required;
-		// reply.authorizer_len = authorizer_reply.length();
 		_lock.unlock();
 		r = tcp_write((char*)&reply, sizeof(reply));
 		if (0 > r)
 		{
 			goto fail_unlocked;
 		}
-
-		/*
-		if (reply.authorizer_len)
-		{
-			r = tcp_write(authorizer_reply.c_str(), authorizer_reply.length());
-			if (0 > r)
-			{
-				goto fail_unlocked;
-			}
-		}
-		*/
 	}
   
 replace:
-	if ((connect.features & FEATURE_RECONNECT_SEQ) && !is_reset_from_peer)
-	{
-		reply_tag = MSGR_TAG_SEQ;
-		existing_seq = existing->_in_seq;
-	}
-	
 	existing->stop();
 	existing->unregister_socket();
 	replaced = true;
@@ -740,19 +653,13 @@ open:
 	_state = SOCKET_OPEN;
 
 	reply.tag = (reply_tag ? reply_tag : MSGR_TAG_READY);
-	reply.features = _policy._features_supported;
 	reply.global_seq = _msgr->get_global_seq();
 	reply.connect_seq = _connect_seq;
 	reply.flags = 0;
-	// reply.authorizer_len = authorizer_reply.length();
 	if (_policy._lossy)
 	{
 		reply.flags = reply.flags | MSG_CONNECT_LOSSY;
 	}
-
-	_connection_state->set_features((uint64_t)reply.features & (uint64_t)connect.features);
-
-	// _session_security.reset(get_auth_session_handler(connect.authorizer_protocol, session_key, _connection_state->get_features()));
 
 	_msgr->_dispatch_queue.queue_accept(static_cast<Connection*>(_connection_state->get()));
 	_msgr->ms_deliver_handle_fast_accept(static_cast<Connection*>(_connection_state->get()));
@@ -772,17 +679,6 @@ open:
 	{
 		goto fail_registered;
 	}
-
-	/*
-	if (reply.authorizer_len)
-	{
-		r = tcp_write(authorizer_reply.c_str(), authorizer_reply.length());
-		if (0 > r)
-		{
-			goto fail_registered;
-		}
-	}
-	*/
 
 	if (reply_tag == MSGR_TAG_SEQ)
 	{
@@ -809,18 +705,12 @@ open:
 	return 0;
 
 fail_registered:
-
-	// config
-	if (0)
-	{
-		utime_t t;
-		// config
-		t.set_from_double(0);
-		t.sleep();
-	}
+	;
 
 fail_unlocked:
+
 	_lock.lock();
+	
 	if (_state != SOCKET_CLOSED)
 	{
 		bool queued = is_queued();
@@ -850,18 +740,10 @@ fail_unlocked:
 	return -1;
 
 shutting_down:
+
 	_msgr->_lock.unlock();
 	
 shutting_down_msgr_unlocked:
-
-	// config
-	if (0)
-	{
-		utime_t t;
-		// config
-		t.set_from_double(0);
-		t.sleep();
-	}
 
 	_state = SOCKET_CLOSED;
 	atomic_set(&_state_closed, 1);
@@ -948,6 +830,8 @@ void Socket::set_socket_options()
 
 int Socket::connect()
 {
+	DEBUG_LOG("Socket connecting");
+	
 	bool got_bad_auth = false;
 
 	uint32_t cseq = _connect_seq;
@@ -965,7 +849,6 @@ int Socket::connect()
 	char banner[strlen("moth") + 1];
 	entity_addr_t paddr;
 	entity_addr_t peer_addr_for_me, socket_addr;
-	// AuthAuthorizer* authorizer = NULL;
 	buffer addrbl;
 	buffer myaddrbl;
 
@@ -988,6 +871,8 @@ int Socket::connect()
 	rc = ::connect(_fd, (sockaddr*)&_peer_addr._addr, _peer_addr.addr_size());
 	if (0 > rc)
 	{
+		ERROR_LOG("connect faild");
+		
 		int stored_errno = errno;
 		if (stored_errno == ECONNREFUSED)
 		{
@@ -995,6 +880,8 @@ int Socket::connect()
 		}
 		goto fail;
 	}
+	
+	DEBUG_LOG("Socket tcp_read");
 
 	rc = tcp_read((char*)&banner, strlen("moth"));
 	if (0 > rc)
@@ -1059,7 +946,7 @@ int Socket::connect()
 		}
   	}
 	
-	::encode(_msgr->_entity._addr, myaddrbl, 0);
+	::encode(_msgr->_entity._addr, myaddrbl);
 
 	memset(&msg, 0, sizeof(msg));
 	msgvec[0].iov_base = myaddrbl.c_str();
@@ -1075,22 +962,10 @@ int Socket::connect()
 
 	while (1)
 	{
-    	// delete authorizer;
-    	// authorizer = _msgr->get_authorizer(_peer_type, false);
-		// buffer authorizer_reply;
-
 		msg_connect connect;
-		connect.features = _policy._features_supported;
 		connect.host_type = _msgr->get_entity()._name.type();
 		connect.global_seq = gseq;
 		connect.connect_seq = cseq;
-		// connect.protocol_version = _msgr->get_proto_version(_peer_type, true);
-		// connect.authorizer_protocol = authorizer ? authorizer->protocol : 0;
-		// connect.authorizer_len = authorizer ? authorizer->bl.length() : 0;
-		
-		// if (authorizer)
-		// {
-		// }
 		
 		connect.flags = 0;
 		
@@ -1105,14 +980,6 @@ int Socket::connect()
 		msg.msg_iov = msgvec;
 		msg.msg_iovlen = 1;
 		msglen = msgvec[0].iov_len;
-		
-		// if (authorizer)
-		// {
-		//	  msgvec[1].iov_base = authorizer->bl.c_str();
-		//	  msgvec[1].iov_len = authorizer->bl.length();
-		//	  msg.msg_iovlen++;
-		//	  msglen += msgvec[1].iov_len;
-		// }
 
 		rc = do_sendmsg(&msg, msglen);
 		if (0 > rc)
@@ -1125,38 +992,6 @@ int Socket::connect()
 		if (0 > rc)
 		{
 			goto fail;
-		}
-
-		/*
-		authorizer_reply.clear();
-
-		if (reply.authorizer_len)
-		{
-			ptr bp = create(reply.authorizer_len);
-			rc = tcp_read(bp.c_str(), reply.authorizer_len);
-			if (0 > rc)
-			{
-				goto fail;
-			}
-			authorizer_reply.push_back(bp);
-		}
-		*/
-
-		// if (authorizer)
-		// {
-		//	  buffer::iterator iter = authorizer_reply.begin();
-		//	  if (!authorizer->verify_reply(iter))
-		// 	  {
-		//		  goto fail;
-		//	  }
-		// }
-
-		// config
-		if (0)
-		{
-			utime_t t;
-			t.set_from_double(0);
-			t.sleep();
 		}
 
 		_lock.lock();
@@ -1184,8 +1019,6 @@ int Socket::connect()
 			
 			got_bad_auth = true;
 			_lock.unlock();
-			// delete authorizer;
-			// authorizer = _msgr->get_authorizer(_peer_type, true);
 			continue;
 		}
 		
@@ -1219,12 +1052,6 @@ int Socket::connect()
 
 		if (reply.tag == MSGR_TAG_READY || reply.tag == MSGR_TAG_SEQ)
 		{
-			uint64_t feat_missing = _policy._features_required & ~(uint64_t)reply.features;
-			if (feat_missing)
-			{
-				goto fail_locked;
-			}
-
 			if (reply.tag == MSGR_TAG_SEQ)
 			{
 				uint64_t newly_acked_seq = 0;
@@ -1253,17 +1080,6 @@ int Socket::connect()
 			_connect_seq = cseq + 1;
 			
 			_backoff = utime_t();
-			_connection_state->set_features((uint64_t)reply.features & (uint64_t)connect.features);
-
-			// if (authorizer)
-			// {
-			// 	  _session_security.reset(get_auth_session_handler(authorizer->protocol, authorizer->session_key, _connection_state->get_features()));
-			// }
-			// else
-			// {
-			// 	  _session_security.reset();
-			// }
-
 			_msgr->_dispatch_queue.queue_connect(static_cast<Connection*>(_connection_state->get()));
 			_msgr->ms_deliver_handle_fast_connect(static_cast<Connection*>(_connection_state->get()));
       
@@ -1274,8 +1090,6 @@ int Socket::connect()
 			
 			maybe_start_delay_thread();
 			
-			// delete authorizer;
-			
 			return 0;
 		}
     
@@ -1283,27 +1097,21 @@ int Socket::connect()
 	}
 
 fail:
-	// config
-	if (0)
-	{
-		utime_t t;
-		t.set_from_double(0);
-		t.sleep();
-	}
 
 	_lock.lock();
 	
 fail_locked:
+
 	if (_state == SOCKET_CONNECTING)
 	{
 		fault();
 	}
 	else
 	{
+		ERROR_LOG("connect fault, but current state is not connecting");
 	}
 
 stop_locked:
-	// delete authorizer;
 	return rc;
 }
 
@@ -1411,6 +1219,8 @@ void Socket::discard_out_queue()
 
 void Socket::fault(bool onread)
 {
+	DEBUG_LOG("Socket fault");
+	
 	_cond.signal();
 
 	if (onread && _state == SOCKET_CONNECTING)
@@ -1435,14 +1245,6 @@ void Socket::fault(bool onread)
 		bool cleared = _connection_state->clear_socket(this);
 		
 		_lock.unlock();
-
-		// config
-		if (0)
-		{
-			utime_t t;
-			t.set_from_double(0);
-			t.sleep();
-		}
 
 		_msgr->_lock.lock();
 		_lock.lock();
@@ -1493,33 +1295,16 @@ void Socket::fault(bool onread)
 	}
 	else if (_backoff == utime_t())
 	{
-		// config
 		_backoff.set_from_double(.2);
 	}
 	else
 	{
 		_cond.timed_wait(_lock, _backoff.to_msec());
 	    _backoff += _backoff;
-		// config
 	    if (_backoff > 15.0)
 	    {
 			_backoff.set_from_double(15.0);
 	    }
-	}
-}
-
-int Socket::randomize_out_seq()
-{
-	if (_connection_state->get_features() & FEATURE_MSG_AUTH)
-	{
-		int seq_error = Utils::get_random_bytes((char *)&_out_seq, sizeof(_out_seq));
-		_out_seq &= SEQ_MASK;
-		return seq_error;
-	}
-	else
-	{
-		_out_seq = 0;
-		return 0;
 	}
 }
 
@@ -1535,10 +1320,6 @@ void Socket::was_session_reset()
 	discard_out_queue();
 
 	_msgr->_dispatch_queue.queue_remote_reset(static_cast<Connection*>(_connection_state->get()));
-
-	if (randomize_out_seq())
-	{
-	}
 
 	_in_seq = 0;
 	_connect_seq = 0;
@@ -1558,14 +1339,6 @@ void Socket::stop_and_wait()
 	{
 		stop();
 	}
-
-	// config
-	if (0)
-	{
-		utime_t t;
-		t.set_from_double(0);
-		t.sleep();
-	}
   
 	if (_delay_thread)
 	{
@@ -1582,6 +1355,8 @@ void Socket::stop_and_wait()
 
 void Socket::reader()
 {
+	DEBUG_LOG("socket reader start");
+	
 	_lock.lock();
 
 	if (_state == SOCKET_ACCEPTING)
@@ -1596,8 +1371,6 @@ void Socket::reader()
 			_cond.wait(_lock);
 			continue;
 		}
-
-		// AuthSessionHandler* auth_handler = _session_security;
 
 		_lock.unlock();
 
@@ -1672,7 +1445,7 @@ void Socket::reader()
 		else if (tag == MSGR_TAG_MSG)
 		{
 			Message* m = NULL;
-			int r = read_message(&m/*, auth_handler.get()*/);
+			int r = read_message(&m);
 
 			_lock.lock();
       
@@ -1697,19 +1470,11 @@ void Socket::reader()
 			{
 				_in_q->dispatch_throttle_release(m->get_dispatch_throttle_size());
 				m->dec();
-				// config
-				if (_connection_state->has_feature(FEATURE_RECONNECT_SEQ) && false)
-				{
-					continue;
-				}
 			}
 			
 			if (m->get_seq() > _in_seq + 1)
 			{
-				// config
-				if (false)
-				{
-				}
+				ERROR_LOG("reader missed message? skipped from seq %d to %d", _in_seq, m->get_seq());
 			}
 
 			m->set_connection(static_cast<Connection*>(_connection_state->get()));
@@ -1722,15 +1487,7 @@ void Socket::reader()
 
 			if (_delay_thread)
 			{
-				utime_t release;
-				// config
-				if (rand() % 10000 < 0 * 10000.0)
-				{
-					release = m->get_recv_stamp();
-					// config
-					release += 1 * (double)(rand() % 10000) / 10000.0;
-				}
-				
+				utime_t release;				
 				_delay_thread->queue(release, m);
 			}
 			else
@@ -1784,6 +1541,8 @@ void Socket::reader()
 
 void Socket::writer()
 {
+	DEBUG_LOG("socket writer start");
+	
 	_lock.lock();
 	while (_state != SOCKET_CLOSED)
 	{
@@ -1794,6 +1553,7 @@ void Socket::writer()
 
 		if (_state == SOCKET_CONNECTING)
 		{
+			DEBUG_LOG("socket state is SOCKET_CONNECTING, will try connect");
 			connect();
 			continue;
 		}
@@ -1819,17 +1579,9 @@ void Socket::writer()
 			if (_send_keepalive)
 			{
 				int rc;
-				if (_connection_state->has_feature(FEATURE_MSGR_KEEPALIVE2))
-				{
-					_lock.unlock();
-					// rc = write_keepalive2(MSGR_TAG_KEEPALIVE2, clock_now());
-					rc = write_keepalive();
-				}
-				else
-				{
-					_lock.unlock();
-					rc = write_keepalive();
-				}
+
+				_lock.unlock();
+				rc = write_keepalive();
 				
 				_lock.lock();
 				if (0 > rc)
@@ -1844,7 +1596,6 @@ void Socket::writer()
 			{
 				utime_t t = _keepalive_ack_stamp;
 				_lock.unlock();
-				// int rc = write_keepalive2(MSGR_TAG_KEEPALIVE2_ACK, t);
 				int rc = write_keepalive();
 				_lock.lock();
 				if (0 > rc)
@@ -1881,8 +1632,6 @@ void Socket::writer()
 
 				m->set_connection(static_cast<Connection*>(_connection_state->get()));
 
-				uint64_t features = _connection_state->get_features();
-
 				if (m->empty_payload())
 				{
 				}
@@ -1890,25 +1639,10 @@ void Socket::writer()
 				{
 				}
 
-				m->encode(features, _msgr->_crc_flag);
+				m->encode(_msgr->_crc_flag);
 
 				const msg_header& header = m->get_header();
 				const msg_footer& footer = m->get_footer();
-
-				/*
-				if (NULL == _session_security.get())
-				{
-				}
-				else
-				{
-					if (_session_security->sign_message(m))
-					{
-					}
-					else
-					{
-					}
-				}
-				*/
 
 				buffer buf = m->get_payload();
 				buf.append(m->get_middle());
@@ -1978,7 +1712,7 @@ static void alloc_aligned_buffer(buffer& data, uint32_t len, uint32_t off)
 	}
 }
 
-int Socket::read_message(Message** pm/*, AuthSessionHandler* auth_handler*/)
+int Socket::read_message(Message** pm)
 {
 	int ret = -1;
   
@@ -1986,36 +1720,14 @@ int Socket::read_message(Message** pm/*, AuthSessionHandler* auth_handler*/)
 	msg_footer footer;
 	uint32_t header_crc = 0;
 
-	if (_connection_state->has_feature(FEATURE_NOSRCADDR))
+	if (tcp_read((char*)&header, sizeof(header)) < 0)
 	{
-		if (tcp_read((char*)&header, sizeof(header)) < 0)
-		{
-			return -1;
-		}
-		
-		if (_msgr->_crc_flag & MSG_CRC_HEADER)
-		{
-			header_crc = crc32c(0, (unsigned char *)&header, sizeof(header) - sizeof(header.crc));
-		}
+		return -1;
 	}
-	else
+	
+	if (_msgr->_crc_flag & MSG_CRC_HEADER)
 	{
-		/*
-		msg_header_old oldheader;
-		if (0 > tcp_read((char*)&oldheader, sizeof(oldheader)))
-		{
-			return -1;
-		}
-		
-		memcpy(&header, &oldheader, sizeof(header));
-		header.src = oldheader.src.name;
-		header.reserved = oldheader.reserved;
-		if (_msgr->_crc_flag & MSG_CRC_HEADER)
-		{
-			header.crc = oldheader.crc;
-			header_crc = crc32c(0, (unsigned char *)&oldheader, sizeof(oldheader) - sizeof(oldheader.crc));
-		}
-		*/
+		header_crc = crc32c(0, (unsigned char *)&header, sizeof(header) - sizeof(header.crc));
 	}
 
 	if ((_msgr->_crc_flag & MSG_CRC_HEADER) && header_crc != header.crc)
@@ -2138,28 +1850,9 @@ int Socket::read_message(Message** pm/*, AuthSessionHandler* auth_handler*/)
 		}
 	}
 
-	if (_connection_state->has_feature(FEATURE_MSG_AUTH))
+	if (0 > tcp_read((char*)&footer, sizeof(footer)))
 	{
-		if (0 > tcp_read((char*)&footer, sizeof(footer)))
-		{
-			goto out_dethrottle;
-		}
-	}
-	else
-	{
-		/*
-		msg_footer_old old_footer;
-		if (0 > tcp_read((char*)&old_footer, sizeof(old_footer)))
-		{
-			goto out_dethrottle;
-		}
-		
-		footer.front_crc = old_footer.front_crc;
-		footer.middle_crc = old_footer.middle_crc;
-		footer.data_crc = old_footer.data_crc;
-		footer.sig = 0;
-		footer.flags = old_footer.flags;
-		*/
+		goto out_dethrottle;
 	}
   
 	aborted = (footer.flags & MSG_FOOTER_COMPLETE) == 0;
@@ -2176,21 +1869,6 @@ int Socket::read_message(Message** pm/*, AuthSessionHandler* auth_handler*/)
 		ret = -EINVAL;
 		goto out_dethrottle;
 	}
-
-	/*
-	if (NULL == auth_handler)
-	{
-	}
-	else
-	{
-		if (auth_handler->check_message_signature(message))
-		{
-			message->dec();
-			ret = -EINVAL;
-			goto out_dethrottle;
-		} 
-	}
-	*/
 
 	message->set_byte_throttler(_policy._throttler_bytes);
 	message->set_message_throttler(_policy._throttler_messages);
@@ -2363,30 +2041,6 @@ int Socket::write_keepalive()
 	return 0;
 }
 
-/*
-int Socket::write_keepalive2(char tag, const utime_t& t)
-{
-	struct timespec ts;
-	t.encode_timeval(&ts);
-	struct msghdr msg;
-	memset(&msg, 0, sizeof(msg));
-	struct iovec msgvec[2];
-	msgvec[0].iov_base = &tag;
-	msgvec[0].iov_len = 1;
-	msgvec[1].iov_base = &ts;
-	msgvec[1].iov_len = sizeof(ts);
-	msg.msg_iov = _msgvec;
-	msg.msg_iovlen = 2;
-
-	if (0 > do_sendmsg(&msg, 1 + sizeof(ts)))
-	{
-		return -1;
-	}
-	
-	return 0;
-}
-*/
-
 int Socket::write_message(const msg_header& header, const msg_footer& footer, buffer& buf)
 {
 	int ret = 0;
@@ -2402,36 +2056,10 @@ int Socket::write_message(const msg_header& header, const msg_footer& footer, bu
 	msglen++;
 	msg.msg_iovlen++;
 
-	// msg_header_old oldheader;
-	if (_connection_state->has_feature(FEATURE_NOSRCADDR))
-	{
-		_msgvec[msg.msg_iovlen].iov_base = (char*)&header;
-		_msgvec[msg.msg_iovlen].iov_len = sizeof(header);
-		msglen += sizeof(header);
-		msg.msg_iovlen++;
-	}
-	else
-	{
-		/*
-		memcpy(&oldheader, &header, sizeof(header));
-		oldheader.src.name = header.src;
-		oldheader.src.addr = _connection_state->get_peer_addr();
-		oldheader.orig_src = oldheader.src;
-		oldheader.reserved = header.reserved;
-		if (_msgr->_crc_flag & MSG_CRC_HEADER)
-		{
-			oldheader.crc = crc32c(0, (unsigned char*)&oldheader, sizeof(oldheader) - sizeof(oldheader.crc));
-		}
-		else
-		{
-			oldheader.crc = 0;
-		}
-		_msgvec[msg.msg_iovlen].iov_base = (char*)&oldheader;
-		_msgvec[msg.msg_iovlen].iov_len = sizeof(oldheader);
-		msglen += sizeof(oldheader);
-		msg.msg_iovlen++;
-		*/
-	}
+	_msgvec[msg.msg_iovlen].iov_base = (char*)&header;
+	_msgvec[msg.msg_iovlen].iov_len = sizeof(header);
+	msglen += sizeof(header);
+	msg.msg_iovlen++;
 
 	std::list<ptr>::const_iterator pb = buf.buffers().begin();
 	uint32_t b_off = 0;
@@ -2478,36 +2106,11 @@ int Socket::write_message(const msg_header& header, const msg_footer& footer, bu
 			b_off = 0;
 		}
 	}
-	
-	// msg_footer_old old_footer;
-	if (_connection_state->has_feature(FEATURE_MSG_AUTH))
-	{
-		_msgvec[msg.msg_iovlen].iov_base = (void*)&footer;
-		_msgvec[msg.msg_iovlen].iov_len = sizeof(footer);
-		msglen += sizeof(footer);
-		msg.msg_iovlen++;
-	}
-	else
-	{
-		/*
-		if (_msgr->_crc_flag & MSG_CRC_HEADER)
-		{
-			old_footer.front_crc = footer.front_crc;
-			old_footer.middle_crc = footer.middle_crc;
-		}
-		else
-		{
-			old_footer.front_crc = old_footer.middle_crc = 0;
-		}
-		
-		old_footer.data_crc = _msgr->_crc_flag & MSG_CRC_DATA ? footer.data_crc : 0;
-		old_footer.flags = footer.flags;   
-		_msgvec[msg.msg_iovlen].iov_base = (char*)&old_footer;
-		_msgvec[msg.msg_iovlen].iov_len = sizeof(old_footer);
-		msglen += sizeof(old_footer);
-		msg.msg_iovlen++;
-		*/
-	}
+
+	_msgvec[msg.msg_iovlen].iov_base = (void*)&footer;
+	_msgvec[msg.msg_iovlen].iov_len = sizeof(footer);
+	msglen += sizeof(footer);
+	msg.msg_iovlen++;
 
 	if (do_sendmsg(&msg, msglen))
 	{
@@ -2533,16 +2136,6 @@ int Socket::tcp_read(char* buf, uint32_t len)
 
 	while (0 < len)
 	{
-		// config
-		if (0 && 0 <= _fd)
-		{
-			// config
-			if (rand() % 0 == 0)
-			{
-				::shutdown(_fd, SHUT_RDWR);
-			}
-		}
-
 		if (0 > tcp_read_wait())
 		{
 			return -1;
@@ -2711,14 +2304,6 @@ int Socket::tcp_write(const char* buf, uint32_t len)
 #if defined(__linux__)
 	pfd.events |= POLLRDHUP;
 #endif
-
-	if (0 && 0 <= _fd)
-	{
-		if (rand() % 0 == 0)
-		{
-			::shutdown(_fd, SHUT_RDWR);
-		}
-	}
 
 	if (0 > poll(&pfd, 1, -1))
 	{

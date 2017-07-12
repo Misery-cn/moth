@@ -12,8 +12,7 @@ class Message;
 class Connection : public RefCountable
 {
 public:
-	Connection(Messenger* m) : _lock(), _msgr(m), _priv(NULL), _peer_type(-1),
-								_features(0), _failed(false), _rx_buffers_version(0)
+	Connection(Messenger* m) : _lock(), _msgr(m), _priv(NULL), _peer_type(-1), _failed(false), _rx_buffers_version(0)
 	{
 	}
 
@@ -71,19 +70,6 @@ public:
 	
 	void set_peer_addr(const entity_addr_t& a) { _peer_addr = a; }
 
-	uint64_t get_features() const { return _features; }
-	
-	bool has_feature(uint64_t f) const { return _features & f; }
-	
-	bool has_features(uint64_t f) const
-	{
-		return (_features & f) == f;
-	}
-	
-	void set_features(uint64_t f) { _features = f; }
-	
-	void set_feature(uint64_t f) { _features |= f; }
-
 	void post_rx_buffer(uint64_t tid, buffer& buf)
 	{
 		Mutex::Locker locker(_lock);
@@ -135,9 +121,6 @@ public:
 	std::map<uint64_t, std::pair<buffer, int> > _rx_buffers;
 
 	friend class SocketConnection;
-
-private:
-	uint64_t _features;
 };
 
 #endif

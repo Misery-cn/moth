@@ -3,9 +3,10 @@
 
 #include <list>
 #include <string>
-#include <string.h>
 #include <vector>
 #include <map>
+#include <set>
+#include <string.h>
 #include <sys/uio.h> // iovec
 #include <limits.h> // IOV_MAX
 #include <sys/mman.h>
@@ -22,15 +23,8 @@ class raw;
 
 raw* copy(const char* c, uint32_t len);
 raw* create(uint32_t len);
-// raw* claim_char(unsigned len, char *buf);
-// raw* create_malloc(unsigned len);
-// raw* claim_malloc(unsigned len, char *buf);
-// raw* create_static(unsigned len, char *buf);
 raw* create_aligned(uint32_t len, uint32_t align);
 raw* create_page_aligned(uint32_t len);
-// raw* create_zero_copy(unsigned len, int fd, int64_t *offset);
-// raw* create_unshareable(unsigned len);
-// raw* create_dummy();
 
 #if defined(HAVE_XIO)
 raw* create_msg(unsigned len, char *buf, XioDispatchHook *m_hook);

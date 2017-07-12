@@ -51,3 +51,16 @@ int MasterMap::build_initial()
 
 	return 0;
 }
+
+void MasterMap::encode(buffer& buf) const
+{
+	::encode(_epoch, buf);
+	// ::encode(_name_addr, buf);
+}
+
+void MasterMap::decode(buffer::iterator& it)
+{
+	::decode(_epoch, it);
+}
+
+

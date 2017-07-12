@@ -1,10 +1,10 @@
 #include "message.h"
 
-void Message::encode(uint64_t features, int crcflags)
+void Message::encode(int crcflags)
 {
 	if (empty_payload())
 	{
-		encode_payload(features);
+		encode_payload();
 
 		if (_byte_throttler)
 		{
@@ -108,11 +108,10 @@ Message* decode_message(int crcflags, msg_header& header, msg_footer& footer, bu
 	return m;
 }
 
-void encode_message(Message* msg, uint64_t features, buffer& payload)
+void encode_message(Message* msg, buffer& payload)
 {
 	buffer front, middle, data;
 	msg_footer footer;
-	msg->encode(features, MSG_CRC_ALL);
 	::encode(msg->get_header(), payload);
 	::encode(msg->get_footer(), payload);
 	::encode(msg->get_payload(), payload);

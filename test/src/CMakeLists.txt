@@ -17,9 +17,7 @@ if(HAVE_GOOD_YASM_ELF64)
 endif(HAVE_GOOD_YASM_ELF64)
 
 
-SET(SRC_LIST moth.cpp
-	master.cpp
-	mastermap.cpp
+SET(SRC_LIST test.cpp
     ../../trunk/src/arch/arm.c
     ../../trunk/src/arch/intel.c
     ../../trunk/src/arch/probe.cpp
@@ -68,6 +66,4 @@ SET(SRC_LIST moth.cpp
 )
 
 
-ADD_EXECUTABLE(moth ${SRC_LIST})
-
-target_link_libraries(moth) 
+ADD_EXECUTABLE(test ${SRC_LIST})

@@ -73,6 +73,8 @@ private:
 	Timer _timer;
 
 	uint32_t _rank;
+
+	bool _has_ever_joined;
 };
 
 #endif

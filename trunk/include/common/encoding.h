@@ -20,7 +20,7 @@ inline void decode_raw(T& t, buffer::iterator& p)
 
 
 #define WRITE_RAW_ENCODER(type)	\
-	inline void encode(const type& v, buffer& buf, uint64_t features=0) { encode_raw(v, buf); } \
+	inline void encode(const type& v, buffer& buf) { encode_raw(v, buf); } \
 	inline void decode(type &v, buffer::iterator& p) { decode_raw(v, p); }
 
 
@@ -52,7 +52,7 @@ inline void decode(bool &v, buffer::iterator& p)
 // -----------------------------------------------------------int types------------------------------------------------
 
 #define WRITE_INTTYPE_ENCODER(type, letype) \
-	inline void encode(type v, buffer& buf, uint64_t features=0) \
+	inline void encode(type v, buffer& buf) \
 	{ \
 		letype e; \
 		e = v; \
@@ -75,20 +75,8 @@ WRITE_INTTYPE_ENCODER(int16_t, le16)
 
 // 调用类自己的encode、decode方法
 #define WRITE_CLASS_ENCODER(cl) \
-	inline void encode(const cl& c, buffer& buf, uint64_t features=0) { c.encode(buf); } \
+	inline void encode(const cl& c, buffer& buf) { c.encode(buf); } \
 	inline void decode(cl& c, buffer::iterator &p) { c.decode(p); }
-
-#define WRITE_CLASS_MEMBER_ENCODER(cl) \
-	inline void encode(const cl& c, buffer& buf) const { c.encode(buf); } \
-	inline void decode(cl &c, buffer::iterator& p) { c.decode(p); }
-
-#define WRITE_CLASS_ENCODER_FEATURES(cl)				\
-	inline void encode(const cl& c, buffer& buf, uint64_t features) { c.encode(buf, features); } \
-	inline void decode(cl& c, buffer::iterator& p) { c.decode(p); }
-
-#define WRITE_CLASS_ENCODER_OPTIONAL_FEATURES(cl) \
-	inline void encode(const cl& c, buffer& buf, uint64_t features = 0) { c.encode(buf, features); }	\
-	inline void decode(cl& c, buffer::iterator& p) { c.decode(p); }
 
 
 /*
@@ -102,7 +90,7 @@ inline void decode(T& o, buffer& buf)
 
 
 // string
-inline void encode(const std::string& s, buffer& buf, uint64_t features = 0)
+inline void encode(const std::string& s, buffer& buf)
 {
 	uint32_t len = s.length();
 	encode(len, buf);
@@ -181,4 +169,28 @@ inline void decode(buffer& buf, buffer::iterator& bi)
 	bi.copy(len, buf);
 }
 
+// std::set
+template<class T>
+inline void encode(const std::set<T>& s, buffer& buf)
+{
+	uint32_t n = (uint32_t)(s.size());
+	encode(n, buf);
+	for (typename std::set<T>::const_iterator it = s.begin(); it != s.end(); it++)
+	{
+		encode(*it, buf);
+	}
+}
+template<class T>
+inline void decode(std::set<T>& s, buffer::iterator& it)
+{
+	uint32_t n;
+	decode(n, it);
+	s.clear();
+	while (n--)
+	{
+		T v;
+		decode(v, it);
+		s.insert(v);
+	}
+}
 #endif

@@ -37,12 +37,8 @@ public:
 		// 按消息数节流
 		Throttle* _throttler_messages;
 
-		uint64_t _features_supported;
-		uint64_t _features_required;
-
 		Policy() : _lossy(false), _server(false), _standby(false), _resetcheck(true),
-				   _throttler_bytes(NULL), _throttler_messages(NULL),
-				   _features_supported(0), _features_required(0)
+				   _throttler_bytes(NULL), _throttler_messages(NULL)
 		{
 		}
 	};

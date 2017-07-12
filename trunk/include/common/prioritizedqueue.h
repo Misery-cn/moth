@@ -196,20 +196,6 @@ class PrioritizedQueue : public OpQueue <T, K>
 				cur = q.begin();
 			}
 		}
-
-		/*
-		void dump(Formatter* f) const
-		{
-			f->dump_int("tokens", tokens);
-			f->dump_int("max_tokens", max_tokens);
-			f->dump_int("size", size);
-			f->dump_int("num_keys", q.size());
-			if (!empty())
-			{
-				f->dump_int("first_item_cost", front().first);
-			}
-		}
-		*/
 	};
 
 	typedef std::map<unsigned, SubQueue> SubQueues;
@@ -421,36 +407,6 @@ public:
 		
 		return ret;
 	}
-
-	/*
-	void dump(Formatter* f) const
-	{
-		f->dump_int("total_priority", _total_priority);
-		f->dump_int("max_tokens_per_subqueue", _max_tokens_per_subqueue);
-		f->dump_int("min_cost", _min_cost);
-		f->open_array_section("high_queues");
-		for (typename SubQueues::const_iterator p = _high_queue.begin(); p != _high_queue.end(); ++p)
-		{
-			f->open_object_section("subqueue");
-			f->dump_int("priority", p->first);
-			p->second.dump(f);
-			f->close_section();
-		}
-		
-		f->close_section();
-		f->open_array_section("queues");
-		
-		for (typename SubQueues::const_iterator p = _queue.begin(); p != _queue.end(); ++p)
-		{
-			f->open_object_section("subqueue");
-			f->dump_int("priority", p->first);
-			p->second.dump(f);
-			f->close_section();
-		}
-		
-		f->close_section();
-	}
-	*/
 };
 
 #endif

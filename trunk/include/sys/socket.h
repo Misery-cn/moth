@@ -319,8 +319,6 @@ public:
     size_t _recv_ofs;
     size_t _recv_len;
 
-	// AuthSessionHandler* _session_security;
-
 protected:
 	friend class SimpleMessenger;
 	SocketConnection* _connection_state;
@@ -359,9 +357,7 @@ protected:
 	
 	void unlock_maybe_reap();
 	
-	int randomize_out_seq();
-	
-	int read_message(Message** pm/*, AuthSessionHandler* session_security_copy*/);
+	int read_message(Message** pm);
 	
 	int write_message(const msg_header& h, const msg_footer& f, buffer& body);
 	

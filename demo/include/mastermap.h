@@ -44,7 +44,7 @@ public:
 		}
 	}
 
-	unsigned size()
+	uint32_t size()
 	{
 		return _name_addr.size();
 	}
@@ -78,6 +78,24 @@ public:
 		return _rank_addr[i];
 	}
 
+	entity_inst_t get_entity(const uint32_t m)
+	{
+		entity_inst_t i;
+		i._addr = _rank_addr[m];
+		i._name = entity_name_t::MASTER(m);
+		return i;
+	}
+
+	void encode(buffer& buf) const;
+	
+	void decode(buffer& buf)
+	{
+		buffer::iterator it = buf.begin();
+		decode(it);
+	}
+	
+	void decode(buffer::iterator& it);
+
 private:
 	// °æ±¾ºÅ
 	uint64_t _epoch;
@@ -87,5 +105,6 @@ private:
 
 	std::map<uint32_t, entity_addr_t> _rank_addr;
 };
+WRITE_CLASS_ENCODER(MasterMap);
 
 #endif

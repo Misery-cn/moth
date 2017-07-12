@@ -1,4 +1,5 @@
 #include <iostream>
+#include "argparse.h"
 #include "messenger.h"
 #include "forker.h"
 #include "master.h"
@@ -20,21 +21,16 @@ void usage(bool et = true)
 
 int main(int argc, const char* argv[])
 {
-	if (3 > argc)
-	{
-		usage();
-	}
+	std::vector<const char*> args;
+	argv_to_vec(argc, argv, args);
 
-	if (0 != strcasecmp(argv[1], "-i") || !StringUtils::is_numeric_string(argv[2]))
+	int whoami = -1;
+	for (unsigned i = 0; i < args.size(); i++)
 	{
-		usage();
-	}
-	
-	uint32_t rank = 0;
-
-	if (!StringUtils::string2int(argv[2], rank))
-	{
-		usage();
+		if (0 == strcmp(args[i], "-i"))
+		{
+			whoami = atoi(args[++i]);
+		}
 	}
 	
 	int err = 0;
@@ -67,17 +63,17 @@ int main(int argc, const char* argv[])
 
 	entity_addr_t addr;
 
-	if (!master_map.contains(rank))
+	if (!master_map.contains(whoami))
 	{
 		std::cerr << "master id no exits" << std::endl;
 		forker.exit(1);
 	}
 	else
 	{
-		addr = master_map.get_addr_by_rank(rank);
+		addr = master_map.get_addr_by_rank(whoami);
 	}
 	
-	Messenger* msgr = Messenger::create("simple", entity_name_t::MASTER(rank), "master", 0);
+	Messenger* msgr = Messenger::create("simple", entity_name_t::MASTER(whoami), "master", 0);
 
 	err = msgr->bind(addr);
 	if (err < 0)
@@ -86,7 +82,7 @@ int main(int argc, const char* argv[])
 		forker.exit(1);
 	}
 	
-	master = new Master(msgr, &master_map, rank);
+	master = new Master(msgr, &master_map, whoami);
 	
 	forker.daemonize();
 	

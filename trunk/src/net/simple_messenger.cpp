@@ -1,4 +1,5 @@
 #include "simple_messenger.h"
+#include "log.h"
 
 SimpleMessenger::SimpleMessenger(entity_name_t name, std::string mname, uint64_t nonce)
   : PolicyMessenger(name, mname, nonce),
@@ -47,8 +48,10 @@ int SimpleMessenger::shutdown()
 	return 0;
 }
 
-int SimpleMessenger::_send_message(Message* m, const entity_inst_t& dest)
+int SimpleMessenger::send_message(Message* m, const entity_inst_t& dest)
 {
+	DEBUG_LOG("SimpleMessenger send_message by entity");
+	
 	m->get_header().src = get_entity_name();
 
 	if (!m->get_priority())
@@ -69,8 +72,10 @@ int SimpleMessenger::_send_message(Message* m, const entity_inst_t& dest)
 	return 0;
 }
 
-int SimpleMessenger::_send_message(Message* m, Connection* con)
+int SimpleMessenger::send_message(Message* m, Connection* con)
 {
+	DEBUG_LOG("SimpleMessenger send_message by connection");
+	
 	m->get_header().src = get_entity_name();
 
 	if (!m->get_priority())
@@ -237,6 +242,8 @@ Socket* SimpleMessenger::add_accept_socket(int fd)
 
 Socket* SimpleMessenger::connect_rank(const entity_addr_t& addr, int type, SocketConnection* con, Message* first)
 {
+	DEBUG_LOG("SimpleMessenger connect_rank");
+	
 	Socket* socket = new Socket(this, Socket::SOCKET_CONNECTING, static_cast<SocketConnection*>(con));
 	socket->_lock.lock();
 	socket->set_peer_type(type);
@@ -283,15 +290,12 @@ Connection* SimpleMessenger::get_connection(const entity_inst_t& dest)
 
 void SimpleMessenger::submit_message(Message* m, SocketConnection* con, const entity_addr_t& dest_addr, int dest_type, bool already_locked)
 {
-	// config
-	if (false)
-	{
-		m->encode(-1, true);
-		m->clear_payload();
-	}
+	DEBUG_LOG("SimpleMessenger submit_message");
 
 	if (con)
 	{
+		DEBUG_LOG("connection already exist");
+		
 		Socket* socket = NULL;
 		bool ok = static_cast<SocketConnection*>(con)->try_get_socket(&socket);
 		if (!ok)
@@ -330,6 +334,8 @@ void SimpleMessenger::submit_message(Message* m, SocketConnection* con, const en
 
 	if (_entity._addr == dest_addr)
 	{
+		DEBUG_LOG("dest addr is local");
+		
 		m->set_connection(static_cast<Connection*>(_local_connection->get()));
 		_dispatch_queue.local_delivery(m, m->get_priority());
 		return;
@@ -545,7 +551,6 @@ void SimpleMessenger::init_local_connection()
 {
 	_local_connection->_peer_addr = _entity._addr;
 	_local_connection->_peer_type = _entity._name.type();
-	_local_connection->set_features(FEATURES_ALL);
 	ms_deliver_handle_fast_connect(dynamic_cast<Connection*>(_local_connection->get()));
 }
 
