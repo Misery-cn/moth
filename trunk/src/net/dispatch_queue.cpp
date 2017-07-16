@@ -134,14 +134,7 @@ void DispatchQueue::entry()
 			_lock.unlock();
 
 			if (item.is_code())
-			{
-				if (0 && 0 && (rand() % 10000)/10000.0 < 0)
-				{
-					utime_t t;
-					t.set_from_double(0);
-					t.sleep();
-				}
-				
+			{			
 				switch (item.get_code())
 				{
 					case D_BAD_REMOTE_RESET:

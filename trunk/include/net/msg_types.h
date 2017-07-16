@@ -154,6 +154,8 @@ public:
 
 	entity_addr_t(const char* str)
 	{
+		memset(this, 0, sizeof(*this));
+		
 		if (!parse(str))
 		{
 			memset(this, 0, sizeof(*this));
@@ -361,7 +363,6 @@ public:
 	
 	bool parse(const char* str)
 	{
-		// ipv6最大长度39
 		char ipv4[39 + 39] = {0};
 		char* tmp = ipv4;
 		const char* s = str;

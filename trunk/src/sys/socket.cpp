@@ -347,8 +347,26 @@ void Socket::join_reader()
 	_reader_needs_join = false;
 }
 
+
+/*
+svr                      cli
+                    <----connect
+       accept<----
+  send banner---->
+					---->read banner
+                    <----send banner
+  read banner<----
+  
+  send cli info---->
+                     ---->read cli info
+					 <----send cli info
+  read cli info<----
+*/
+
 int Socket::accept()
 {
+	DEBUG_LOG("socket accepting");
+	
 	_lock.unlock();
 
 	buffer addrs;
@@ -378,8 +396,11 @@ int Socket::accept()
 	r = tcp_write("moth", strlen("moth"));
 	if (0 > r)
 	{
+		ERROR_LOG("socket accept write banner failed");
 		goto fail_unlocked;
 	}
+
+	DEBUG_LOG("accept send banner successful");
 
 	::encode(_msgr->_entity._addr, addrs);
 
@@ -390,6 +411,7 @@ int Socket::accept()
 	r = ::getpeername(_fd, (sockaddr*)&ss, &len);
 	if (0 > r)
 	{
+		ERROR_LOG("socket accept get client info failed");
 		goto fail_unlocked;
 	}
 	socket_addr.set_sockaddr((sockaddr*)&ss);
@@ -398,11 +420,15 @@ int Socket::accept()
 	r = tcp_write(addrs.c_str(), addrs.length());
 	if (0 > r)
 	{
+		ERROR_LOG("socket accept write client info failed");
 		goto fail_unlocked;
 	}
+
+	DEBUG_LOG("accept send client info successful");
   
 	if (0 > tcp_read(banner, strlen("moth")))
 	{
+		ERROR_LOG("socket accept read banner failed");
 		goto fail_unlocked;
 	}
 	
@@ -411,14 +437,17 @@ int Socket::accept()
 		banner[strlen("moth")] = 0;
 		goto fail_unlocked;
 	}
+
+	DEBUG_LOG("accept read banner successful");
 	
 	{
-		ptr tp(sizeof(entity_addr));
+		ptr tp(sizeof(entity_addr_t));
 		addrbl.push_back(std::move(tp));
 	}
 	
 	if (0 > tcp_read(addrbl.c_str(), addrbl.length()))
 	{
+		ERROR_LOG("socket accept read client info failed");
 		goto fail_unlocked;
 	}
 	
@@ -433,14 +462,21 @@ int Socket::accept()
 		_peer_addr._addr = socket_addr._addr;
 		_peer_addr.set_port(port);
 	}
+	
 	set_peer_addr(_peer_addr);
+
+	DEBUG_LOG("accept read client info successful");
   
 	while (1)
 	{
 		if (0 > tcp_read((char*)&connect, sizeof(connect)))
 		{
+			ERROR_LOG("socket accept read connect info failed");
+			
 			goto fail_unlocked;
 		}
+
+		DEBUG_LOG("socket accept read connect info successful");
     
 		_msgr->_lock.lock();
 		_lock.lock();
@@ -458,10 +494,13 @@ int Socket::accept()
 		_policy = _msgr->get_policy(connect.host_type);
 
 		memset(&reply, 0, sizeof(reply));
+		reply.protocol_version = 0;
+		
 		_msgr->_lock.unlock();
 
 		if (connect.protocol_version != reply.protocol_version)
 		{
+			ERROR_LOG("error version");
 			reply.tag = MSGR_TAG_BADPROTOVER;
 			goto reply;
 		}
@@ -484,9 +523,13 @@ int Socket::accept()
 		existing = _msgr->lookup_socket(_peer_addr);
 		if (existing)
 		{
+			DEBUG_LOG("socket accept existing connection");
+			
 			existing->_lock.lock();
 			if (existing->_reader_dispatching)
 			{
+				DEBUG_LOG("reader dispatching");
+				
 				existing->get();
 				_lock.unlock();
 				_msgr->_lock.unlock();
@@ -504,8 +547,10 @@ int Socket::accept()
 
 			if (connect.global_seq < existing->_peer_global_seq)
 			{
+				DEBUG_LOG("global_seq repy");
+				
 				reply.tag = MSGR_TAG_RETRY_GLOBAL;
-				reply.global_seq = existing->_peer_global_seq;  // so we can send it below..
+				reply.global_seq = existing->_peer_global_seq;
 				existing->_lock.unlock();
 				_msgr->_lock.unlock();
 				goto reply;
@@ -516,41 +561,59 @@ int Socket::accept()
       
 			if (existing->_policy._lossy)
 			{
+				DEBUG_LOG("lossy");
+				
 				existing->was_session_reset();
 				goto replace;
 			}
 
 			if (0 == connect.connect_seq &&  0 < existing->_connect_seq)
 			{
+				DEBUG_LOG("connect_seq is 0");
+				
 				is_reset_from_peer = true;
+				
 				if (_policy._resetcheck)
 				{
 					existing->was_session_reset();
 				}
+				
 				goto replace;
 			}
 
 			if (connect.connect_seq < existing->_connect_seq)
 			{
+				DEBUG_LOG("connect.connect_seq < existing->_connect_seq");
+				
 				goto retry_session;
 			}
 
 			if (connect.connect_seq == existing->_connect_seq)
 			{
+				DEBUG_LOG("connect.connect_seq == existing->_connect_seq");
+				
 				if (existing->_state == SOCKET_OPEN || existing->_state == SOCKET_STANDBY)
 				{
+					DEBUG_LOG("existing->_state == SOCKET_OPEN || existing->_state == SOCKET_STANDBY");
+					
 					goto retry_session;
 				}
 
 				if (_peer_addr < _msgr->_entity._addr || existing->_policy._server)
 				{
+					DEBUG_LOG("_peer_addr < _msgr->_entity._addr || existing->_policy._server");
+					
 					if (!(existing->_state == SOCKET_CONNECTING || existing->_state == SOCKET_WAIT))
 					{
+						DEBUG_LOG("replace");
+						
 						goto replace;
 					}
 				}
 				else
 				{
+					DEBUG_LOG("_peer_addr > _msgr->_entity._addr && !existing->_policy._server");
+					
 					if (!(existing->_state == SOCKET_CONNECTING))
 					{
 					}
@@ -564,22 +627,30 @@ int Socket::accept()
 			
 			if (_policy._resetcheck && 0 == existing->_connect_seq)
 			{
+				DEBUG_LOG("_policy._resetcheck && 0 == existing->_connect_seq");
+				
 				reply.tag = MSGR_TAG_RESETSESSION;
 				_msgr->_lock.unlock();
 				existing->_lock.unlock();
 				goto reply;
 			}
 
+			DEBUG_LOG("goto replace");
+			
 			goto replace;
 		} 
 		else if (0 < connect.connect_seq)
 		{
+			DEBUG_LOG("0 < connect.connect_seq");
+			
 			_msgr->_lock.unlock();
 			reply.tag = MSGR_TAG_RESETSESSION;
 			goto reply;
 		}
 		else
 		{
+			DEBUG_LOG("goto open");
+			
 			existing = NULL;
 			goto open;
 		}
@@ -609,6 +680,8 @@ replace:
 
 	if (existing->_policy._lossy)
 	{
+		DEBUG_LOG("existing->_policy._lossy");
+		
 		if (existing->_connection_state->clear_socket(existing))
 		{
 			_msgr->_dispatch_queue.queue_reset(static_cast<Connection*>(existing->_connection_state->get()));
@@ -616,6 +689,8 @@ replace:
 	}
 	else
 	{
+		DEBUG_LOG("!existing->_policy._lossy");
+		
 		_msgr->_dispatch_queue.queue_reset(static_cast<Connection*>(_connection_state->get()));
 		_connection_state = existing->_connection_state;
 
@@ -712,7 +787,7 @@ fail_unlocked:
 	_lock.lock();
 	
 	if (_state != SOCKET_CLOSED)
-	{
+	{	
 		bool queued = is_queued();
 
 		if (queued)
@@ -830,7 +905,7 @@ void Socket::set_socket_options()
 
 int Socket::connect()
 {
-	DEBUG_LOG("Socket connecting");
+	DEBUG_LOG("socket connecting");
 	
 	bool got_bad_auth = false;
 
@@ -871,7 +946,7 @@ int Socket::connect()
 	rc = ::connect(_fd, (sockaddr*)&_peer_addr._addr, _peer_addr.addr_size());
 	if (0 > rc)
 	{
-		ERROR_LOG("connect faild");
+		ERROR_LOG("connect %s faild", inet_ntoa(((sockaddr_in*)&_peer_addr._addr)->sin_addr));
 		
 		int stored_errno = errno;
 		if (stored_errno == ECONNREFUSED)
@@ -880,12 +955,11 @@ int Socket::connect()
 		}
 		goto fail;
 	}
-	
-	DEBUG_LOG("Socket tcp_read");
 
 	rc = tcp_read((char*)&banner, strlen("moth"));
 	if (0 > rc)
 	{
+		ERROR_LOG("socket connect read banner failed");
 		goto fail;
 	}
 	
@@ -893,6 +967,8 @@ int Socket::connect()
 	{
 		goto fail;
 	}
+
+	DEBUG_LOG("connect read banner successful");
 
 	memset(&msg, 0, sizeof(msg));
 	msgvec[0].iov_base = banner;
@@ -903,12 +979,15 @@ int Socket::connect()
 	rc = do_sendmsg(&msg, msglen);
 	if (0 > rc)
 	{
+		ERROR_LOG("socket connect send banner failed");
 		goto fail;
 	}
 
+	DEBUG_LOG("connect send banner successful");
+
 	{
 		#if defined(__linux__) || defined(DARWIN) || defined(__FreeBSD__)
-			ptr p(sizeof(entity_addr) * 2);
+			ptr p(sizeof(entity_addr_t) * 2);
 		#else
 			int wirelen = sizeof(__u32) * 2 + sizeof(sock_addr_storage);
 	    	ptr p(wirelen * 2);
@@ -919,8 +998,11 @@ int Socket::connect()
 	rc = tcp_read(addrbl.c_str(), addrbl.length());
 	if (0 > rc)
 	{
+		ERROR_LOG("socket connect read client info failed");
 		goto fail;
 	}
+
+	DEBUG_LOG("connect read client info successful");
 	
 	try
 	{
@@ -930,18 +1012,21 @@ int Socket::connect()
 	}
 	catch (...)
 	{
+		ERROR_LOG("decode client info failed");
 		goto fail;
 	}
 	
 	_port = peer_addr_for_me.get_port();
 
 	if (_peer_addr != paddr)
-	{
+	{	
 		if (paddr.is_blank_ip() && _peer_addr.get_port() == paddr.get_port() && _peer_addr.get_nonce() == paddr.get_nonce())
 		{
+			ERROR_LOG("same node");
 		}
 		else
 		{
+			ERROR_LOG("not same node");
 			goto fail;
 		}
   	}
@@ -957,8 +1042,11 @@ int Socket::connect()
 	rc = do_sendmsg(&msg, msglen);
 	if (0 > rc)
 	{
+		ERROR_LOG("socket connect send client info failed");
 		goto fail;
 	}
+
+	DEBUG_LOG("connect send client info successful");
 
 	while (1)
 	{
@@ -966,7 +1054,7 @@ int Socket::connect()
 		connect.host_type = _msgr->get_entity()._name.type();
 		connect.global_seq = gseq;
 		connect.connect_seq = cseq;
-		
+		connect.protocol_version = 0;
 		connect.flags = 0;
 		
 		if (_policy._lossy)
@@ -984,15 +1072,21 @@ int Socket::connect()
 		rc = do_sendmsg(&msg, msglen);
 		if (0 > rc)
 		{
+			ERROR_LOG("connect send connect info failed");
 			goto fail;
 		}
+
+		DEBUG_LOG("connect send connect info successful");
 
 		msg_connect_reply reply;
 		rc = tcp_read((char*)&reply, sizeof(reply));
 		if (0 > rc)
 		{
+			ERROR_LOG("connect read connect reply failed");
 			goto fail;
 		}
+
+		DEBUG_LOG("connect read connect reply successful");
 
 		_lock.lock();
 		if (_state != SOCKET_CONNECTING)
@@ -1219,7 +1313,7 @@ void Socket::discard_out_queue()
 
 void Socket::fault(bool onread)
 {
-	DEBUG_LOG("Socket fault");
+	DEBUG_LOG("socket fault, current state is %s", get_state_name(_state));
 	
 	_cond.signal();
 

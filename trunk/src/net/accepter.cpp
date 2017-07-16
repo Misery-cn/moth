@@ -276,6 +276,9 @@ void Accepter::entry()
 		int fd = ::accept(_listen_fd, (sockaddr*)&ss, &len);
 		if (0 <= fd)
 		{
+			sockaddr_in* addr_in = (sockaddr_in*)&ss;
+			INFO_LOG("accept %s:%d connect", inet_ntoa(addr_in->sin_addr), ntohs(addr_in->sin_port));
+			
 			if (set_close_on_exec(fd))
 			{
 				ERROR_LOG("set close on exec flag failed while accept");

@@ -41,6 +41,37 @@ public:
 				   _throttler_bytes(NULL), _throttler_messages(NULL)
 		{
 		}
+
+		static Policy stateful_server()
+		{
+			return Policy(false, true, true, true);
+		}
+		
+		static Policy stateless_server()
+		{
+			return Policy(true, true, false, false);
+		}
+		
+		static Policy lossless_peer()
+		{
+			return Policy(false, false, true, false);
+		}
+		
+		static Policy lossless_peer_reuse()
+		{
+			return Policy(false, false, true, true);
+		}
+		
+		static Policy lossy_client()
+		{
+			return Policy(true, false, false, false);
+		}
+		
+		static Policy lossless_client()
+		{
+			return Policy(false, false, false, true);
+		}
+		
 	};
 
 	static Messenger* create(std::string type, entity_name_t name, std::string lname, uint64_t nonce = 0, uint64_t flags = 0);

@@ -40,7 +40,6 @@ int MasterMap::build_initial()
 		sconfig.get_val((*it).c_str(), "addr", straddr);
 		DEBUG_LOG("%s addr is %s", (*it).c_str(), straddr.c_str());
 		entity_addr_t addr(straddr.c_str());
-
 		if (0 == addr.get_port())
 		{
 			addr.set_port(9999);

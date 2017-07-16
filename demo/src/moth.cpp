@@ -75,16 +75,23 @@ int main(int argc, const char* argv[])
 	
 	Messenger* msgr = Messenger::create("simple", entity_name_t::MASTER(whoami), "master", 0);
 
+	// 绑定端口开始监听
 	err = msgr->bind(addr);
 	if (err < 0)
 	{
-		std::cerr << "unable to bind to " << addr.get_sockaddr()->sa_data << std::endl;
+		sockaddr_in* addr_in = (struct sockaddr_in*)addr.get_sockaddr();
+		std::cerr << "unable to bind to " << inet_ntoa(addr_in->sin_addr) << std::endl;
 		forker.exit(1);
 	}
 	
 	master = new Master(msgr, &master_map, whoami);
 	
 	forker.daemonize();
+
+	msgr->set_policy(entity_name_t::TYPE_CLIENT, Messenger::Policy::stateless_server());
+	msgr->set_policy(entity_name_t::TYPE_SERVER, Messenger::Policy::lossless_peer_reuse());
+	msgr->set_policy(entity_name_t::TYPE_MASTER, Messenger::Policy::lossless_peer_reuse());
+	msgr->set_policy(entity_name_t::TYPE_SLAVE, Messenger::Policy::stateless_server());
 	
 	msgr->start();
 	
