@@ -26,10 +26,6 @@ raw* create(uint32_t len);
 raw* create_aligned(uint32_t len, uint32_t align);
 raw* create_page_aligned(uint32_t len);
 
-#if defined(HAVE_XIO)
-raw* create_msg(unsigned len, char *buf, XioDispatchHook *m_hook);
-#endif
-
 // ptr为raw的部分数据段
 class ptr
 {
@@ -43,8 +39,8 @@ public:
 	ptr(const ptr& p);
 	ptr(ptr&& p);
 	ptr(const ptr& p, uint32_t o, uint32_t l);
-	ptr& operator =(const ptr& other);
-	ptr& operator= (ptr&& p);
+	ptr& operator=(const ptr& other);
+	ptr& operator=(ptr&& p);
 	~ptr() 
 	{
 		release();
@@ -61,13 +57,13 @@ public:
 
 	ptr& make_shareable();
 
-	bool at_buffer_head() const { return _off == 0; }
+	bool at_buffer_head() const { return 0 == _off; }
 
 	bool at_buffer_tail() const;
 
 	bool is_aligned(uint32_t align) const
 	{
-		return ((long)c_str() & (align - 1)) == 0;
+		return 0 == ((long)c_str() & (align - 1));
 	}
 
 	bool is_page_aligned() const
@@ -77,7 +73,7 @@ public:
 
 	bool is_n_align_sized(uint32_t align) const
     {
-		return (length() % align) == 0;
+		return 0 == (length() % align);
     }
 
 	bool is_n_page_sized() const
@@ -87,7 +83,7 @@ public:
 
 	bool is_partial() const 
 	{
-		return have_raw() && (start() > 0 || end() < raw_length());
+		return have_raw() && (0 < start() || end() < raw_length());
     }
 
 	raw* get_raw() const { return _raw; }
@@ -110,9 +106,9 @@ public:
 
 	uint32_t unused_tail_length() const;
 
-	const char& operator [](uint32_t n) const;
+	const char& operator[](uint32_t n) const;
 
-	char& operator [](uint32_t n);
+	char& operator[](uint32_t n);
 
 	const char* raw_c_str() const;
 
@@ -348,8 +344,8 @@ public:
 
 		void advance(ssize_t o);
 		void seek(size_t o);
-		char operator *();
-		iterator& operator ++();
+		char operator*();
+		iterator& operator++();
 		ptr get_current_ptr();
 
 		void copy(uint32_t len, char* dest);
@@ -362,12 +358,12 @@ public:
 		void copy_in(uint32_t len, const char *src, bool crc_reset);
 		void copy_in(uint32_t len, const buffer& otherl);
 
-		bool operator ==(const iterator& rhs) const
+		bool operator==(const iterator& rhs) const
 		{
 			return _bl == rhs._bl && _off == rhs._off;
 		}
 		
-		bool operator !=(const iterator& rhs) const
+		bool operator!=(const iterator& rhs) const
 		{
 			return _bl != rhs._bl || _off != rhs._off;
 		}
@@ -610,7 +606,7 @@ public:
 
 	buffer(buffer&& other);
 	
-    buffer& operator =(const buffer& other)
+    buffer& operator=(const buffer& other)
 	{
 		if (this != &other)
 		{
@@ -622,7 +618,7 @@ public:
 		return *this;
     }
 
-	buffer& operator =(buffer&& other)
+	buffer& operator=(buffer&& other)
 	{
 		_buffers = std::move(other._buffers);
 		_len = other._len;
@@ -679,7 +675,10 @@ public:
 	void push_front(ptr& bp)
 	{
 		if (0 == bp.length())
+		{
 			return;
+		}
+		
       	_buffers.push_front(bp);
       	_len += bp.length();
     }
@@ -687,7 +686,10 @@ public:
 	void push_front(ptr&& bp)
 	{
 		if (0 == bp.length())
+		{
 			return;
+		}
+		
 		_len += bp.length();
 		_buffers.push_front(std::move(bp));
     }
@@ -700,7 +702,10 @@ public:
 	void push_back(const ptr& bp)
 	{
 		if (0 == bp.length())
+		{
 			return;
+		}
+		
 		_buffers.push_back(bp);
 		_len += bp.length();
     }
@@ -708,7 +713,10 @@ public:
 	void push_back(ptr&& bp)
 	{
 		if (0 == bp.length())
+		{
 			return;
+		}
+		
       	_len += bp.length();
 		_buffers.push_back(std::move(bp));
     }
@@ -814,9 +822,9 @@ public:
     void append(std::istream& in);
     void append_zero(uint32_t len);
 
-	const char& operator [](uint32_t n) const;
+	const char& operator[](uint32_t n) const;
 
-	char *c_str();
+	char* c_str();
 
 	std::string to_str() const;
 
@@ -887,79 +895,101 @@ public:
     }
 };
 
-inline bool operator >(buffer& l, buffer& r)
+inline bool operator>(buffer& l, buffer& r)
 {
 	for (uint32_t p = 0; ; p++)
 	{
     	if (l.length() > p && r.length() == p)
+    	{
 			return true;
+    	}
 		
     	if (l.length() == p)
+    	{
 			return false;
+    	}
 		
     	if (l[p] > r[p])
+    	{
 			return true;
+    	}
 		
     	if (l[p] < r[p])
+    	{
 			return false;
+    	}
 	}
 }
 
-inline bool operator >=(buffer& l, buffer& r)
+inline bool operator>=(buffer& l, buffer& r)
 {
 	for (uint32_t p = 0; ; p++)
 	{
     	if (l.length() > p && r.length() == p)
+    	{
 			return true;
+    	}
 		
     	if (r.length() == p && l.length() == p)
+    	{
 			return true;
+    	}
 		
     	if (l.length() == p && r.length() > p)
+    	{
 			return false;
+    	}
 		
     	if (l[p] > r[p])
+    	{
 			return true;
+    	}
 		
     	if (l[p] < r[p])
+    	{
 			return false;
+    	}
 	}
 }
 
-inline bool operator ==(const buffer &l, const buffer &r)
+inline bool operator==(const buffer &l, const buffer &r)
 {
 	if (l.length() != r.length())
+	{
 		return false;
+	}
 	
 	for (uint32_t p = 0; p < l.length(); p++)
 	{
     	if (l[p] != r[p])
+    	{
 			return false;
+    	}
 	}
 	
 	return true;
 }
 
-inline bool operator <(buffer& l, buffer& r)
+inline bool operator<(buffer& l, buffer& r)
 {
 	return r > l;
 }
 
-inline bool operator <=(buffer& l, buffer& r)
+inline bool operator<=(buffer& l, buffer& r)
 {
 	return r >= l;
 }
 
 
-std::ostream& operator <<(std::ostream& out, const ptr& bp);
+std::ostream& operator<<(std::ostream& out, const ptr& bp);
 
-std::ostream& operator <<(std::ostream& out, const raw& r);
+std::ostream& operator<<(std::ostream& out, const raw& r);
 
-std::ostream& operator <<(std::ostream& out, const buffer& bl);
+std::ostream& operator<<(std::ostream& out, const buffer& bl);
 
-std::ostream& operator <<(std::ostream& out, const SysCallException& e);
+std::ostream& operator<<(std::ostream& out, const SysCallException& e);
 
-inline hash& operator <<(hash& l, buffer& r)
+inline hash& operator<<(hash& l, buffer& r)
 {
 	l.update(r);
 	return l;

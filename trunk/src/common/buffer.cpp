@@ -13,6 +13,7 @@
 #include "intarith.h"
 #include "builtin.h"
 #include "armor.h"
+#include "strtol.h"
 #include "safe_io.h"
 #include "crc32.h"
 #include "error.h"
@@ -27,13 +28,17 @@ const bool buffer_track_alloc = get_env_bool("BUFFER_TRACK");
 void inc_total_alloc(uint32_t len)
 {
 	if (buffer_track_alloc)
+	{
 		atomic_add(len, &buffer_total_alloc);
+	}
 }
 
 void dec_total_alloc(uint32_t len)
 {
 	if (buffer_track_alloc)
+	{
 		atomic_sub(len, &buffer_total_alloc);
+	}
 }
 
 void inc_history_alloc(uint64_t len)
@@ -56,8 +61,8 @@ static atomic_t buffer_max_pipe_size;
 
 int update_max_pipe_size()
 {
-#ifdef CEPH_HAVE_SETPIPE_SZ
-	char buf[32];
+#ifdef HAVE_SETPIPE_SZ
+	char buf[32] = {0};
 	int r;
     std::string err;
 	struct stat stat_result;
@@ -66,11 +71,15 @@ int update_max_pipe_size()
 	r = safe_read_file("/proc/sys/fs/", "pipe-max-size",
 		       buf, sizeof(buf) - 1);
     if (r < 0)
+    {
 		return r;
+    }
     buf[r] = '\0';
     size_t size = strict_strtol(buf, 10, &err);
     if (!err.empty())
+    {
 		return -EIO;
+    }
 	atomic_set(&buffer_max_pipe_size, size);
 #endif
     return 0;
@@ -79,12 +88,17 @@ int update_max_pipe_size()
 
 size_t get_max_pipe_size()
 {
-#ifdef CEPH_HAVE_SETPIPE_SZ
+#ifdef HAVE_SETPIPE_SZ
 	size_t size = atomic_read(&buffer_max_pipe_size);
 	if (size)
+	{
 		return size;
+	}
+	
     if (update_max_pipe_size() == 0)
+    {
 		return atomic_read(&buffer_max_pipe_size);
+    }
 #endif
 
     return 65536;
@@ -104,7 +118,7 @@ public:
 	virtual ~raw() {}
 
 	raw(const raw& other);
-    const raw& operator =(const raw& other);
+    const raw& operator=(const raw& other);
 
 	virtual char* get_data()
 	{
@@ -113,7 +127,7 @@ public:
 
 	virtual raw* clone_empty() = 0;
 
-	raw *clone()
+	raw* clone()
 	{
 		raw* c = clone_empty();
 		memcpy(c->_data, _data, _len);
@@ -170,7 +184,7 @@ public:
 	void invalidate_crc()
 	{
 		SpinLock::Locker locker(_crc_spinlock);
-		if (_crc_map.size() != 0)
+		if (0 != _crc_map.size())
 		{
 			_crc_map.clear();
 		}
@@ -213,20 +227,27 @@ public:
 	static raw_combined* create(uint32_t len, uint32_t align = 0)
 	{
 		if (!align)
+		{
 			align = sizeof(size_t);
+		}
+		
       	size_t rawlen = ROUND_UP_TO(sizeof(raw_combined), alignof(raw_combined));
 		size_t datalen = ROUND_UP_TO(len, alignof(raw_combined));
 
 #ifdef DARWIN
-		char* ptr = (char *)valloc(rawlen + datalen);
+		char* ptr = (char*)valloc(rawlen + datalen);
 #else
 		char* ptr = 0;
 		int r = posix_memalign((void**)(void*)&ptr, align, rawlen + datalen);
 		if (r)
+		{
 			THROW_SYSCALL_EXCEPTION(NULL, r, "posix_memalign");
-#endif /* DARWIN */
+		}
+#endif
 		if (!ptr)
+		{
 			THROW_SYSCALL_EXCEPTION(NULL, r, "posix_memalign");
+		}
 
 		return new (ptr + datalen) raw_combined(ptr, len, align);
 	}
@@ -287,7 +308,9 @@ public:
 	{
 		_data = (char*)mmap(NULL, _len, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANON, -1, 0);
 		if (!_data)
+		{
 			THROW_SYSCALL_EXCEPTION(NULL, errno, "mmap");
+		}
 		inc_total_alloc(_len);
 		inc_history_alloc(_len);
     }
@@ -319,10 +342,14 @@ public:
 		_data = 0;
 		int r = posix_memalign((void**)(void*)&_data, _align, _len);
 		if (r)
+		{
 			THROW_SYSCALL_EXCEPTION(NULL, r, "posix_memalign");
-#endif /* DARWIN */
+		}
+#endif
 		if (!_data)
+		{
 			THROW_SYSCALL_EXCEPTION(NULL, r, "posix_memalign");
+		}
 		inc_total_alloc(_len);
 		inc_history_alloc(_len);
     }
@@ -394,19 +421,19 @@ public:
 		_pipefds[1] = -1;
 
 		int r;
-		if (pipe(_pipefds) == -1)
+		if (-1 == pipe(_pipefds))
 		{
 			THROW_SYSCALL_EXCEPTION(NULL, errno, "pipe");
 		}
 
 		r = set_nonblocking(_pipefds);
-		if (r < 0)
+		if (0 > r)
 		{
 			THROW_SYSCALL_EXCEPTION(NULL, errno, "set_nonblocking");
 		}
 
 		r = set_pipe_size(_pipefds, len);
-		if (r < 0)
+		if (0 > r)
 		{
 		}
 
@@ -417,7 +444,10 @@ public:
 	~raw_pipe()
 	{
 		if (_data)
+		{
 			free(_data);
+		}
+		
 		close_pipe(_pipefds);
 		dec_total_alloc(_len);
     }
@@ -431,7 +461,7 @@ public:
 	{
 		int flags = SPLICE_F_NONBLOCK;
 		ssize_t r = safe_splice(fd, off, _pipefds[1], NULL, _len, flags);
-		if (r < 0)
+		if (0 > r)
 		{
 			return r;
 		}
@@ -445,12 +475,13 @@ public:
 	{
 		int flags = SPLICE_F_NONBLOCK;
 		ssize_t r = safe_splice_exact(_pipefds[0], NULL, fd, offset, _len, flags);
-		if (r < 0)
+		if (0 > r)
 		{
 			return r;
 		}
 		
 		_source_consumed = true;
+		
 		return 0;
     }
 
@@ -462,7 +493,9 @@ public:
     char* get_data()
 	{
 		if (_data)
+		{
 			return _data;
+		}
 		
 		return copy_pipe(_pipefds);
     }
@@ -472,7 +505,7 @@ private:
 	int set_pipe_size(int* fds, long length)
 	{
 #ifdef HAVE_SETPIPE_SZ
-		if (fcntl(fds[1], F_SETPIPE_SZ, length) == -1)
+		if (-1 == fcntl(fds[1], F_SETPIPE_SZ, length))
 		{
 			int r = -errno;
 			if (r == -EPERM)
@@ -489,20 +522,30 @@ private:
 
 	int set_nonblocking(int* fds)
 	{
-		if (fcntl(fds[0], F_SETFL, O_NONBLOCK) == -1)
+		if (-1 == fcntl(fds[0], F_SETFL, O_NONBLOCK))
+		{
 			return -errno;
-		if (fcntl(fds[1], F_SETFL, O_NONBLOCK) == -1)
+		}
+		
+		if (-1 == fcntl(fds[1], F_SETFL, O_NONBLOCK))
+		{
 			return -errno;
+		}
 		
 		return 0;
     }
 
 	void close_pipe(int* fds)
 	{
-		if (fds[0] >= 0)
+		if (0 <= fds[0])
+		{
 			VOID_TEMP_FAILURE_RETRY(close(fds[0]));
-		if (fds[1] >= 0)
+		}
+		
+		if (0 <= fds[1])
+		{
 			VOID_TEMP_FAILURE_RETRY(close(fds[1]));
+		}
 	}
 
     char* copy_pipe(int* fds)
@@ -510,24 +553,24 @@ private:
 		int tmpfd[2];
 		int r;
 
-		if (pipe(tmpfd) == -1)
+		if (-1 == pipe(tmpfd))
 		{
 			THROW_SYSCALL_EXCEPTION(NULL, errno, "pipe");
 		}
 		
       	r = set_nonblocking(tmpfd);
-		if (r < 0)
+		if (0 > r)
 		{
 			THROW_SYSCALL_EXCEPTION(NULL, r, "set_nonblocking");
 		}
 		
 		r = set_pipe_size(tmpfd, _len);
-		if (r < 0)
+		if (0 > r)
 		{
 		}
 		
 		int flags = SPLICE_F_NONBLOCK;
-		if (tee(fds[0], tmpfd[1], _len, flags) == -1)
+		if (-1 == tee(fds[0], tmpfd[1], _len, flags))
 		{
 			r = errno;
 			close_pipe(tmpfd);
@@ -551,6 +594,7 @@ private:
 		}
 		
 		close_pipe(tmpfd);
+		
 		return _data;
 	}
 };
@@ -562,9 +606,13 @@ public:
     explicit raw_char(uint32_t l) : raw(l)
 	{
 		if (_len)
+		{
 			_data = new char[_len];
+		}
 		else
+		{
 			_data = 0;
+		}
 		
 		inc_total_alloc(_len);
 		inc_history_alloc(_len);
@@ -593,9 +641,13 @@ public:
 	explicit raw_unshareable(uint32_t l) : raw(l)
 	{
 		if (_len)
+		{
 			_data = new char[_len];
+		}
 		else
+		{
 			_data = 0;
+		}
     }
 	
     raw_unshareable(uint32_t l, char* b) : raw(b, l)
@@ -629,64 +681,6 @@ public:
 		return new raw_char(_len);
     }
 };
-
-#if defined(HAVE_XIO)
-class xio_msg_buffer : public raw
-{
-private:
-    XioDispatchHook* _hook;
-	
-public:
-	xio_msg_buffer(XioDispatchHook* hook, const char* d, uint32_t l) : raw((char*)d, l), _hook(hook->get()){}
-
-    bool is_shareable() { return false; }
-	
-    static void operator delete(void* p)
-    {
-		xio_msg_buffer* buf = static_cast<xio_msg_buffer*>(p);
-		buf->_hook->put();
-    }
-	
-    raw* clone_empty()
-	{
-		return new raw_char(_len);
-    }
- };
-
-class xio_mempool : public raw
-{
-public:
-	struct xio_reg_mem* _mp;
-    xio_mempool(struct xio_reg_mem* mp, uint32_t l) : raw((char*)mp->addr, l), _mp(mp)
-    {}
-	
-    ~xio_mempool() {}
-	
-    raw* clone_empty()
-	{
-		return new raw_char(_len);
-    }
-};
-
-struct xio_reg_mem* get_xio_mp(const ptr& bp)
-{
-	xio_mempool *mb = dynamic_cast<xio_mempool*>(bp.get_raw());
-	if (mb)
-	{
-		return mb->mp;
-    }
-	
-    return NULL;
-}
-
-raw* create_msg(uint32_t len, char* buf, XioDispatchHook* hook)
-{
-	XioPool& pool = hook->get_pool();
-    raw* bp = static_cast<raw*>(pool.alloc(sizeof(xio_msg_buffer)));
-    new (bp)xio_msg_buffer(hook, buf, len);
-    return bp;
-}
-#endif /* HAVE_XIO */
 
 
 raw* copy(const char* c, uint32_t len)
@@ -749,11 +743,12 @@ raw* create_zero_copy(uint32_t len, int fd, int64_t* offset)
 #ifdef HAVE_SPLICE
 	raw_pipe* buf = new raw_pipe(len);
     int r = buf->set_source(fd, (loff_t*)offset);
-    if (r < 0)
+    if (0 > r)
 	{
 		delete buf;
 		THROW_SYSCALL_EXCEPTION(NULL, r, "safe_splice");
     }
+	
     return buf;
 #else
 	THROW_SYSCALL_EXCEPTION(NULL, -ENOTSUP, "safe_splice");
@@ -820,7 +815,7 @@ ptr::ptr(const ptr& p, uint32_t o, uint32_t l) : _raw(p._raw), _off(p._off + o),
 	atomic_inc(&(_raw->_ref));
 }
 
-ptr& ptr::operator =(const ptr& p)
+ptr& ptr::operator=(const ptr& p)
 {
 	if (p._raw)
 	{
@@ -845,7 +840,7 @@ ptr& ptr::operator =(const ptr& p)
 	return *this;
 }
 
-ptr& ptr::operator =(ptr&& p)
+ptr& ptr::operator=(ptr&& p)
 {
 	release();
 	raw* raw = p._raw;
@@ -933,7 +928,9 @@ bool ptr::at_buffer_tail() const
 const char* ptr::c_str() const
 {
 	if (buffer_track_c_str)
+	{
 		atomic_inc(&buffer_c_str_accesses);
+	}
 	
 	return _raw->get_data() + _off;
 }
@@ -941,7 +938,9 @@ const char* ptr::c_str() const
 char* ptr::c_str()
 {
 	if (buffer_track_c_str)
+	{
 		atomic_inc(&buffer_c_str_accesses);
+	}
 	
 	return _raw->get_data() + _off;
 }
@@ -949,15 +948,19 @@ char* ptr::c_str()
 const char* ptr::end_c_str() const
 {
 	if (buffer_track_c_str)
+	{
 		atomic_inc(&buffer_c_str_accesses);
+	}
 	
-  return _raw->get_data() + _off + _len;
+	return _raw->get_data() + _off + _len;
 }
 
 char* ptr::end_c_str()
 {
 	if (buffer_track_c_str)
+	{
 		atomic_inc(&buffer_c_str_accesses);
+	}
 	
 	return _raw->get_data() + _off + _len;
 }
@@ -966,12 +969,16 @@ char* ptr::end_c_str()
 uint32_t ptr::unused_tail_length() const
 {
 	if (_raw)
+	{
 		return _raw->_len - (_off + _len);
+	}
 	else
+	{
 		return 0;
+	}
 }
 
-const char& ptr::operator [](uint32_t n) const
+const char& ptr::operator[](uint32_t n) const
 {
 	return _raw->get_data()[_off + n];
 }
@@ -999,7 +1006,9 @@ int ptr::raw_nref() const
 void ptr::copy_out(uint32_t o, uint32_t l, char* dest) const
 {
 	if (o + l > _len)
+	{
 		THROW_SYSCALL_EXCEPTION(NULL, -1, "copy_out");
+	}
 	
 	char* src =  _raw->_data + _off + o;
 	maybe_inline_memcpy(dest, src, l, 8);
@@ -1017,14 +1026,20 @@ int ptr::cmp(const ptr& o) const
 	{
 		int r = memcmp(c_str(), o.c_str(), l);
 		if (r)
+		{
 			return r;
+		}
 	}
 	
 	if (_len < o._len)
+	{
 		return -1;
+	}
 	
 	if (_len > o._len)
+	{
 		return 1;
+	}
 	
 	return 0;
 }
@@ -1059,7 +1074,9 @@ void ptr::copy_in(uint32_t o, uint32_t l, const char *src, bool crc_reset)
 {
 	char* dest = _raw->_data + _off + o;
 	if (crc_reset)
+	{
 		_raw->invalidate_crc();
+	}
 	
 	maybe_inline_memcpy(dest, src, l, 64);
 }
@@ -1072,7 +1089,9 @@ void ptr::zero()
 void ptr::zero(bool crc_reset)
 {
 	if (crc_reset)
+	{
 		_raw->invalidate_crc();
+	}
 	
 	memset(c_str(), 0, _len);
 }
@@ -1085,7 +1104,9 @@ void ptr::zero(uint32_t o, uint32_t l)
 void ptr::zero(uint32_t o, uint32_t l, bool crc_reset)
 {
 	if (crc_reset)
+	{
 		_raw->invalidate_crc();
+	}
 	
 	memset(c_str() + o, 0, l);
 }
@@ -1118,7 +1139,9 @@ void buffer::iterator_impl<is_const>::advance(ssize_t o)
 		while (0 < _p_off)
 		{
 			if (_iter == _ls->end())
+			{
 				THROW_SYSCALL_EXCEPTION(NULL, -1, "advance");
+			}
 			
 			if (_p_off >= _iter->length())
 			{
@@ -1143,7 +1166,9 @@ void buffer::iterator_impl<is_const>::advance(ssize_t o)
 		{
 			uint32_t d = -o;
 			if (d > _p_off)
+			{
 				d = _p_off;
+			}
 			
 			_p_off -= d;
 			_off -= d;
@@ -1170,19 +1195,23 @@ void buffer::iterator_impl<is_const>::seek(size_t o)
 }
 
 template<bool is_const>
-char buffer::iterator_impl<is_const>::operator *() const
+char buffer::iterator_impl<is_const>::operator*() const
 {
 	if (_iter == _ls->end())
+	{
 		THROW_SYSCALL_EXCEPTION(NULL, -1, "operator*");
+	}
 	
 	return (*_iter)[_p_off];
 }
 
 template<bool is_const>
-buffer::iterator_impl<is_const>& buffer::iterator_impl<is_const>::operator ++()
+buffer::iterator_impl<is_const>& buffer::iterator_impl<is_const>::operator++()
 {
 	if (_iter == _ls->end())
+	{
 		THROW_SYSCALL_EXCEPTION(NULL, -1, "operator++");
+	}
 	
 	advance(1);
 	
@@ -1193,7 +1222,9 @@ template<bool is_const>
 ptr buffer::iterator_impl<is_const>::get_current_ptr() const
 {
 	if (_iter == _ls->end())
+	{
 		THROW_SYSCALL_EXCEPTION(NULL, -1, "get_current_ptr");
+	}
 	
 	return ptr(*_iter, _p_off, _iter->length() - _p_off);
 }
@@ -1202,16 +1233,22 @@ template<bool is_const>
 void buffer::iterator_impl<is_const>::copy(uint32_t len, char* dest)
 {
 	if (_iter == _ls->end())
+	{
 		seek(_off);
+	}
 	
 	while (0 < len)
 	{
 		if (_iter == _ls->end())
+		{
 			THROW_SYSCALL_EXCEPTION(NULL, -1, "copy");
+		}
 
 		uint32_t howmuch = _iter->length() - _p_off;
 		if (len < howmuch)
+		{
 			howmuch = len;
+		}
 		
 		_iter->copy_out(_p_off, howmuch, dest);
 		dest += howmuch;
@@ -1233,16 +1270,22 @@ template<bool is_const>
 void buffer::iterator_impl<is_const>::copy(uint32_t len, buffer& dest)
 {
 	if (_iter == _ls->end())
+	{
 		seek(_off);
+	}
 	
 	while (0 < len)
 	{
 		if (_iter == _ls->end())
+		{
 			THROW_SYSCALL_EXCEPTION(NULL, -1, "copy");
+		}
 
 		uint32_t howmuch = _iter->length() - _p_off;
 		if (len < howmuch)
+		{
 			howmuch = len;
+		}
 		
 		dest.append(*_iter, _p_off, howmuch);
 
@@ -1255,17 +1298,23 @@ template<bool is_const>
 void buffer::iterator_impl<is_const>::copy(uint32_t len, std::string& dest)
 {
 	if (_iter == _ls->end())
+	{
 		seek(_off);
+	}
 	
 	while (0 < len)
 	{
 		if (_iter == _ls->end())
+		{
 			THROW_SYSCALL_EXCEPTION(NULL, -1, "copy");
+		}
 
 		unsigned howmuch = _iter->length() - _p_off;
 		const char *c_str = _iter->c_str();
 		if (len < howmuch)
+		{
 			howmuch = len;
+		}
 		
 		dest.append(c_str + _p_off, howmuch);
 
@@ -1278,12 +1327,16 @@ template<bool is_const>
 void buffer::iterator_impl<is_const>::copy_all(buffer& dest)
 {
 	if (_iter == _ls->end())
+	{
 		seek(_off);
+	}
 	
 	while (1)
 	{
 		if (_iter == _ls->end())
+		{
 			return;
+		}
 
 		unsigned howmuch = _iter->length() - _p_off;
 		const char *c_str = _iter->c_str();
@@ -1354,7 +1407,7 @@ void buffer::iterator::seek(size_t o)
 	buffer::iterator_impl<false>::seek(o);
 }
 
-char buffer::iterator::operator *()
+char buffer::iterator::operator*()
 {
 	if (_iter == _ls->end())
 	{
@@ -1364,7 +1417,7 @@ char buffer::iterator::operator *()
 	return (*_iter)[_p_off];
 }
 
-buffer::iterator& buffer::iterator::operator ++()
+buffer::iterator& buffer::iterator::operator++()
 {
 	buffer::iterator_impl<false>::operator ++();
 	
@@ -1414,16 +1467,22 @@ void buffer::iterator::copy_in(uint32_t len, const char* src)
 void buffer::iterator::copy_in(uint32_t len, const char* src, bool crc_reset)
 {
 	if (_iter == _ls->end())
+	{
 		seek(_off);
+	}
 
 	while (0 < len)
 	{
 		if (_iter == _ls->end())
+		{
 			THROW_SYSCALL_EXCEPTION(NULL, -1, "copy_in");
+		}
 
 		uint32_t howmuch = _iter->length() - _p_off;
 		if (len < howmuch)
+		{
 			howmuch = len;
+		}
 		
 		_iter->copy_in(_p_off, howmuch, src, crc_reset);
 
@@ -1436,7 +1495,9 @@ void buffer::iterator::copy_in(uint32_t len, const char* src, bool crc_reset)
 void buffer::iterator::copy_in(uint32_t len, const buffer& other)
 {
 	if (_iter == _ls->end())
+	{
 		seek(_off);
+	}
 
 	uint32_t left = len;
 
@@ -1445,13 +1506,17 @@ void buffer::iterator::copy_in(uint32_t len, const buffer& other)
 	{
 		uint32_t l = (*i).length();
 		if (left < l)
+		{
 			l = left;
+		}
 		
 		copy_in(l, i->c_str());
 		left -= l;
 		
-		if (left == 0)
+		if (0 == left)
+		{
 			break;
+		}
 	}
 }
 
@@ -1481,7 +1546,9 @@ bool buffer::contents_equal(buffer& other)
 bool buffer::contents_equal(const buffer& other) const
 {
 	if (length() != other.length())
+	{
 		return false;
+	}
 
 	if (true)
 	{
@@ -1492,10 +1559,14 @@ bool buffer::contents_equal(const buffer& other) const
 		{
 			uint32_t len = a->length() - aoff;
 			if (len > b->length() - boff)
+			{
   				len = b->length() - boff;
+			}
 			
 			if (0 != memcmp(a->c_str() + aoff, b->c_str() + boff, len))
+			{
 				return false;
+			}
 			
 			aoff += len;
 			if (aoff == a->length())
@@ -1523,7 +1594,9 @@ bool buffer::contents_equal(const buffer& other) const
 		while (!me.end())
 		{
 			if (*me != *him)
+			{
 				return false;
+			}
 			
 			++me;
 			++him;
@@ -1539,7 +1612,9 @@ bool buffer::can_zero_copy() const
 		it != _buffers.end(); ++it)
 	{
 		if (!it->can_zero_copy())
+		{
 			return false;
+		}
 	}
 		
 	return true;
@@ -1548,7 +1623,9 @@ bool buffer::can_zero_copy() const
 bool buffer::is_provided_buffer(const char* dst) const
 {
 	if (_buffers.empty())
+	{
 		return false;
+	}
 	
 	return (is_contiguous() && (_buffers.front().c_str() == dst));
 }
@@ -1559,7 +1636,9 @@ bool buffer::is_aligned(uint32_t align) const
 		it != _buffers.end(); ++it)
 	{
 		if (!it->is_aligned(align))
+		{
 			return false;
+		}
 	}
 		
 	return true;
@@ -1571,7 +1650,9 @@ bool buffer::is_n_align_sized(uint32_t align) const
 		it != _buffers.end(); ++it)
 	{
 		if (!it->is_n_align_sized(align))
+		{
 			return false;
+		}
 	}
 		
 	return true;
@@ -1583,7 +1664,9 @@ bool buffer::is_aligned_size_and_memory(uint32_t align_size, uint32_t align_memo
 		it != _buffers.end(); ++it)
 	{
 		if (!it->is_aligned(align_memory) || !it->is_n_align_sized(align_size))
+		{
 			return false;
+		}
 	}
 		
 	return true;
@@ -1640,7 +1723,9 @@ void buffer::zero(uint32_t o, uint32_t l)
 		
 		p += it->length();
 		if (o + l <= p)
+		{
 			break;
+		}
 	}
 }
 
@@ -1669,10 +1754,14 @@ void buffer::rebuild()
 	
 	ptr nb;
 	
-	if ((_len & ~PAGE_MASK) == 0)
+	if (0 == (_len & ~PAGE_MASK))
+	{
 		nb = create_page_aligned(_len);
+	}
 	else
+	{
 		nb = create(_len);
+	}
 	
 	rebuild(nb);
 }
@@ -1690,7 +1779,9 @@ void buffer::rebuild(ptr& nb)
 	_memcopy_count += pos;
 	_buffers.clear();
 	if (nb.length())
+	{
 		_buffers.push_back(nb);
+	}
 	
 	invalidate_crc();
 	_last_p = begin();
@@ -1756,7 +1847,9 @@ void buffer::claim_append(buffer& bl, uint32_t flags)
 	_len += bl._len;
 	
 	if (!(flags & CLAIM_ALLOW_NONSHAREABLE))
+	{
 		bl.make_shareable();
+	}
 	
 	_buffers.splice(_buffers.end(), bl._buffers);
 	bl._len = 0;
@@ -1768,7 +1861,9 @@ void buffer::claim_prepend(buffer& bl, uint32_t flags)
 	_len += bl._len;
 	
 	if (!(flags & CLAIM_ALLOW_NONSHAREABLE))
+	{
 		bl.make_shareable();
+	}
 	
 	_buffers.splice(_buffers.begin(), bl._buffers);
 	bl._len = 0;
@@ -1778,10 +1873,14 @@ void buffer::claim_prepend(buffer& bl, uint32_t flags)
 void buffer::copy(uint32_t off, uint32_t len, char* dest) const
 {
 	if (off + len > length())
+	{
 		THROW_SYSCALL_EXCEPTION(NULL, -1, "copy");
+	}
 	
-	if (_last_p.get_off() != off) 
+	if (_last_p.get_off() != off)
+	{
 		_last_p.seek(off);
+	}
 	
 	_last_p.copy(len, dest);
 }
@@ -1789,18 +1888,24 @@ void buffer::copy(uint32_t off, uint32_t len, char* dest) const
 void buffer::copy(uint32_t off, uint32_t len, buffer& dest) const
 {
 	if (off + len > length())
+	{
 		THROW_SYSCALL_EXCEPTION(NULL, -1, "copy");
+	}
 	
-	if (_last_p.get_off() != off) 
+	if (_last_p.get_off() != off)
+	{
 		_last_p.seek(off);
+	}
 	
 	_last_p.copy(len, dest);
 }
 
 void buffer::copy(uint32_t off, uint32_t len, std::string& dest) const
 {
-	if (_last_p.get_off() != off) 
+	if (_last_p.get_off() != off)
+	{
 		_last_p.seek(off);
+	}
 	
 	return _last_p.copy(len, dest);
 }
@@ -1813,18 +1918,24 @@ void buffer::copy_in(uint32_t off, uint32_t len, const char* src)
 void buffer::copy_in(uint32_t off, uint32_t len, const char* src, bool crc_reset)
 {
 	if (off + len > length())
+	{
 		THROW_SYSCALL_EXCEPTION(NULL, -1, "copy_in");
+	}
 
-	if (_last_p.get_off() != off) 
+	if (_last_p.get_off() != off)
+	{
 		_last_p.seek(off);
+	}
 	
 	_last_p.copy_in(len, src, crc_reset);
 }
 
 void buffer::copy_in(uint32_t off, uint32_t len, const buffer& src)
 {
-	if (_last_p.get_off() != off) 
+	if (_last_p.get_off() != off)
+	{
 		_last_p.seek(off);
+	}
 	
 	_last_p.copy_in(len, src);
 }
@@ -1848,7 +1959,10 @@ void buffer::append(const char* data, uint32_t len)
 		uint32_t gap = _append_buffer.unused_tail_length();
 		if (gap)
 		{
-			if (gap > len) gap = len;
+			if (gap > len)
+			{
+				gap = len;
+			}
 			
 			_append_buffer.append(data, gap);
 			append(_append_buffer, _append_buffer.end() - gap, gap);
@@ -1856,8 +1970,10 @@ void buffer::append(const char* data, uint32_t len)
 			data += gap;
 		}
 		
-		if (len == 0)
+		if (0 == len)
+		{
 			break;
+		}
   
 		size_t need = ROUND_UP_TO(len, sizeof(size_t)) + sizeof(raw_combined);
 		size_t alen = ROUND_UP_TO(need, BUFFER_ALLOC_UNIT) - sizeof(raw_combined);
@@ -1869,13 +1985,17 @@ void buffer::append(const char* data, uint32_t len)
 void buffer::append(const ptr& bp)
 {
 	if (bp.length())
+	{
 		push_back(bp);
+	}
 }
 
 void buffer::append(ptr&& bp)
 {
 	if (bp.length())
+	{
 		push_back(std::move(bp));
+	}
 }
 
 void buffer::append(const ptr& bp, uint32_t off, uint32_t len)
@@ -1913,7 +2033,9 @@ void buffer::append(std::istream& in)
 		append(s.c_str(), s.length());
 		
 		if (s.length())
+		{
 			append("\n", 1);
+		}
 	}
 }
 
@@ -1924,10 +2046,12 @@ void buffer::append_zero(uint32_t len)
 	append(std::move(bp));
 }
 
-const char& buffer::operator [](uint32_t n) const
+const char& buffer::operator[](uint32_t n) const
 {
 	if (n >= _len)
+	{
 		THROW_SYSCALL_EXCEPTION(NULL, -1, "operator[]");
+	}
 
 	for (std::list<ptr>::const_iterator p = _buffers.begin();
 		p != _buffers.end(); ++p)
@@ -1945,13 +2069,17 @@ const char& buffer::operator [](uint32_t n) const
 char* buffer::c_str()
 {
 	if (_buffers.empty())
+	{
 		return 0;
+	}
 
 	std::list<ptr>::const_iterator iter = _buffers.begin();
 	++iter;
 
 	if (iter != _buffers.end())
+	{
 		rebuild();
+	}
 	
 	return _buffers.front().c_str();
 }
@@ -1975,7 +2103,9 @@ std::string buffer::to_str() const
 char* buffer::get_contiguous(uint32_t orig_off, uint32_t len)
 {
 	if (orig_off + len > length())
+	{
 		THROW_SYSCALL_EXCEPTION(NULL, -1, "get_contiguous");
+	}
 
 	if (0 == len)
 	{
@@ -1990,16 +2120,21 @@ char* buffer::get_contiguous(uint32_t orig_off, uint32_t len)
 		++curbuf;
 	}
 
-	if (off + len > curbuf->length()) {
+	if (off + len > curbuf->length())
+	{
 		buffer tmp;
 		unsigned l = off + len;
 
 		do
 		{
 			if (l >= curbuf->length())
+			{
 				l -= curbuf->length();
+			}
 			else
+			{
 				l = 0;
+			}
 			
 			tmp.append(*curbuf);
 			curbuf = _buffers.erase(curbuf);
@@ -2020,7 +2155,9 @@ char* buffer::get_contiguous(uint32_t orig_off, uint32_t len)
 void buffer::substr_of(const buffer& other, uint32_t off, uint32_t len)
 {
 	if (off + len > other.length())
+	{
 		THROW_SYSCALL_EXCEPTION(NULL, -1, "substr_of");
+	}
 
 	clear();
 
@@ -2052,10 +2189,14 @@ void buffer::substr_of(const buffer& other, uint32_t off, uint32_t len)
 void buffer::splice(uint32_t off, uint32_t len, buffer* claim_by)
 {
 	if (0 == len)
+	{
 		return;
+	}
 
 	if (off >= length())
+	{
 		THROW_SYSCALL_EXCEPTION(NULL, -1, "splice");
+	}
 
 	std::list<ptr>::iterator curbuf = _buffers.begin();
 	while (0 < off)
@@ -2079,9 +2220,12 @@ void buffer::splice(uint32_t off, uint32_t len, buffer* claim_by)
 
 	while (0 < len)
 	{
-		if (off + len < (*curbuf).length()) {
-			if (claim_by) 
+		if (off + len < (*curbuf).length())
+		{
+			if (claim_by)
+			{
 				claim_by->append( *curbuf, off, len );
+			}
 			
 			(*curbuf).set_offset(off+len + (*curbuf).offset());
 			(*curbuf).set_length((*curbuf).length() - (len+off));
@@ -2090,8 +2234,10 @@ void buffer::splice(uint32_t off, uint32_t len, buffer* claim_by)
 		}
   
 		unsigned howmuch = (*curbuf).length() - off;
-		if (claim_by) 
-			claim_by->append( *curbuf, off, howmuch );
+		if (claim_by)
+		{
+			claim_by->append( *curbuf, off, howmuch);
+		}
 		
 		_len -= (*curbuf).length();
 		_buffers.erase( curbuf++ );
@@ -2110,7 +2256,9 @@ void buffer::write(uint32_t off, uint32_t len, std::ostream& out) const
 		it != s._buffers.end(); ++it)
 	{
 		if (it->length())
+		{
 			out.write(it->c_str(), it->length());
+		}
 	}
 }
 
@@ -2181,12 +2329,13 @@ int buffer::read_file(const char* fn, std::string* error)
 	}
 	
 	VOID_TEMP_FAILURE_RETRY(close(fd));
+	
 	return 0;
 }
 
 ssize_t buffer::read_fd(int fd, size_t len)
 {
-	if (false && 0 == read_fd_zero_copy(fd, len))
+	if (0 == read_fd_zero_copy(fd, len))
 	{
 		return 0;
 	}
@@ -2199,6 +2348,7 @@ ssize_t buffer::read_fd(int fd, size_t len)
 		bp.set_length(ret);
 		append(std::move(bp));
 	}
+	
 	return ret;
 }
 
@@ -2301,7 +2451,9 @@ static int do_writev(int fd, struct iovec *vec, uint64_t offset, unsigned veclen
 int buffer::write_fd(int fd) const
 {
 	if (can_zero_copy())
+	{
 		return write_fd_zero_copy(fd);
+	}
 
 	iovec iov[IOV_MAX];
 	int iovlen = 0;
@@ -2330,8 +2482,10 @@ int buffer::write_fd(int fd) const
 				if (wrote < 0)
 				{
 					int err = errno;
-						if (err == EINTR)
-							goto retry;
+					if (err == EINTR)
+					{
+						goto retry;
+					}
 					return -err;
 				}
 				
@@ -2387,7 +2541,9 @@ int buffer::write_fd(int fd, uint64_t offset) const
 
 		int r = do_writev(fd, iov, offset, iovlen, bytes);
 		if (0 > r)
+		{
 			return r;
+		}
 		
 		offset += bytes;
 	}
@@ -2410,25 +2566,35 @@ void buffer::prepare_iov(std::vector<iovec> *piov) const
 int buffer::write_fd_zero_copy(int fd) const
 {
 	if (!can_zero_copy())
+	{
 		return -ENOTSUP;
+	}
 
 	int64_t offset = lseek(fd, 0, SEEK_CUR);
-	int64_t *off_p = &offset;
-	if (offset < 0 && errno != ESPIPE)
+	int64_t* off_p = &offset;
+	if (0 > offset && ESPIPE != errno)
+	{
 		return -errno;
+	}
 	
-	if (errno == ESPIPE)
+	if (ESPIPE == errno)
+	{
 		off_p = NULL;
+	}
 	
 	for (std::list<ptr>::const_iterator it = _buffers.begin();
 		it != _buffers.end(); ++it)
 	{
 		int r = it->zero_copy_to_fd(fd, off_p);
-		if (r < 0)
+		if (0 > r)
+		{
 			return r;
+		}
 		
 		if (off_p)
+		{
 			offset += it->length();
+		}
 	}
 		
 	return 0;
@@ -2493,7 +2659,9 @@ void buffer::write_stream(std::ostream& out) const
 void buffer::hexdump(std::ostream& out, bool trailing_newline) const
 {
 	if (!length())
+	{
 		return;
+	}
 
 	std::ios_base::fmtflags original_flags = out.flags();
 
@@ -2539,22 +2707,28 @@ void buffer::hexdump(std::ostream& out, bool trailing_newline) const
 		}
 		
 		if (o)
+		{
 			out << "\n";
+		}
 		
 		out << std::hex << std::setw(8) << o << " ";
 
 		uint32_t i;
 		for (i = 0; i < per && o + i< length(); i++)
 		{
-			if (i == 8)
+			if (8 == i)
+			{
 				out << ' ';
+			}
 			out << " " << std::setw(2) << ((unsigned)(*this)[o + i] & 0xff);
 		}
 		
 		for (; i < per; i++)
 		{
-			if (i == 8)
+			if (8 == i)
+			{
 				out << ' ';
+			}
 			
 			out << "   ";
 		}
@@ -2564,9 +2738,13 @@ void buffer::hexdump(std::ostream& out, bool trailing_newline) const
 		{
 			char c = (*this)[o+i];
 			if (isupper(c) || islower(c) || isdigit(c) || c == ' ' || ispunct(c))
+			{
 				out << c;
+			}
 			else
+			{
 				out << '.';
+			}
 		}
 		
 		out << '|' << std::dec;
@@ -2581,26 +2759,30 @@ void buffer::hexdump(std::ostream& out, bool trailing_newline) const
 	out.flags(original_flags);
 }
 
-std::ostream& operator <<(std::ostream& out, const raw& r)
+std::ostream& operator<<(std::ostream& out, const raw& r)
 {
 	return out << "buffer::raw(" << (void*)r._data << " len " << r._len << " nref " << atomic_read(&r._ref) << ")";
 }
 
-std::ostream& operator <<(std::ostream& out, const ptr& bp)
+std::ostream& operator<<(std::ostream& out, const ptr& bp)
 {
 	if (bp.have_raw())
+	{
 		out << "buffer::ptr(" << bp.offset() << "~" << bp.length()
 			<< " " << (void*)bp.c_str()
 			<< " in raw " << (void*)bp.raw_c_str()
 			<< " len " << bp.raw_length()
 			<< " nref " << bp.raw_nref() << ")";
+	}
 	else
+	{
 		out << "buffer:ptr(" << bp.offset() << "~" << bp.length() << " no raw)";
+	}
 	
 	return out;
 }
 
-std::ostream& operator <<(std::ostream& out, const buffer& bl)
+std::ostream& operator<<(std::ostream& out, const buffer& bl)
 {
 	out << "buffer::list(len=" << bl.length() << "," << std::endl;
 
@@ -2617,7 +2799,7 @@ std::ostream& operator <<(std::ostream& out, const buffer& bl)
 	return out;
 }
 
-std::ostream& operator <<(std::ostream& out, const SysCallException& e)
+std::ostream& operator<<(std::ostream& out, const SysCallException& e)
 {
 	return out << e.what();
 }

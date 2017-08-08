@@ -57,18 +57,17 @@ public:
 		_obj_num = object_number;
 		_idle_num = _obj_num;
 
-		// _object_array = new ObjectClass[_obj_num];
-		_object_queue = new ArrayList<ObjectClass*>(_obj_num);
+		_object_queue = new ArrayList<ObjectClass*>();
 
 		for (uint32_t i = 0; i < _obj_num; ++i)
 		{
-			// ObjectClass* object = &_object_array[i];
 			// 这儿需要new多次,也可以一次性new一个数组
 			ObjectClass* object = new ObjectClass();
 			object->set_index(i);
 			object->set_in_pool(true);
 
-			_object_queue->push_back(object);
+			ArrayList<ObjectClass*>::Item item(object);
+			_object_queue->push_back(&item);
 		}
 	}
 
@@ -77,7 +76,6 @@ public:
 		MutexGuard locker(_lock);
 		
 		DELETE_P(_object_queue);
-        // DELETE_ARRAY(_object_array);
 	}
 
 	// 从对象池中获取一个对象

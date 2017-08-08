@@ -51,6 +51,7 @@ class DispatchQueue
 	mutable Mutex _lock;
 	Cond _cond;
 
+	// 优先级队列
 	PrioritizedQueue<QueueItem, uint64_t> _mqueue;
 
 	std::set< std::pair<double, Message*> > _marrival;
@@ -72,6 +73,7 @@ class DispatchQueue
     
 	enum { D_CONNECT = 1, D_ACCEPT, D_BAD_REMOTE_RESET, D_BAD_RESET, D_CONN_REFUSED, D_NUM_CODES };
 
+	// 发送线程,处理队列_mqueue中的消息
 	class DispatchThread : public Thread
 	{
 	private:
@@ -88,7 +90,8 @@ class DispatchQueue
 	Cond _local_delivery_cond;
 	bool _stop_local_delivery;
 	std::list< std::pair<Message*, int> > _local_messages;
-	
+
+	// 处理本地消息线程
 	class LocalDeliveryThread : public Thread
 	{
 	private:
@@ -198,7 +201,8 @@ public:
 	{
 		return _next_id++;
 	}
-	
+
+	// 启动发送消息线程和本地消息发送线程
 	void start();
 	
 	void entry();
@@ -216,7 +220,7 @@ public:
 				_stop(false)
 	{}
 	
-	~DispatchQueue()
+	virtual ~DispatchQueue()
 	{
 	}
 };

@@ -73,7 +73,7 @@ int main(int argc, const char* argv[])
 		addr = master_map.get_addr_by_rank(whoami);
 	}
 	
-	Messenger* msgr = Messenger::create("simple", entity_name_t::MASTER(whoami), "master", 0);
+	Messenger* msgr = Messenger::create("simple", entity_name_t::MASTER(whoami), "master");
 
 	// 绑定端口开始监听
 	err = msgr->bind(addr);

@@ -12,7 +12,7 @@ long long strict_strtoll(const char* str, int base, std::string* err)
 	errno = 0;
 	long long ret = strtoll(str, &endptr, base);
 
-	if ((errno == ERANGE && (ret == LLONG_MAX || ret == LLONG_MIN)) || (errno != 0 && ret == 0))
+	if ((errno == ERANGE && (ret == LLONG_MAX || ret == LLONG_MIN)) || (0 != errno && 0 == ret))
 	{
 		errStr = "The option value '";
 		errStr.append(str);
@@ -50,7 +50,9 @@ int strict_strtol(const char* str, int base, std::string* err)
 	std::string errStr;
 	long long ret = strict_strtoll(str, base, err);
 	if (!err->empty())
+	{
 		return 0;
+	}
 	
 	if ((ret <= INT_MIN) || (ret >= INT_MAX))
 	{
@@ -146,30 +148,50 @@ T strict_si_cast(const char* str, std::string* err)
 	
 	const char &u = s.back();
 	int m = 0;
-	if (u == 'B')
+	if ('B' == u)
+	{
 		m = 0;
-	else if (u == 'K')
+	}
+	else if ('K' == u)
+	{
 		m = 10;
-	else if (u == 'M')
+	}
+	else if ('M' == u)
+	{
 		m = 20;
-	else if (u == 'G')
+	}
+	else if ('G' == u)
+	{
 		m = 30;
-	else if (u == 'T')
+	}
+	else if ('T' == u)
+	{
 		m = 40;
-	else if (u == 'P')
+	}
+	else if ('P' == u)
+	{
 		m = 50;
-	else if (u == 'E')
+	}
+	else if ('E' == u)
+	{
 		m = 60;
+	}
 	else
+	{
 		m = -1;
+	}
 
-	if (m >= 0)
+	if (0 <= m)
+	{
 		s.pop_back();
+	}
 	else
+	{
 		m = 0;
+	}
 
 	long long ll = strict_strtoll(s.c_str(), 10, err);
-	if (ll < 0 && !std::numeric_limits<T>::is_signed)
+	if (0 > ll && !std::numeric_limits<T>::is_signed)
 	{
 	    *err = "strict_sistrtoll: value should not be negative";
 	    return 0;

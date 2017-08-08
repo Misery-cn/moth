@@ -34,7 +34,9 @@ static inline char* ritoa(T u, char* buf)
 	}
 	
 	while (digits++ < width)
+	{
     	*--buf = '0';
+	}
 	
 	return buf;
 }

@@ -27,7 +27,6 @@
 
 // SYS_NS_BEGIN
 
-
 static const int SM_IOV_MAX = (IOV_MAX >= 1024 ? IOV_MAX / 4 : IOV_MAX);
 
 class SimpleMessenger;
@@ -165,26 +164,42 @@ public:
 	{
 		return get_state_name(_state);
     }
-	
 
-    // 创建套接字
-    int open() throw (SysCallException);
-    // 关闭套接字
-    int close() throw (SysCallException);
-	// 关闭调用open返回的套接字
-	int close(size_t fd) throw (SysCallException);
-    // 监听端口,MaxConn为同时处理的最大连接数
-    int listen() throw (SysCallException);
-    // 绑定端口
-    int bind(IN char* ip, IN int port) throw (SysCallException);
-    // 请求建立连接
-    int connect(IN char* ip, IN int port) throw (SysCallException);
-    // 接收连接
-    int accept(OUT int* fd, OUT struct sockaddr_in* addr) throw (SysCallException);
-    // 读取数据
-    int read(IN int fd, OUT char* buf, OUT int len) throw (SysCallException);
-    // 写入数据
-    int write(IN int fd, IN char* buf) throw (SysCallException);
+	int create_socket();
+
+	// close函数会关闭套接字ID
+	// 如果有其他的进程共享着这个套接字,那么它仍然是打开的
+	int close_socket()
+	{
+		recv_reset();
+	
+		if (0 <= _fd)
+		{
+			::close(_fd);
+			_fd = -1;
+		}
+	}
+
+	// SHUT_RD 关闭读功能
+	// SHUT_WR 关闭写功能
+	// SHUT_RDWR 关闭读写功能
+	void shutdown_socket()
+	{
+		recv_reset();
+		
+		if (0 <= _fd)
+		{
+			::shutdown(_fd, SHUT_RDWR);
+			_fd = -1;
+		}
+	}
+
+	void set_state_close()
+	{
+		_state = SOCKET_CLOSED;
+		atomic_set(&_state_closed, 1);
+	}
+	
 	// 设置选项
 	void set_socket_options();
 	// 启动读线程
@@ -192,7 +207,7 @@ public:
 	// 启动写线程
     void start_writer();
 	
-    void maybe_start_delay_thread();
+    void start_delay_thread();
 	
     void join_reader();
 
@@ -251,8 +266,11 @@ public:
 				m = iter->second.front();
 				iter->second.pop_front();
 			}
+			
 			if (iter->second.empty())
+			{
 				_out_q.erase(iter->first);
+			}
 		}
 		
 		return m;
@@ -263,16 +281,6 @@ public:
 	void discard_requeued_up_to(uint64_t seq);
 
 	void discard_out_queue();
-
-	// SHUT_RD 关闭读功能
-	// SHUT_WR 关闭写功能
-	// SHUT_RDWR 关闭读写功能
-	void shutdown_socket()
-	{
-		recv_reset();
-		if (0 <= _fd)
-			::shutdown(_fd, SHUT_RDWR);
-	}
 
 	void recv_reset()
 	{
@@ -323,11 +331,17 @@ protected:
 	friend class SimpleMessenger;
 	SocketConnection* _connection_state;
 	utime_t _backoff;
+	// 读线程是否启动
 	bool _reader_running;
 	bool _reader_needs_join;
+	// 读线程是否在发送消息
 	bool _reader_dispatching;
+	// 消息是否发送完成
 	bool _notify_on_dispatch_done;
 	bool _writer_running;
+	// 是否替换socket
+	bool _replaced;
+	bool _is_reset_from_peer;
 
 	std::map<int, std::list<Message*> > _out_q;
 
@@ -350,6 +364,14 @@ protected:
 	int accept();	
 	
     int connect();
+
+	int accepting();
+
+	int connecting();
+
+	void replace_socket(Socket* other);
+
+	int open_socket(const msg_connect& connect);
 	
     void reader();
 	
@@ -374,6 +396,10 @@ protected:
 	void restore_signal();
 	
 	void fault(bool reader = false);
+
+	void accept_fail();
+
+	void connect_fail();
 	
 	void was_session_reset();
 

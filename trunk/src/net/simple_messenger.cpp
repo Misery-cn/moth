@@ -1,12 +1,11 @@
 #include "simple_messenger.h"
 #include "log.h"
 
-SimpleMessenger::SimpleMessenger(entity_name_t name, std::string mname, uint64_t nonce)
-  : PolicyMessenger(name, mname, nonce),
-	_accepter(this, nonce),
+SimpleMessenger::SimpleMessenger(entity_name_t name, std::string mname)
+  : PolicyMessenger(name, mname),
+	_accepter(this),
     _dispatch_queue(this, mname),
     _reaper_thread(this),
-	_nonce(nonce),
     _lock(), _did_bind(false),
     _global_seq(0),
     _dispatch_throttler(std::string("msgr_dispatch_throttler_") + mname),
@@ -84,6 +83,7 @@ int SimpleMessenger::send_message(Message* m, Connection* con)
 	}
 
 	submit_message(m, static_cast<SocketConnection*>(con), con->get_peer_addr(), con->get_peer_type(), false);
+	
 	return 0;
 }
 
@@ -104,9 +104,11 @@ void SimpleMessenger::reaper_entry()
 	DEBUG_LOG("socket reaper start");
 	
 	Mutex::Locker locker(_lock);
+	
 	while (!_reaper_stop)
 	{
 		reaper();
+		
 		if (_reaper_stop)
 		{
 			break;
@@ -126,7 +128,11 @@ void SimpleMessenger::reaper()
 		Socket* socket = _socket_reap_queue.front();
 		_socket_reap_queue.pop_front();
 		
-		DEBUG_LOG("reaping socket");
+		if (!socket)
+		{
+			ERROR_LOG("socket already deleted");
+			continue;
+		}
 
 		socket->_lock.lock();
 		socket->discard_out_queue();
@@ -148,6 +154,8 @@ void SimpleMessenger::reaper()
 		{
 			::close(socket->_fd);
 		}
+
+		DEBUG_LOG("reaping socket %d ref count", socket->get_ref());
 		
     	socket->dec();
 	}
@@ -215,7 +223,6 @@ int SimpleMessenger::start()
 
 	if (!_did_bind)
 	{
-		_entity._addr._nonce = _nonce;
 		init_local_connection();
 	}
 
@@ -236,6 +243,7 @@ Socket* SimpleMessenger::add_accept_socket(int fd)
 	
 	_sockets.insert(socket);
 	_accepting_sockets.insert(socket);
+	
 	return socket;
 }
 

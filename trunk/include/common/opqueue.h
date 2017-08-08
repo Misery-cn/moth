@@ -25,8 +25,6 @@ public:
 
     virtual T dequeue() = 0;
 
-    // virtual void dump(Formatter* f) const = 0;
-
     virtual ~OpQueue() {}; 
 };
 

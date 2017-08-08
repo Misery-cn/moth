@@ -34,8 +34,8 @@ public:
 	virtual ~Logger();
 
 	void set_appender(Appender* appender)
-	{
-		_appenders->push_back(appender);
+	{	
+		_appenders->push_back(&appender->item);
 	}
 
 	void call_appender(LogEvent* event);
@@ -54,14 +54,10 @@ private:
 	// 日志级别
 	log_level_t _level;
 
-	// 模块ID
-
 	// 日志目的地列表
     ArrayList<Appender*>* _appenders;
 
-	// 共享内存
-
-	// 线程互斥
+	// 互斥锁
 	Mutex _lock;
 };
 

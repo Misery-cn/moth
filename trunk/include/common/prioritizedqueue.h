@@ -41,7 +41,7 @@ class PrioritizedQueue : public OpQueue <T, K>
 		int64_t _size;
 		typename Classes::iterator cur;
 	public:
-		SubQueue(const SubQueue &other) : q(other.q), _tokens(other._tokens),
+		SubQueue(const SubQueue& other) : q(other.q), _tokens(other._tokens),
 					_max_tokens(other._max_tokens), _size(other._size), cur(q.begin())
 		{}
 		
@@ -198,7 +198,7 @@ class PrioritizedQueue : public OpQueue <T, K>
 		}
 	};
 
-	typedef std::map<unsigned, SubQueue> SubQueues;
+	typedef std::map<uint32_t, SubQueue> SubQueues;
 	SubQueues _high_queue;
 	SubQueues _queue;
 

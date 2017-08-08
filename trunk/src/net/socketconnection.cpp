@@ -48,8 +48,10 @@ bool SocketConnection::try_get_socket(Socket** s)
 bool SocketConnection::clear_socket(Socket* s)
 {
 	Mutex::Locker locker(_lock);
+	
 	if (s == _socket)
 	{
+		// new connectionÊ±getÒ»´Î
 		_socket->dec();
 		_socket = NULL;
 		_failed = true;
@@ -62,12 +64,16 @@ bool SocketConnection::clear_socket(Socket* s)
 void SocketConnection::reset_socket(Socket* s)
 {
 	Mutex::Locker locker(_lock);
+	
 	if (_socket)
 	{
+		DEBUG_LOG("current ref count is %d", _socket->get_ref());
 		_socket->dec();
 	}
 	
 	_socket = s->get();
+	
+	DEBUG_LOG("new socket ref count is %d", _socket->get_ref());
 }
 
 bool SocketConnection::is_connected()

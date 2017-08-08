@@ -9,6 +9,7 @@
 #include "dir_utils.h"
 #include "file_utils.h"
 #include "time_utils.h"
+#include "array_list.h"
 
 typedef enum
 {
@@ -21,9 +22,9 @@ typedef enum
 
 // 
 const int LOG_LINE_SIZE = 512;
-// 最大日志文件10M大小
-const int MAX_LOG_FILE_SIZE = 10 * M;
-// 最大10个日志文件
+// 最大日志文件大小
+const int MAX_LOG_FILE_SIZE = 1000 * M;
+// 最大日志文件个数
 const int MAX_LOG_FILE_SEQ = 10;
 
 
@@ -55,14 +56,19 @@ public:
 class Appender
 {
 public:
-	Appender();
-	virtual ~Appender();
+	Appender() : item(this)
+	{
+		// TODO
+	}
+	
+	virtual ~Appender()
+	{
+		// TODO
+	}
 
 	virtual void do_appender(LogEvent* logevent) = 0;
 	
-protected:
-	// 进程名
-
+	ArrayList<Appender*>::Item item;
 };
 
 

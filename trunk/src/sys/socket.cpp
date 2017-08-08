@@ -4,12 +4,14 @@
 #include "msg_types.h"
 #include "crc32.h"
 #include "simple_messenger.h"
+#include "error.h"
 // SYS_NS_BEGIN
 
 #define SEQ_MASK  0x7fffffff
+#define BANNER "banner"
 
 Socket::Socket(SimpleMessenger* msgr, int st, SocketConnection* con)
-		: _reader_thread(this), _writer_thread(this), _delay_thread(NULL), _msgr(msgr),
+		: RefCountable(), _reader_thread(this), _writer_thread(this), _delay_thread(NULL), _msgr(msgr),
 		_conn_id(msgr->_dispatch_queue.get_id()), _recv_ofs(0), _recv_len(0), _fd(-1),
 		_port(0), _peer_type(-1), _lock(), _state(st), _connection_state(NULL), 
 		_reader_running(false), _reader_needs_join(false), _reader_dispatching(false),
@@ -42,254 +44,6 @@ Socket::~Socket()
 	DELETE_ARRAY(_recv_buf);
 }
 
-int Socket::open() throw (SysCallException)
-{
-    // 创建一个套接字
-    _fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (0 >= _fd)
-    {
-        THROW_SYSCALL_EXCEPTION(NULL, errno, "socket");
-    }
-
-    return 0;
-}
-
-int Socket::close() throw (SysCallException)
-{
-    // 关闭连接
-    shutdown(_fd, SHUT_RDWR);
-    // 清理套接字
-    if (0 != close(_fd))
-    {
-        THROW_SYSCALL_EXCEPTION(NULL, errno, "close");
-    }
-	
-	_fd = -1;
-	
-    return 0;
-}
-
-int Socket::close(size_t fd) throw (SysCallException)
-{
-    // 关闭连接
-    shutdown(fd, SHUT_RDWR);
-    // 清理套接字
-    if (0 != close(fd))
-    {
-        THROW_SYSCALL_EXCEPTION(NULL, errno, "close");
-    }
-	
-	fd = -1;
-	
-    return 0;
-}
-
-int Socket::bind(char* ip, int port) throw (SysCallException)
-{
-    int	op = 1;
-    struct sockaddr_in addr;
-
-    memset((char *)&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(port);
-    if ((NULL == ip) || (MIN_IP_LEN > strlen(ip)))
-    {
-        addr.sin_addr.s_addr = INADDR_ANY;
-    }
-    else
-    {
-        addr.sin_addr.s_addr = inet_addr(ip);
-    }
-
-    // 允许在bind过程中本地地址可重复使用
-    // 成功返回0，失败返回-1
-    if (0 > setsockopt(_fd, SOL_SOCKET, SO_REUSEADDR, (char *)&op, sizeof(op)))
-    {
-        return -1;
-    }
-
-    // 给套接口分配协议地址,如果前面没有设置地址可重复使用,则要判断errno=EADDRINUSE,即地址已使用
-    // 成功返回0，失败返回-1
-    if (0 > ::bind(_fd, (struct sockaddr*)&addr, sizeof(addr)))
-    {
-        THROW_SYSCALL_EXCEPTION(NULL, errno, "bind");
-    }
-
-    return 0;
-}
-
-int Socket::listen() throw (SysCallException)
-{
-    if (0 != ::listen(_fd, MAX_CONN))
-    {
-        THROW_SYSCALL_EXCEPTION(NULL, errno, "listen");
-    }
-
-    return 0;
-}
-
-int Socket::accept(int* fd, struct sockaddr_in* addr) throw (SysCallException)
-{
-    int newfd = -1;
-    int size = sizeof(struct sockaddr_in);
-
-    newfd = ::accept(_fd, (struct sockaddr*)addr, (socklen_t*)&size);
-    if (0 > newfd)
-    {
-        THROW_SYSCALL_EXCEPTION(NULL, errno, "accept");
-    }
-
-    *fd = newfd;
-
-    return 0;
-}
-
-int Socket::connect(char* ip, int port) throw (SysCallException)
-{
-    struct sockaddr_in addr;
-
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr(ip);
-    addr.sin_port = htons(port);
-
-    // Socket连接
-    if (0 != ::connect(_fd, (struct sockaddr*)&addr, sizeof(addr)))
-    {
-        THROW_SYSCALL_EXCEPTION(NULL, errno, "connect");
-    }
-
-    return 0;
-}
-
-int Socket::read(int fd, char* buf, int len) throw (SysCallException)
-{
-    /*
-	fd_set readfds;
-    fd_set errfds;
-    struct timeval tv;
-
-    // 初始化
-    FD_ZERO(&readfds);
-    // 打开sockfd的可读位
-    FD_SET(fd, &readfds);
-
-    // 初始化
-    FD_ZERO(&errfds);
-    // 设置sockfd的异常位
-    FD_SET(fd, &errfds);
-
-    tv.tv_sec = WAIT_TIME_OUT;
-    tv.tv_usec = 0;
-
-    // 检测套接字状态
-    if (select(fd + 1, &readfds, NULL, &errfds, &tv))
-    {
-        // 判断描述字sockfd的异常位是否打开,如果打开则表示产生错误
-        if (FD_ISSET(fd, &errfds))
-        {
-            return SOCKET_READ_ERROR;
-        }
-
-        // 判断描述字sockfd的可读位是否打开,如果打开则读取数据
-        if (FD_ISSET(fd, &readfds))
-        {
-            // 读数据
-            // 返回实际所读的字节数
-            if (0 > read(fd, buff, len))
-            {
-                return SOCKET_READ_ERROR;
-            }
-            else
-            {
-				return NO_ERROR;
-            }
-        }
-    }
-	*/
-	
-	// 读数据
-	// 返回实际所读的字节数
-	if (0 > read(fd, buf, len))
-	{
-		if ((EAGAIN != errno) && (EWOULDBLOCK != errno))
-        {
-			THROW_SYSCALL_EXCEPTION(NULL, errno, "read");
-        }
-	}
-	else
-	{
-		return 0;
-	}
-}
-
-int Socket::write(int fd, char* buf) throw (SysCallException)
-{
-	/*
-    fd_set writefds;
-    struct timeval tv;
-
-    // 初始化
-    FD_ZERO(&writefds);
-    // 打开fd的可写位
-    FD_SET(fd, &writefds);
-
-    tv.tv_sec = WAIT_TIME_OUT;
-    tv.tv_usec = 0;
-
-    int bufLen = strlen(buff);
-
-    // 检测套接字状态
-    if (select(fd + 1, NULL, &writefds, 0, &tv))
-    {
-        // 判断描述字sockfd的可写位是否打开,如果打开则写入数据
-        if (FD_ISSET(fd, &writefds))
-        {
-            // 写入数据
-            // 返回所写字节数
-            int wl = write(fd, buff, bufLen);
-            if (0 > wl)
-            {
-                return SOCKET_WRITE_ERROR;
-            }
-            else
-            {
-                if (wl == bufLen)
-                {
-                    return NO_ERROR;
-                }
-                else
-                {
-                    return SOCKET_WRITE_ERROR;
-                }
-            }
-        }
-    }
-	*/
-	
-	// 写入数据
-	// 返回所写字节数
-	int bufLen = strlen(buf);
-	int wl = ::write(fd, buf, bufLen);
-	if (0 > wl)
-	{
-		if ((EAGAIN != errno) && (EWOULDBLOCK != errno))
-        {
-			THROW_SYSCALL_EXCEPTION(NULL, errno, "write");
-        }
-	}
-	else
-	{
-		if (wl == bufLen)
-		{
-			return 0;
-		}
-		else
-		{
-			THROW_SYSCALL_EXCEPTION(NULL, errno, "write");
-		}
-	}
-}
-
 void Socket::handle_ack(uint64_t seq)
 {
 	while (!_sent.empty() && _sent.front()->get_seq() <= seq)
@@ -312,11 +66,10 @@ void Socket::start_reader()
 	_reader_thread.create();
 }
 
-void Socket::maybe_start_delay_thread()
+void Socket::start_delay_thread()
 {
 	if (!_delay_thread)
 	{
-		// config
 	    uint32_t pos = std::string("").find(entity_type_name(_connection_state->_peer_type));
 	    if (pos != std::string::npos)
 		{
@@ -345,485 +98,6 @@ void Socket::join_reader()
 	_reader_thread.join();
 	_lock.lock();
 	_reader_needs_join = false;
-}
-
-
-/*
-svr                      cli
-                    <----connect
-       accept<----
-  send banner---->
-					---->read banner
-                    <----send banner
-  read banner<----
-  
-  send cli info---->
-                     ---->read cli info
-					 <----send cli info
-  read cli info<----
-*/
-
-int Socket::accept()
-{
-	DEBUG_LOG("socket accepting");
-	
-	_lock.unlock();
-
-	buffer addrs;
-	entity_addr_t socket_addr;
-	socklen_t len;
-	int r;
-	char banner[strlen("moth")+1];
-	buffer addrbl;
-	msg_connect connect;
-	msg_connect_reply reply;
-	Socket* existing = NULL;
-	buffer bp;
-	uint64_t feat_missing;
-	bool replaced = false;
-	bool is_reset_from_peer = false;
-	int removed;
-
-	int reply_tag = 0;
-	uint64_t existing_seq = -1;
-	
-	uint64_t newly_acked_seq = 0;
-
-	recv_reset();
-
-	set_socket_options();
-
-	r = tcp_write("moth", strlen("moth"));
-	if (0 > r)
-	{
-		ERROR_LOG("socket accept write banner failed");
-		goto fail_unlocked;
-	}
-
-	DEBUG_LOG("accept send banner successful");
-
-	::encode(_msgr->_entity._addr, addrs);
-
-	_port = _msgr->_entity._addr.get_port();
-
-	sockaddr_storage ss;
-	len = sizeof(ss);
-	r = ::getpeername(_fd, (sockaddr*)&ss, &len);
-	if (0 > r)
-	{
-		ERROR_LOG("socket accept get client info failed");
-		goto fail_unlocked;
-	}
-	socket_addr.set_sockaddr((sockaddr*)&ss);
-	::encode(socket_addr, addrs);
-
-	r = tcp_write(addrs.c_str(), addrs.length());
-	if (0 > r)
-	{
-		ERROR_LOG("socket accept write client info failed");
-		goto fail_unlocked;
-	}
-
-	DEBUG_LOG("accept send client info successful");
-  
-	if (0 > tcp_read(banner, strlen("moth")))
-	{
-		ERROR_LOG("socket accept read banner failed");
-		goto fail_unlocked;
-	}
-	
-	if (memcmp(banner, "moth", strlen("moth")))
-	{
-		banner[strlen("moth")] = 0;
-		goto fail_unlocked;
-	}
-
-	DEBUG_LOG("accept read banner successful");
-	
-	{
-		ptr tp(sizeof(entity_addr_t));
-		addrbl.push_back(std::move(tp));
-	}
-	
-	if (0 > tcp_read(addrbl.c_str(), addrbl.length()))
-	{
-		ERROR_LOG("socket accept read client info failed");
-		goto fail_unlocked;
-	}
-	
-	{
-		buffer::iterator ti = addrbl.begin();
-		::decode(_peer_addr, ti);
-	}
-
-	if (_peer_addr.is_blank_ip())
-	{
-		int port = _peer_addr.get_port();
-		_peer_addr._addr = socket_addr._addr;
-		_peer_addr.set_port(port);
-	}
-	
-	set_peer_addr(_peer_addr);
-
-	DEBUG_LOG("accept read client info successful");
-  
-	while (1)
-	{
-		if (0 > tcp_read((char*)&connect, sizeof(connect)))
-		{
-			ERROR_LOG("socket accept read connect info failed");
-			
-			goto fail_unlocked;
-		}
-
-		DEBUG_LOG("socket accept read connect info successful");
-    
-		_msgr->_lock.lock();
-		_lock.lock();
-		if (_msgr->_dispatch_queue._stop)
-		{
-			goto shutting_down;
-		}
-		
-		if (_state != SOCKET_ACCEPTING)
-		{
-			goto shutting_down;
-		}
-
-		set_peer_type(connect.host_type);
-		_policy = _msgr->get_policy(connect.host_type);
-
-		memset(&reply, 0, sizeof(reply));
-		reply.protocol_version = 0;
-		
-		_msgr->_lock.unlock();
-
-		if (connect.protocol_version != reply.protocol_version)
-		{
-			ERROR_LOG("error version");
-			reply.tag = MSGR_TAG_BADPROTOVER;
-			goto reply;
-		}
-    
-		_lock.unlock();
-
-	retry_existing_lookup:
-		_msgr->_lock.lock();
-		_lock.lock();
-		if (_msgr->_dispatch_queue._stop)
-		{
-			goto shutting_down;
-		}
-		
-		if (_state != SOCKET_ACCEPTING)
-		{
-			goto shutting_down;
-		}
-    
-		existing = _msgr->lookup_socket(_peer_addr);
-		if (existing)
-		{
-			DEBUG_LOG("socket accept existing connection");
-			
-			existing->_lock.lock();
-			if (existing->_reader_dispatching)
-			{
-				DEBUG_LOG("reader dispatching");
-				
-				existing->get();
-				_lock.unlock();
-				_msgr->_lock.unlock();
-				existing->_notify_on_dispatch_done = true;
-				while (existing->_reader_dispatching)
-				{
-					existing->_cond.wait(existing->_lock);
-				}
-				
-				existing->_lock.unlock();
-				existing->dec();
-				existing = NULL;
-				goto retry_existing_lookup;
-			}
-
-			if (connect.global_seq < existing->_peer_global_seq)
-			{
-				DEBUG_LOG("global_seq repy");
-				
-				reply.tag = MSGR_TAG_RETRY_GLOBAL;
-				reply.global_seq = existing->_peer_global_seq;
-				existing->_lock.unlock();
-				_msgr->_lock.unlock();
-				goto reply;
-			}
-			else
-			{
-			}
-      
-			if (existing->_policy._lossy)
-			{
-				DEBUG_LOG("lossy");
-				
-				existing->was_session_reset();
-				goto replace;
-			}
-
-			if (0 == connect.connect_seq &&  0 < existing->_connect_seq)
-			{
-				DEBUG_LOG("connect_seq is 0");
-				
-				is_reset_from_peer = true;
-				
-				if (_policy._resetcheck)
-				{
-					existing->was_session_reset();
-				}
-				
-				goto replace;
-			}
-
-			if (connect.connect_seq < existing->_connect_seq)
-			{
-				DEBUG_LOG("connect.connect_seq < existing->_connect_seq");
-				
-				goto retry_session;
-			}
-
-			if (connect.connect_seq == existing->_connect_seq)
-			{
-				DEBUG_LOG("connect.connect_seq == existing->_connect_seq");
-				
-				if (existing->_state == SOCKET_OPEN || existing->_state == SOCKET_STANDBY)
-				{
-					DEBUG_LOG("existing->_state == SOCKET_OPEN || existing->_state == SOCKET_STANDBY");
-					
-					goto retry_session;
-				}
-
-				if (_peer_addr < _msgr->_entity._addr || existing->_policy._server)
-				{
-					DEBUG_LOG("_peer_addr < _msgr->_entity._addr || existing->_policy._server");
-					
-					if (!(existing->_state == SOCKET_CONNECTING || existing->_state == SOCKET_WAIT))
-					{
-						DEBUG_LOG("replace");
-						
-						goto replace;
-					}
-				}
-				else
-				{
-					DEBUG_LOG("_peer_addr > _msgr->_entity._addr && !existing->_policy._server");
-					
-					if (!(existing->_state == SOCKET_CONNECTING))
-					{
-					}
-					existing->send_keepalive();
-					reply.tag = MSGR_TAG_WAIT;
-					existing->_lock.unlock();
-					_msgr->_lock.unlock();
-					goto reply;
-				}
-			}
-			
-			if (_policy._resetcheck && 0 == existing->_connect_seq)
-			{
-				DEBUG_LOG("_policy._resetcheck && 0 == existing->_connect_seq");
-				
-				reply.tag = MSGR_TAG_RESETSESSION;
-				_msgr->_lock.unlock();
-				existing->_lock.unlock();
-				goto reply;
-			}
-
-			DEBUG_LOG("goto replace");
-			
-			goto replace;
-		} 
-		else if (0 < connect.connect_seq)
-		{
-			DEBUG_LOG("0 < connect.connect_seq");
-			
-			_msgr->_lock.unlock();
-			reply.tag = MSGR_TAG_RESETSESSION;
-			goto reply;
-		}
-		else
-		{
-			DEBUG_LOG("goto open");
-			
-			existing = NULL;
-			goto open;
-		}
-
-		abort();
-
-	retry_session:
-		reply.tag = MSGR_TAG_RETRY_SESSION;
-		reply.connect_seq = existing->_connect_seq + 1;
-		existing->_lock.unlock();
-		_msgr->_lock.unlock();
-		goto reply;    
-
-	reply:
-		_lock.unlock();
-		r = tcp_write((char*)&reply, sizeof(reply));
-		if (0 > r)
-		{
-			goto fail_unlocked;
-		}
-	}
-  
-replace:
-	existing->stop();
-	existing->unregister_socket();
-	replaced = true;
-
-	if (existing->_policy._lossy)
-	{
-		DEBUG_LOG("existing->_policy._lossy");
-		
-		if (existing->_connection_state->clear_socket(existing))
-		{
-			_msgr->_dispatch_queue.queue_reset(static_cast<Connection*>(existing->_connection_state->get()));
-		}
-	}
-	else
-	{
-		DEBUG_LOG("!existing->_policy._lossy");
-		
-		_msgr->_dispatch_queue.queue_reset(static_cast<Connection*>(_connection_state->get()));
-		_connection_state = existing->_connection_state;
-
-		_connection_state->reset_socket(this);
-
-		if (existing->_delay_thread)
-		{
-			existing->_delay_thread->steal_for_socket(this);
-			_delay_thread = existing->_delay_thread;
-			existing->_delay_thread = NULL;
-			_delay_thread->flush();
-		}
-
-		uint64_t replaced_conn_id = _conn_id;
-		_conn_id = existing->_conn_id;
-		existing->_conn_id = replaced_conn_id;
-
-		_in_seq = is_reset_from_peer ? 0 : existing->_in_seq;
-		_in_seq_acked = _in_seq;
-
-		existing->requeue_sent();
-		_out_seq = existing->_out_seq;
-
-		for (std::map<int, std::list<Message*> >::iterator iter = existing->_out_q.begin(); iter != existing->_out_q.end(); ++iter)
-		{
-			_out_q[iter->first].splice(_out_q[iter->first].begin(), iter->second);
-		}
-	}
-	existing->stop_and_wait();
-	existing->_lock.unlock();
-
-open:
-	_connect_seq = connect.connect_seq + 1;
-	_peer_global_seq = connect.global_seq;
-	_state = SOCKET_OPEN;
-
-	reply.tag = (reply_tag ? reply_tag : MSGR_TAG_READY);
-	reply.global_seq = _msgr->get_global_seq();
-	reply.connect_seq = _connect_seq;
-	reply.flags = 0;
-	if (_policy._lossy)
-	{
-		reply.flags = reply.flags | MSG_CONNECT_LOSSY;
-	}
-
-	_msgr->_dispatch_queue.queue_accept(static_cast<Connection*>(_connection_state->get()));
-	_msgr->ms_deliver_handle_fast_accept(static_cast<Connection*>(_connection_state->get()));
-
-	if (_msgr->_dispatch_queue._stop)
-	{
-		goto shutting_down;
-	}
-	
-	removed = _msgr->_accepting_sockets.erase(this);
-	register_socket();
-	_msgr->_lock.unlock();
-	_lock.unlock();
-
-	r = tcp_write((char*)&reply, sizeof(reply));
-	if (0 > r)
-	{
-		goto fail_registered;
-	}
-
-	if (reply_tag == MSGR_TAG_SEQ)
-	{
-		if (0 > tcp_write((char*)&existing_seq, sizeof(existing_seq)))
-		{
-			goto fail_registered;
-		}
-		
-		if (0 > tcp_read((char*)&newly_acked_seq, sizeof(newly_acked_seq)))
-		{
-			goto fail_registered;
-		}
-	}
-
-	_lock.lock();
-	discard_requeued_up_to(newly_acked_seq);
-	if (_state != SOCKET_CLOSED)
-	{
-		start_writer();
-	}
-
-	maybe_start_delay_thread();
-
-	return 0;
-
-fail_registered:
-	;
-
-fail_unlocked:
-
-	_lock.lock();
-	
-	if (_state != SOCKET_CLOSED)
-	{	
-		bool queued = is_queued();
-
-		if (queued)
-		{
-			_state = _policy._server ? SOCKET_STANDBY : SOCKET_CONNECTING;
-		}
-		else if (replaced)
-		{
-			_state = SOCKET_STANDBY;
-		}
-		else
-		{
-			_state = SOCKET_CLOSED;
-			atomic_set(&_state_closed, 1);
-		}
-		
-		fault();
-		
-		if (queued || replaced)
-		{
-			start_writer();
-		}
-	}
-	
-	return -1;
-
-shutting_down:
-
-	_msgr->_lock.unlock();
-	
-shutting_down_msgr_unlocked:
-
-	_state = SOCKET_CLOSED;
-	atomic_set(&_state_closed, 1);
-	fault();
-	return -1;
 }
 
 void Socket::set_socket_options()
@@ -903,40 +177,483 @@ void Socket::set_socket_options()
 #endif
 }
 
-int Socket::connect()
+int Socket::create_socket()
 {
-	DEBUG_LOG("socket connecting");
-	
-	bool got_bad_auth = false;
-
-	uint32_t cseq = _connect_seq;
-	uint32_t gseq = _msgr->get_global_seq();
-
-	join_reader();
-
-	_lock.unlock();
-  
-	char tag = -1;
-	int rc = -1;
-	struct msghdr msg;
-	struct iovec msgvec[2];
-	int msglen;
-	char banner[strlen("moth") + 1];
-	entity_addr_t paddr;
-	entity_addr_t peer_addr_for_me, socket_addr;
-	buffer addrbl;
-	buffer myaddrbl;
-
+	// 已经打开了一个socket
 	if (0 <= _fd)
 	{
-		::close(_fd);
+		close_socket();
 	}
 
 	_fd = ::socket(_peer_addr.get_family(), SOCK_STREAM, 0);
 	if (0 > _fd)
 	{
-		rc = -errno;
-		goto fail;
+		return -1;
+	}
+
+	return 0;
+}
+
+
+int Socket::accepting()
+{
+	// _lock.unlock();
+	int rc = 0;
+	char banner[strlen(BANNER) + 1] = {0};
+	bool is_reset_from_peer = false;
+	// 保存本地地址和对端地址信息的buf
+	buffer addrs_buf;
+	socklen_t len;
+	// 对端地址
+	entity_addr_t peer_addr;
+	// 保存对端地址信息的buf
+	buffer peer_addr_buf;
+	msg_connect connect;
+	msg_connect_reply connect_reply;
+	Socket* existing = NULL;
+	uint64_t existing_seq = -1;
+	uint64_t newly_acked_seq = 0;
+
+	recv_reset();
+	
+	set_socket_options();
+
+	rc = tcp_write(BANNER, strlen(BANNER));
+	if (0 > rc)
+	{
+		// _lock.lock();
+		accept_fail();
+		return -1;
+	}
+
+	if (0 > tcp_read(banner, strlen(BANNER)))
+	{
+		// _lock.lock();
+		accept_fail();
+		return -1;
+	}
+	
+	if (memcmp(banner, BANNER, strlen(BANNER)))
+	{
+		// _lock.lock();
+		_state = SOCKET_CLOSED;
+		atomic_set(&_state_closed, 1);
+		fault();
+		return -1;
+	}
+
+	// 先将自己的地址信息保存到buffer中
+	::encode(_msgr->_entity._addr, addrs_buf);
+	
+	_port = _msgr->_entity._addr.get_port();
+
+	sockaddr_storage ss;
+	len = sizeof(ss);
+	// 获取对端地址
+	rc = ::getpeername(_fd, (sockaddr*)&ss, &len);
+	if (0 > rc)
+	{	
+		// _lock.lock();
+		accept_fail();
+		return -1;
+	}
+	
+	peer_addr.set_sockaddr((sockaddr*)&ss);
+	
+	// 将对端地址保存到buffer中
+	::encode(peer_addr, addrs_buf);
+
+	rc = tcp_write(addrs_buf.c_str(), addrs_buf.length());
+	if (0 > rc)
+	{
+		// _lock.lock();
+		accept_fail();
+		return -1;
+	}
+
+	{
+		ptr p(sizeof(entity_addr_t));
+		peer_addr_buf.push_back(std::move(p));
+	}
+
+	if (0 > tcp_read(peer_addr_buf.c_str(), peer_addr_buf.length()))
+	{
+		// _lock.lock();
+		accept_fail();
+		return -1;
+	}
+
+	{
+		buffer::iterator it = peer_addr_buf.begin();
+		::decode(_peer_addr, it);
+	}
+
+	if (_peer_addr.is_blank_ip())
+	{
+		int port = _peer_addr.get_port();
+		_peer_addr._addr = peer_addr._addr;
+		_peer_addr.set_port(port);
+	}
+	
+	set_peer_addr(_peer_addr);
+	
+	if (0 > tcp_read((char*)&connect, sizeof(connect)))
+	{
+		// _lock.lock();
+		accept_fail();
+		return -1;
+	}
+
+	// _msgr->_lock.lock();
+	Mutex::Locker locker(_msgr->_lock);
+	// _lock.lock();
+	if (_msgr->_dispatch_queue._stop)
+	{
+		// _msgr->_lock.unlock();
+		set_state_close();
+		fault();
+		return -1;
+	}
+	
+	if (SOCKET_ACCEPTING != _state)
+	{
+		// _msgr->_lock.unlock();
+		set_state_close();
+		fault();
+		return -1;
+	}
+
+	set_peer_type(connect.host_type);
+	_policy = _msgr->get_policy(connect.host_type);
+
+	memset(&connect_reply, 0, sizeof(connect_reply));
+	connect_reply.protocol_version = 0;
+	
+	// _msgr->_lock.unlock();
+
+	if (connect.protocol_version != connect_reply.protocol_version)
+	{
+		connect_reply.tag = MSGR_TAG_BADPROTOVER;
+		// _lock.unlock();
+		rc = tcp_write((char*)&connect_reply, sizeof(connect_reply));
+		if (0 > rc)
+		{
+			// _lock.lock();
+			accept_fail();
+			return -1;
+		}
+	}
+	
+	// _lock.unlock();
+	
+	// 是否已发起过连接
+	existing = _msgr->lookup_socket(_peer_addr);
+
+	if (existing)
+	{
+		// existing->_lock.lock();
+		Mutex::Locker locker(existing->_lock);
+
+		// 读线程已经启动了
+		if (existing->_reader_dispatching)
+		{
+			existing->get();
+			// _lock.unlock();
+			// _msgr->_lock.unlock();
+			existing->_notify_on_dispatch_done = true;
+			
+			while (existing->_reader_dispatching)
+			{
+				existing->_cond.wait(existing->_lock);
+			}
+			
+			// existing->_lock.unlock();
+			existing->dec();
+		}
+
+		/*
+		if (connect.global_seq < existing->_peer_global_seq)
+		{			
+			connect_reply.tag = MSGR_TAG_RETRY_GLOBAL;
+			connect_reply.global_seq = existing->_peer_global_seq;
+			existing->_lock.unlock();
+			_msgr->_lock.unlock();
+			
+			// _lock.unlock();
+			rc = tcp_write((char*)&connect_reply, sizeof(connect_reply));
+			if (0 > rc)
+			{
+				// _lock.lock();
+				accept_fail();
+				return -1;
+			}
+		}
+		*/
+
+		if (existing->_policy._lossy)
+		{		
+			existing->was_session_reset();
+			// 替换该socket
+			replace_socket(existing);
+			
+			return open_socket(connect);
+		}
+
+		if (0 == connect.connect_seq &&  0 < existing->_connect_seq)
+		{		
+			is_reset_from_peer = true;
+			
+			if (_policy._resetcheck)
+			{
+				existing->was_session_reset();
+			}
+			
+			// 替换该socket
+			replace_socket(existing);
+			
+			return open_socket(connect);
+		}
+
+		if (connect.connect_seq < existing->_connect_seq)
+		{
+			DEBUG_LOG("connect.connect_seq < existing->_connect_seq");
+			
+			connect_reply.tag = MSGR_TAG_RETRY_SESSION;
+			connect_reply.connect_seq = existing->_connect_seq + 1;
+			// existing->_lock.unlock();
+			// _msgr->_lock.unlock();
+
+			// _lock.unlock();
+			rc = tcp_write((char*)&connect_reply, sizeof(connect_reply));
+			if (0 > rc)
+			{
+				// _lock.lock();
+				accept_fail();				
+				return -1;
+			}
+		}
+
+		if (connect.connect_seq == existing->_connect_seq)
+		{
+			DEBUG_LOG("connect.connect_seq == existing->_connect_seq");
+			
+			if (SOCKET_OPEN == existing->_state || SOCKET_STANDBY == existing->_state)
+			{
+				DEBUG_LOG("existing->_state == SOCKET_OPEN || existing->_state == SOCKET_STANDBY");
+				
+				connect_reply.tag = MSGR_TAG_RETRY_SESSION;
+				connect_reply.connect_seq = existing->_connect_seq + 1;
+				// existing->_lock.unlock();
+				// _msgr->_lock.unlock();
+
+				// _lock.unlock();
+				rc = tcp_write((char*)&connect_reply, sizeof(connect_reply));
+				if (0 > rc)
+				{
+					// _lock.lock();
+					accept_fail();
+					return -1;
+				}
+			}
+
+			if (_peer_addr < _msgr->_entity._addr || existing->_policy._server)
+			{
+				DEBUG_LOG("_peer_addr < _msgr->_entity._addr || existing->_policy._server");
+				
+				// 替换该socket
+				replace_socket(existing);
+			
+				return open_socket(connect);
+			}
+			else
+			{
+				DEBUG_LOG("_peer_addr > _msgr->_entity._addr && !existing->_policy._server");
+				
+				existing->send_keepalive();
+				connect_reply.tag = MSGR_TAG_WAIT;
+				// existing->_lock.unlock();
+				// _msgr->_lock.unlock();
+				// _lock.unlock();
+				rc = tcp_write((char*)&connect_reply, sizeof(connect_reply));
+				if (0 > rc)
+				{
+					// _lock.lock();
+					accept_fail();					
+					return -1;
+				}
+			}
+
+			if (_policy._resetcheck && 0 == existing->_connect_seq)
+			{
+				DEBUG_LOG("_policy._resetcheck && 0 == existing->_connect_seq");
+				
+				connect_reply.tag = MSGR_TAG_RESETSESSION;
+				// _msgr->_lock.unlock();
+				// existing->_lock.unlock();
+
+				// _lock.unlock();
+				rc = tcp_write((char*)&connect_reply, sizeof(connect_reply));
+				if (0 > rc)
+				{
+					// _lock.lock();
+					accept_fail();					
+					return -1;
+				}
+			}
+		}
+
+		// 替换该socket
+		replace_socket(existing);
+	
+		return open_socket(connect);
+	}
+	else if (0 < connect.connect_seq)
+	{
+		connect_reply.tag = MSGR_TAG_RESETSESSION;
+		
+		// _lock.unlock();
+		rc = tcp_write((char*)&connect_reply, sizeof(connect_reply));
+		if (0 > rc)
+		{
+			// _lock.lock();
+			accept_fail();		
+			return -1;
+		}
+	}
+	else
+	{
+		return open_socket(connect);
+	}
+}
+
+void Socket::replace_socket(Socket* other)
+{
+	DEBUG_LOG("replace socket");
+	
+	_replaced = true;
+	other->stop();
+	other->unregister_socket();
+
+	if (other->_policy._lossy)
+	{
+		if (other->_connection_state->clear_socket(other))
+		{
+			_msgr->_dispatch_queue.queue_reset(static_cast<Connection*>(other->_connection_state->get()));
+		}
+	}
+	else
+	{
+		_msgr->_dispatch_queue.queue_reset(static_cast<Connection*>(_connection_state->get()));
+		_connection_state = other->_connection_state;
+
+		_connection_state->reset_socket(this);
+
+		if (other->_delay_thread)
+		{
+			other->_delay_thread->steal_for_socket(this);
+			_delay_thread = other->_delay_thread;
+			other->_delay_thread = NULL;
+			_delay_thread->flush();
+		}
+
+		uint64_t replaced_conn_id = _conn_id;
+		_conn_id = other->_conn_id;
+		other->_conn_id = replaced_conn_id;
+
+		_in_seq = _is_reset_from_peer ? 0 : other->_in_seq;
+		_in_seq_acked = _in_seq;
+
+		other->requeue_sent();
+		_out_seq = other->_out_seq;
+
+		for (std::map<int, std::list<Message*> >::iterator iter = other->_out_q.begin(); iter != other->_out_q.end(); ++iter)
+		{
+			_out_q[iter->first].splice(_out_q[iter->first].begin(), iter->second);
+		}
+	}
+	
+	other->stop_and_wait();
+}
+
+int Socket::open_socket(const msg_connect& connect)
+{
+	DEBUG_LOG("open socket");
+	
+	int rc = 0;
+	msg_connect_reply connect_reply;
+
+	_connect_seq = connect.connect_seq + 1;
+	_peer_global_seq = connect.global_seq;
+	_state = SOCKET_OPEN;
+
+	connect_reply.tag = MSGR_TAG_READY;
+	connect_reply.global_seq = _msgr->get_global_seq();
+	connect_reply.connect_seq = _connect_seq;
+	connect_reply.flags = 0;
+	if (_policy._lossy)
+	{
+		connect_reply.flags = connect_reply.flags | MSG_CONNECT_LOSSY;
+	}
+
+	_msgr->_dispatch_queue.queue_accept(static_cast<Connection*>(_connection_state->get()));
+	_msgr->ms_deliver_handle_fast_accept(static_cast<Connection*>(_connection_state->get()));
+
+	if (_msgr->_dispatch_queue._stop)
+	{
+		set_state_close();
+		fault();
+		return -1;
+	}
+	
+	_msgr->_accepting_sockets.erase(this);
+	register_socket();
+
+	rc = tcp_write((char*)&connect_reply, sizeof(connect_reply));
+	if (0 > rc)
+	{
+		accept_fail();
+		return -1;
+	}
+
+	// _lock.lock();
+	discard_requeued_up_to(0);
+	
+	if (SOCKET_CLOSED != _state)
+	{
+		start_writer();
+	}
+
+	start_delay_thread();
+
+	return 0;
+}
+
+
+int Socket::connecting()
+{
+	DEBUG_LOG("socket connecting");
+
+	uint32_t global_seq = _msgr->get_global_seq();
+	DEBUG_LOG("connect seq is %d, global seq is %d", _connect_seq, global_seq);
+
+	join_reader();
+
+	// _lock.unlock();
+
+	int rc = 0;
+	char banner[strlen(BANNER) + 1] = {0};
+	buffer addrs_buf;
+	// 对端地址信息
+	entity_addr_t peer_addr;
+	// 对端发送给的我的地址信息
+	entity_addr_t peer_addr_for_me;
+	buffer my_addr_buf;
+
+	// 打开一个socket
+	if (create_socket())
+	{
+		connect_fail();
+		return -1;
 	}
 
 	recv_reset();
@@ -948,266 +665,201 @@ int Socket::connect()
 	{
 		ERROR_LOG("connect %s faild", inet_ntoa(((sockaddr_in*)&_peer_addr._addr)->sin_addr));
 		
-		int stored_errno = errno;
-		if (stored_errno == ECONNREFUSED)
+		if (ECONNREFUSED == Error::code())
 		{
 			_msgr->_dispatch_queue.queue_refused(static_cast<Connection*>(_connection_state->get()));
 		}
-		goto fail;
+		
+		// _lock.lock();
+
+		connect_fail();
+
+		return -1;
 	}
 
-	rc = tcp_read((char*)&banner, strlen("moth"));
+	rc = tcp_read((char*)&banner, strlen(BANNER));
 	if (0 > rc)
 	{
-		ERROR_LOG("socket connect read banner failed");
-		goto fail;
+		// _lock.lock();
+		connect_fail();
+		return -1;
 	}
 	
-	if (memcmp(banner, "moth", strlen("moth")))
+	if (memcmp(banner, BANNER, strlen(BANNER)))
 	{
-		goto fail;
+		// _lock.lock();
+		connect_fail();
+		return -1;
 	}
 
 	DEBUG_LOG("connect read banner successful");
 
-	memset(&msg, 0, sizeof(msg));
-	msgvec[0].iov_base = banner;
-	msgvec[0].iov_len = strlen("moth");
-	msg.msg_iov = msgvec;
-	msg.msg_iovlen = 1;
-	msglen = msgvec[0].iov_len;
-	rc = do_sendmsg(&msg, msglen);
+	rc = tcp_write(BANNER, strlen(BANNER));
 	if (0 > rc)
 	{
 		ERROR_LOG("socket connect send banner failed");
-		goto fail;
+		// _lock.lock();
+		connect_fail();
+		return -1;
 	}
-
-	DEBUG_LOG("connect send banner successful");
 
 	{
-		#if defined(__linux__) || defined(DARWIN) || defined(__FreeBSD__)
-			ptr p(sizeof(entity_addr_t) * 2);
-		#else
-			int wirelen = sizeof(__u32) * 2 + sizeof(sock_addr_storage);
-	    	ptr p(wirelen * 2);
-		#endif
-			addrbl.push_back(std::move(p));
+	#if defined(__linux__) || defined(DARWIN) || defined(__FreeBSD__)
+		ptr p(sizeof(entity_addr_t) * 2);
+	#else
+		// addr(sockaddr_storage) + type(uint32_t)
+		int len = sizeof(uint32_t) + sizeof(sock_addr_storage);
+    	ptr p(len * 2);
+	#endif
+		addrs_buf.push_back(std::move(p));
 	}
-	
-	rc = tcp_read(addrbl.c_str(), addrbl.length());
+
+	rc = tcp_read(addrs_buf.c_str(), addrs_buf.length());
 	if (0 > rc)
 	{
-		ERROR_LOG("socket connect read client info failed");
-		goto fail;
+		// _lock.lock();
+		connect_fail();
+		return -1;
 	}
 
-	DEBUG_LOG("connect read client info successful");
-	
 	try
 	{
-		buffer::iterator p = addrbl.begin();
-		::decode(paddr, p);
+		buffer::iterator p = addrs_buf.begin();
+		// accept的时候先编的是对端的地址信息
+		// 先解出对端地址信息
+		::decode(peer_addr, p);
+		// 解出自己的地址信息
 		::decode(peer_addr_for_me, p);
 	}
 	catch (...)
 	{
-		ERROR_LOG("decode client info failed");
-		goto fail;
+		// _lock.lock();
+		connect_fail();
+		return -1;
 	}
-	
+
+	// 自己的端口号
 	_port = peer_addr_for_me.get_port();
 
-	if (_peer_addr != paddr)
+	// 判断是否和发起connetct的地址一样
+	if (_peer_addr != peer_addr)
 	{	
-		if (paddr.is_blank_ip() && _peer_addr.get_port() == paddr.get_port() && _peer_addr.get_nonce() == paddr.get_nonce())
+		if (peer_addr.is_blank_ip() && _peer_addr.get_port() == peer_addr.get_port())
 		{
 			ERROR_LOG("same node");
 		}
 		else
 		{
 			ERROR_LOG("not same node");
-			goto fail;
+			// _lock.lock();
+			connect_fail();
+			return -1;
 		}
   	}
-	
-	::encode(_msgr->_entity._addr, myaddrbl);
 
-	memset(&msg, 0, sizeof(msg));
-	msgvec[0].iov_base = myaddrbl.c_str();
-	msgvec[0].iov_len = myaddrbl.length();
-	msg.msg_iov = msgvec;
-	msg.msg_iovlen = 1;
-	msglen = msgvec[0].iov_len;
-	rc = do_sendmsg(&msg, msglen);
+	// 发送自己的地址信息给对端
+	::encode(_msgr->_entity._addr, my_addr_buf);
+
+	rc = tcp_write(my_addr_buf.c_str(), my_addr_buf.length());
 	if (0 > rc)
 	{
-		ERROR_LOG("socket connect send client info failed");
-		goto fail;
+		// _lock.lock();
+		connect_fail();
+		return -1;
 	}
 
-	DEBUG_LOG("connect send client info successful");
+	msg_connect connect;
+	connect.host_type = _msgr->get_entity()._name.type();
+	connect.global_seq = global_seq;
+	connect.connect_seq = _connect_seq;
+	connect.protocol_version = 0;
+	connect.flags = 0;
 
-	while (1)
+	if (_policy._lossy)
 	{
-		msg_connect connect;
-		connect.host_type = _msgr->get_entity()._name.type();
-		connect.global_seq = gseq;
-		connect.connect_seq = cseq;
-		connect.protocol_version = 0;
-		connect.flags = 0;
-		
-		if (_policy._lossy)
-		{
-			connect.flags |= MSG_CONNECT_LOSSY;
-		}
-		
-		memset(&msg, 0, sizeof(msg));
-		msgvec[0].iov_base = (char*)&connect;
-		msgvec[0].iov_len = sizeof(connect);
-		msg.msg_iov = msgvec;
-		msg.msg_iovlen = 1;
-		msglen = msgvec[0].iov_len;
-
-		rc = do_sendmsg(&msg, msglen);
-		if (0 > rc)
-		{
-			ERROR_LOG("connect send connect info failed");
-			goto fail;
-		}
-
-		DEBUG_LOG("connect send connect info successful");
-
-		msg_connect_reply reply;
-		rc = tcp_read((char*)&reply, sizeof(reply));
-		if (0 > rc)
-		{
-			ERROR_LOG("connect read connect reply failed");
-			goto fail;
-		}
-
-		DEBUG_LOG("connect read connect reply successful");
-
-		_lock.lock();
-		if (_state != SOCKET_CONNECTING)
-		{
-			goto stop_locked;
-		}
-
-		if (reply.tag == MSGR_TAG_FEATURES)
-		{
-			goto fail_locked;
-		}
-
-		if (reply.tag == MSGR_TAG_BADPROTOVER)
-		{
-			goto fail_locked;
-		}
-
-		if (reply.tag == MSGR_TAG_BADAUTHORIZER)
-		{
-			if (got_bad_auth)
-			{
-				goto stop_locked;
-			}
-			
-			got_bad_auth = true;
-			_lock.unlock();
-			continue;
-		}
-		
-		if (reply.tag == MSGR_TAG_RESETSESSION)
-		{
-			was_session_reset();
-			cseq = 0;
-			_lock.unlock();
-			continue;
-		}
-		
-		if (reply.tag == MSGR_TAG_RETRY_GLOBAL)
-		{
-			gseq = _msgr->get_global_seq(reply.global_seq);
-			_lock.unlock();
-			continue;
-		}
-		
-		if (reply.tag == MSGR_TAG_RETRY_SESSION)
-		{
-			cseq = _connect_seq = reply.connect_seq;
-			_lock.unlock();
-			continue;
-		}
-
-		if (reply.tag == MSGR_TAG_WAIT)
-		{
-			_state = SOCKET_WAIT;
-			goto stop_locked;
-		}
-
-		if (reply.tag == MSGR_TAG_READY || reply.tag == MSGR_TAG_SEQ)
-		{
-			if (reply.tag == MSGR_TAG_SEQ)
-			{
-				uint64_t newly_acked_seq = 0;
-				rc = tcp_read((char*)&newly_acked_seq, sizeof(newly_acked_seq));
-				if (0 > rc)
-				{
-					goto fail_locked;
-				}
-
-				while (newly_acked_seq > _out_seq)
-				{
-					Message *m = get_next_outgoing();
-					m->dec();
-					++_out_seq;
-				}
-				
-				if (0 > tcp_write((char*)&_in_seq, sizeof(_in_seq)))
-				{
-					goto fail_locked;
-				}
-			}
-
-			_peer_global_seq = reply.global_seq;
-			_policy._lossy = reply.flags & MSG_CONNECT_LOSSY;
-			_state = SOCKET_OPEN;
-			_connect_seq = cseq + 1;
-			
-			_backoff = utime_t();
-			_msgr->_dispatch_queue.queue_connect(static_cast<Connection*>(_connection_state->get()));
-			_msgr->ms_deliver_handle_fast_connect(static_cast<Connection*>(_connection_state->get()));
-      
-			if (!_reader_running)
-			{
-				start_reader();
-			}
-			
-			maybe_start_delay_thread();
-			
-			return 0;
-		}
-    
-		goto fail_locked;
+		connect.flags |= MSG_CONNECT_LOSSY;
 	}
 
-fail:
-
-	_lock.lock();
-	
-fail_locked:
-
-	if (_state == SOCKET_CONNECTING)
+	rc = tcp_write((char*)&connect, sizeof(connect));
+	if (0 > rc)
 	{
-		fault();
-	}
-	else
-	{
-		ERROR_LOG("connect fault, but current state is not connecting");
+		// _lock.lock();
+		connect_fail();
+		return -1;
 	}
 
-stop_locked:
-	return rc;
+	msg_connect_reply connect_reply;
+	rc = tcp_read((char*)&connect_reply, sizeof(connect_reply));
+	if (0 > rc)
+	{
+		// _lock.lock();
+		connect_fail();
+		return -1;
+	}
+
+	if (MSGR_TAG_BADPROTOVER == connect_reply.tag)
+	{
+		connect_fail();
+		return -1;
+	}
+
+	if (MSGR_TAG_RESETSESSION == connect_reply.tag)
+	{
+		was_session_reset();
+		_connect_seq = 0;
+		// _lock.unlock();
+		connect_fail();
+		return -1;
+	}
+
+	if (MSGR_TAG_RETRY_GLOBAL == connect_reply.tag)
+	{
+		global_seq = _msgr->get_global_seq(connect_reply.global_seq);
+		// _lock.unlock();
+		connect_fail();
+		return -1;
+	}
+
+	if (MSGR_TAG_RETRY_SESSION == connect_reply.tag)
+	{
+		_connect_seq = connect_reply.connect_seq;
+		// _lock.unlock();
+		connect_fail();
+		return -1;
+	}
+
+	if (MSGR_TAG_WAIT == connect_reply.tag)
+	{
+		_state = SOCKET_WAIT;
+		return -1;
+	}
+
+	if (MSGR_TAG_READY == connect_reply.tag)
+	{
+		_peer_global_seq = connect_reply.global_seq;
+		_policy._lossy = connect_reply.flags & MSG_CONNECT_LOSSY;
+		_state = SOCKET_OPEN;
+		_connect_seq = _connect_seq + 1;
+		
+		_backoff = utime_t();
+		_msgr->_dispatch_queue.queue_connect(static_cast<Connection*>(_connection_state->get()));
+		_msgr->ms_deliver_handle_fast_connect(static_cast<Connection*>(_connection_state->get()));
+  
+		if (!_reader_running)
+		{
+			start_reader();
+		}
+		
+		start_delay_thread();
+		
+		return 0;
+	}
+
+	connect_fail();
+
+	return -1;
 }
+
 
 void Socket::register_socket()
 {
@@ -1267,7 +919,7 @@ void Socket::requeue_sent()
 
 void Socket::discard_requeued_up_to(uint64_t seq)
 {
-	if (_out_q.count(MSG_PRIO_HIGHEST) == 0)
+	if (0 == _out_q.count(MSG_PRIO_HIGHEST))
 	{
 		return;
 	}
@@ -1276,7 +928,7 @@ void Socket::discard_requeued_up_to(uint64_t seq)
 	while (!rq.empty())
 	{
 		Message* m = rq.front();
-		if (m->get_seq() == 0 || m->get_seq() > seq)
+		if (0 == m->get_seq() || m->get_seq() > seq)
 		{
 			break;
 		}
@@ -1328,6 +980,7 @@ void Socket::fault(bool onread)
 		{
 			_msgr->_dispatch_queue.queue_reset(static_cast<Connection*>(_connection_state->get()));
 		}
+		
 		return;
 	}
 
@@ -1370,6 +1023,7 @@ void Socket::fault(bool onread)
 	if (_policy._standby && !is_queued())
 	{
 		_state = SOCKET_STANDBY;
+		
 		return;
 	}
 
@@ -1399,6 +1053,46 @@ void Socket::fault(bool onread)
 	    {
 			_backoff.set_from_double(15.0);
 	    }
+	}
+}
+
+void Socket::accept_fail()
+{
+	// _lock.lock();
+	
+	if (SOCKET_CLOSED != _state)
+	{	
+		bool queued = is_queued();
+
+		if (queued)
+		{
+			_state = _policy._server ? SOCKET_STANDBY : SOCKET_CONNECTING;
+		}
+		else if (_replaced)
+		{
+			_state = SOCKET_STANDBY;
+		}
+		else
+		{
+			set_state_close();
+		}
+		
+		fault();
+		
+		if (queued || _replaced)
+		{
+			start_writer();
+		}
+	}
+}
+
+void Socket::connect_fail()
+{
+	// _lock.lock();
+
+	if (SOCKET_CONNECTING == _state)
+	{
+		fault();
 	}
 }
 
@@ -1455,7 +1149,7 @@ void Socket::reader()
 
 	if (_state == SOCKET_ACCEPTING)
 	{
-		accept();
+		accepting();
 	}
 
 	while (_state != SOCKET_CLOSED && _state != SOCKET_CONNECTING)
@@ -1638,6 +1332,7 @@ void Socket::writer()
 	DEBUG_LOG("socket writer start");
 	
 	_lock.lock();
+	
 	while (_state != SOCKET_CLOSED)
 	{
 		if (is_queued() && _state == SOCKET_STANDBY && !_policy._server)
@@ -1648,7 +1343,7 @@ void Socket::writer()
 		if (_state == SOCKET_CONNECTING)
 		{
 			DEBUG_LOG("socket state is SOCKET_CONNECTING, will try connect");
-			connect();
+			connecting();
 			continue;
 		}
     
@@ -2061,7 +1756,7 @@ int Socket::do_sendmsg(struct msghdr* msg, uint32_t len, bool more)
 		if (_state == SOCKET_CLOSED)
 		{
 			restore_signal();
-			return -EINTR; // close enough
+			return -EINTR;
 		}
 
 		len -= r;
@@ -2285,10 +1980,14 @@ int Socket::tcp_read_wait()
 	evmask |= POLLRDHUP;
 #endif
 	if (pfd.revents & evmask)
+	{
 		return -1;
+	}
 
 	if (!(pfd.revents & POLLIN))
+	{
 		return -1;
+	}
 
 	return 0;
 }

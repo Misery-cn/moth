@@ -52,7 +52,6 @@ struct entity_name
 struct entity_addr
 {
 	le32 type;
-	le32 nonce;
 	struct sockaddr_storage in_addr;
 } __attr_packed__;
 

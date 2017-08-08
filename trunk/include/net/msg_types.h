@@ -13,6 +13,8 @@ struct entity_name_t
 {
 public:
 	uint8_t _type;
+	// 为了对齐
+	char _reserved[7];
 	int64_t _num;
 
 	static const int TYPE_CLIENT = ENTITY_TYPE_CLIENT;
@@ -49,12 +51,14 @@ public:
 	void encode(buffer& buf) const
 	{
 		::encode(_type, buf);
+		::encode(_reserved, buf);
 		::encode(_num, buf);
 	}
 	
 	void decode(buffer::iterator& it)
 	{
 		::decode(_type, it);
+		::decode(_reserved, it);
 		::decode(_num, it);
 	}
 	
@@ -131,8 +135,9 @@ struct entity_addr_t
 {
 public:
 	int32_t _type;
-	// 唯一标识
-	int32_t _nonce;
+	// 64位机器上为8字节对齐
+	// 这里保留4字节
+	char _reserved[4];
 
 	union
 	{
@@ -147,9 +152,9 @@ public:
 	    sockaddr_in6 _addr6;
 	};
 
-	entity_addr_t() : _type(0), _nonce(0)
+	entity_addr_t() : _type(0)
 	{ 
-		memset(&_addr, 0, sizeof(_addr));
+		memset(this, 0, sizeof(*this));
 	}
 
 	entity_addr_t(const char* str)
@@ -165,7 +170,6 @@ public:
 	explicit entity_addr_t(const entity_addr& a)
 	{
 		_type = a.type;
-		_nonce = a.nonce;
 		_addr = a.in_addr;
 #if !defined(__FreeBSD__)
 		_addr.ss_family = ntohs(_addr.ss_family);
@@ -177,7 +181,6 @@ public:
 	{
 		entity_addr a;
 		a.type = 0;
-		a.nonce = _nonce;
 		a.in_addr = _addr;
 #if !defined(__FreeBSD__)
 		a.in_addr.ss_family = htons(_addr.ss_family);
@@ -190,16 +193,17 @@ public:
 		switch (_addr.ss_family)
 		{
 		    case AF_INET:
+			{
 				return sizeof(_addr4);
+		    }
 		    case AF_INET6:
+			{
 				return sizeof(_addr6);
+		    }
 	    }
 		
 	    return sizeof(_addr);
 	}
-
-	uint32_t get_nonce() const { return _nonce; }
-	void set_nonce(uint32_t n) { _nonce = n; }
 
 	int get_family() const { return _addr.ss_family; }
 	void set_family(int f) { _addr.ss_family = f; }
@@ -299,11 +303,6 @@ public:
 	bool probably_equals(const entity_addr_t& other) const 
 	{
 		if (get_port() != other.get_port())
-		{
-			return false;
-		}
-		
-		if (get_nonce() != other.get_nonce())
 		{
 			return false;
 		}
@@ -445,24 +444,13 @@ public:
 			}
 		}
 		
-		if ('/' == *s)
-		{
-			s++;
-			int non = atoi(s);
-			set_nonce(non);
-			while (*s && *s >= '0' && *s <= '9')
-			{
-				s++;
-			}
-		}
-		
 		return true;
 	}
 
 	void encode(buffer& buf) const
 	{
 		::encode(_type, buf);
-		::encode(_nonce, buf);
+		::encode(_reserved, buf);
 #if defined(__linux__) || defined(DARWIN) || defined(__FreeBSD__)
 		::encode(_addr, buf);
 #else
@@ -477,7 +465,7 @@ public:
 	void decode(buffer::iterator& it)
 	{
 		::decode(_type, it);
-		::decode(_nonce, it);
+		::decode(_reserved, it);
 #if defined(__linux__) || defined(DARWIN) || defined(__FreeBSD__)
 		::decode(_addr, it);
 #else

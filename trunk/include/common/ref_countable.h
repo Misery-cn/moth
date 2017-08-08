@@ -7,7 +7,8 @@
 class RefCountable
 {
 public:
-	RefCountable() { atomic_set(&_ref, 0); }
+	// 初始化时引用计数即为1
+	RefCountable() { atomic_set(&_ref, 1); }
 
 	virtual ~RefCountable() {}
 

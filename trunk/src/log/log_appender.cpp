@@ -58,16 +58,6 @@ std::string RunLogEvent::format()
 	return message.str();
 }
 
-Appender::Appender()
-{
-	// TODO
-}
-
-Appender::~Appender()
-{
-	// TODO
-}
-
 FileAppender::FileAppender(const char* filename)
 {
 	_log_fd = -1;

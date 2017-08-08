@@ -30,6 +30,8 @@ int Accepter::create_socket(int* rd, int* wr)
 		return -errno;
 	}
 	
+	// pipefd[0] 为读端
+	// pipefd[1] 为写端
 	*rd = selfpipe[0];
 	*wr = selfpipe[1];
 	
@@ -73,7 +75,7 @@ int Accepter::bind(const entity_addr_t& bind_addr, const std::set<int>& avoid_po
 	int rc = -1;
 	int r = -1;
 
-	// 如果失败尝试绑定3次
+	// 尝试绑定3次
 	for (int i = 0; i < 3; ++i)
 	{
 		if (0 < i)
@@ -149,6 +151,7 @@ int Accepter::bind(const entity_addr_t& bind_addr, const std::set<int>& avoid_po
 		_listen_fd = -1;
 		return rc;
 	}
+	
 	listen_addr.set_sockaddr((sockaddr*)&ss);
 
 	// 设置接收缓冲大小
@@ -182,7 +185,6 @@ int Accepter::bind(const entity_addr_t& bind_addr, const std::set<int>& avoid_po
 		return rc;
 	}
   
-	listen_addr._nonce = _nonce;
 	_msgr->set_entity_addr(listen_addr);
 	_msgr->init_local_connection();
 
@@ -201,9 +203,6 @@ int Accepter::rebind(const std::set<int>& avoid_ports)
 	std::set<int> new_avoid = avoid_ports;
 	new_avoid.insert(addr.get_port());
 	addr.set_port(0);
-
-	_nonce += 1000000;
-	_msgr->_entity._addr._nonce = _nonce;
 
 	int r = bind(addr, new_avoid);
 	if (0 == r)
@@ -232,6 +231,17 @@ void Accepter::entry()
 
 	struct pollfd pfd[2];
 	memset(pfd, 0, sizeof(pfd));
+	
+	// POLLIN 普通或优先级带数据可读
+	// POLLRDNORM 普通数据可读
+	// POLLRDBAND 优先级带数据可读
+	// POLLPRI 高优先级数据可读
+	// POLLOUT 普通数据可写
+	// POLLWRNORM 普通数据可写
+	// POLLWRBAND 优先级带数据可写
+	// POLLERR 发生错误
+	// POLLHUP 对方文件描述符挂起
+	// POLLNVAL 文件描述符不是一个打开的文件
 
 	pfd[0].fd = _listen_fd;
 	pfd[0].events = POLLIN | POLLERR | POLLNVAL | POLLHUP;
@@ -250,22 +260,27 @@ void Accepter::entry()
 			break;
 		}
 		
+		// 发生错误
 		if (pfd[0].revents & (POLLERR | POLLNVAL | POLLHUP))
 		{
 			break;
 		}
 		
+		// 退出
 		if (pfd[1].revents & (POLLIN | POLLERR | POLLNVAL | POLLHUP))
 		{
-			if (::read(_shutdown_rd_fd, &ch, 1) == -1)
+			if (-1 == ::read(_shutdown_rd_fd, &ch, 1))
 			{
 				if (errno != EAGAIN)
 				{
+					
 				}
 			}
+			
 			break;
 		}
 		
+		// 结束
 		if (_done)
 		{
 			break;
@@ -317,10 +332,9 @@ void Accepter::stop()
 	int ret = safe_write(_shutdown_wr_fd, buf, 1);
 	if (0 > ret)
 	{
+		// 
 	}
-	else
-	{
-	}
+	
 	VOID_TEMP_FAILURE_RETRY(::close(_shutdown_wr_fd));
 	_shutdown_wr_fd = -1;
 
@@ -333,6 +347,7 @@ void Accepter::stop()
 	{
 		if (0 > ::close(_listen_fd))
 		{
+			// 
 		}
 		_listen_fd = -1;
 	}
@@ -341,6 +356,7 @@ void Accepter::stop()
 	{
 		if (0 > ::close(_shutdown_rd_fd))
 		{
+			// 
 		}
 		_shutdown_rd_fd = -1;
 	}

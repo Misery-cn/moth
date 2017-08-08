@@ -107,6 +107,7 @@ bool Mutex::timed_lock(uint32_t millisecond) throw (SysCallException)
 		ts.tv_sec += millisecond / 1000;
 		ts.tv_nsec += (millisecond % 1000) * 1000000;
 #else
+
 #endif // _POSIX_C_SOURCE
         struct timeval tv;
         if (-1 == gettimeofday(&tv, NULL))

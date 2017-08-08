@@ -15,6 +15,7 @@ bool Log::init()
 	Appender* appender = new FileAppender("moth");
 	
 	_run = new Logger();
+	
 	_run->set_appender(appender);
 
 	return true;
@@ -57,7 +58,7 @@ Logger::Logger()
 {
 	_level = Log_Info;
 	// 附加器列表,目前只有一个文件附加器
-	_appenders = new ArrayList<Appender*>(1);
+	_appenders = new ArrayList<Appender*>();
 }
 
 Logger::~Logger()
@@ -74,10 +75,9 @@ void Logger::call_appender(LogEvent* event)
 	// 托管
 	MutexGuard guard(_lock);
 
-	for (uint32_t i = 0; i < _appenders->size(); i++)
+	for (ArrayList<Appender*>::iterator it = _appenders->begin(); !it.end(); ++it)
 	{
-		Appender* ap = (*_appenders)[i];
-		ap->do_appender(event);
+		(*it)->do_appender(event);
 	}
 }
 

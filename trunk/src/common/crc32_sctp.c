@@ -314,7 +314,7 @@ static uint32_t sctp_crc32c_sb8_64_bit(uint32_t crc, unsigned char const* p_buf,
 		crc = sctp_crc_tableil8_o32[(crc ^ *p_buf++) & 0x000000FF] ^
 		    (crc >> 8);
 	for (li = 0; li < running_length / 8; li++) {
-#ifdef CEPH_BIG_ENDIAN
+#ifdef BIG_ENDIAN
 		crc ^= *p_buf++;
 		crc ^= (*p_buf++) << 8;
 		crc ^= (*p_buf++) << 16;
@@ -330,7 +330,7 @@ static uint32_t sctp_crc32c_sb8_64_bit(uint32_t crc, unsigned char const* p_buf,
 		    sctp_crc_tableil8_o72[term2 & 0x000000FF] ^
 		    sctp_crc_tableil8_o64[(term2 >> 8) & 0x000000FF];
 
-#ifdef CEPH_BIG_ENDIAN
+#ifdef BIG_ENDIAN
 		crc ^= sctp_crc_tableil8_o56[*p_buf++];
 		crc ^= sctp_crc_tableil8_o48[*p_buf++];
 		crc ^= sctp_crc_tableil8_o40[*p_buf++];
@@ -380,7 +380,7 @@ static uint32_t sctp_crc32c_sb8_64_bit_zero(uint32_t crc, uint32_t length, uint3
 		    sctp_crc_tableil8_o72[term2 & 0x000000FF] ^
 		    sctp_crc_tableil8_o64[(term2 >> 8) & 0x000000FF];
 
-#ifdef CEPH_BIG_ENDIAN
+#ifdef BIG_ENDIAN
 		crc ^= sctp_crc_tableil8_o56[0];
 		crc ^= sctp_crc_tableil8_o48[0];
 		crc ^= sctp_crc_tableil8_o40[0];
