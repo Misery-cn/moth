@@ -38,6 +38,7 @@ private:
     bool _in_pool;
 	// 在对象池中的索引
     uint32_t _index;
+	ArrayList<PoolObject*>::Item _item;
 };
 
 
@@ -61,13 +62,10 @@ public:
 
 		for (uint32_t i = 0; i < _obj_num; ++i)
 		{
-			// 这儿需要new多次,也可以一次性new一个数组
 			ObjectClass* object = new ObjectClass();
 			object->set_index(i);
 			object->set_in_pool(true);
-
-			ArrayList<ObjectClass*>::Item item(object);
-			_object_queue->push_back(&item);
+			_object_queue->push_back(&ObjectClass._item);
 		}
 	}
 
