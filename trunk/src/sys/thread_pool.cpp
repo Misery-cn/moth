@@ -120,7 +120,7 @@ void ThreadPool::stop(bool clear_after)
     _lock.lock();
     for (uint32_t i = 0; i < _work_queues.size(); i++)
     {
-        work_queues[i]->_clear();
+        _work_queues[i]->_clear();
     }
 	
     _stop = false;

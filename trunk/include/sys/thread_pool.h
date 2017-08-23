@@ -1,6 +1,9 @@
 #ifndef _SYS_THREAD_POOL_H_
 #define _SYS_THREAD_POOL_H_
 
+#include <list>
+#include <vector>
+#include <set>
 #include "thread.h"
 
 // SYS_NS_BEGIN
@@ -9,11 +12,29 @@
 class ThreadPool
 {
 public:
-	class BaseWorkQueue;
-	
+
     ThreadPool(uint32_t thread_num);
 
     virtual ~ThreadPool();
+	
+	// 任务队列基类
+    class BaseWorkQueue
+    {
+    public:
+        BaseWorkQueue() {}
+
+        virtual ~BaseWorkQueue() {}
+
+        virtual void _clear() = 0;
+
+        virtual bool _empty() = 0;
+
+        virtual void* _void_dequeue() = 0;
+
+        virtual void _void_process(void*) = 0;
+
+        virtual void _void_process_finish(void*) = 0;
+    };
 
     // 获取线程数
     uint32_t get_num_threads()
@@ -85,13 +106,17 @@ private:
 	// 工作线程类
     class WorkThread : public Thread
     {
-        ThreadPool* _pool;
+	public:
+	
         WorkThread(ThreadPool* p) : _pool(p) {}
         // 工作线程启动后,即调用pool的worker函数
         void entry()
         {
             _pool->worker(this);
         }
+		
+	private:	
+		ThreadPool* _pool;
     };
 
 	// 启动线程池中的线程
@@ -102,26 +127,6 @@ private:
 
 	// 线程池工作函数
     void worker(WorkThread* wt);
-
-private:
-    // 任务队列基类
-    class BaseWorkQueue
-    {
-    public:
-        BaseWorkQueue() {}
-
-        virtual ~BaseWorkQueue() {}
-
-        virtual void _clear() = 0;
-
-        virtual bool _empty() = 0;
-
-        virtual void* _void_dequeue() = 0;
-
-        virtual void _void_process(void*) = 0;
-
-        virtual void _void_process_finish(void*) = 0;
-    };
 
 public:
     template<class T>
