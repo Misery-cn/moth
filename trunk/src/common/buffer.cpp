@@ -164,14 +164,15 @@ public:
 	{
 		SpinLock::Locker locker(_crc_spinlock);
 		
-		std::map<std::pair<size_t, size_t>, std::pair<uint32_t, uint32_t> >::const_iterator iter =
-		_crc_map.find(fromto);
+		std::map<std::pair<size_t, size_t>, std::pair<uint32_t, uint32_t> >::const_iterator iter = _crc_map.find(fromto);
+		
 		if (iter == _crc_map.end())
 		{
 			return false;
 		}
 		
 		*crc = iter->second;
+		
 		return true;
     }
 
@@ -184,6 +185,7 @@ public:
 	void invalidate_crc()
 	{
 		SpinLock::Locker locker(_crc_spinlock);
+		
 		if (0 != _crc_map.size())
 		{
 			_crc_map.clear();

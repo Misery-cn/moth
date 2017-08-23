@@ -1,7 +1,7 @@
 #include "master.h"
 #include "mprobe.h"
 
-Master::Master(Messenger* msgr, MasterMap* mmap, uint32_t rank) : _msgr(msgr), _master_map(mmap), _rank(rank)
+Master::Master(Messenger* msgr, MasterMap* mmap, uint32_t rank) : _msgr(msgr), _master_map(mmap), _rank(rank), _op_pool(30), _op_wq(&_op_pool)
 {
 
 }
@@ -9,6 +9,51 @@ Master::Master(Messenger* msgr, MasterMap* mmap, uint32_t rank) : _msgr(msgr), _
 Master::~Master()
 {
 	
+}
+
+void Master::OPWorkQueue::_process(Operation* op)
+{
+	if (op)
+	{
+		op->op();
+		
+		delete op;
+	}
+}
+
+bool Master::OPWorkQueue::_enqueue(Operation* op)
+{
+	_ops.push_back(op);
+
+	return true;
+}
+
+void Master::OPWorkQueue::_dequeue(Operation* op)
+{
+	if (!_ops.empty())
+	{
+		op = _ops.front();
+		_ops.pop_front();
+	}
+	else
+	{
+		op = NULL;
+	}
+}
+
+Operation* Master::OPWorkQueue::_dequeue()
+{
+	Operation* op = NULL;
+
+	if (!_ops.empty())
+	{
+		op = _ops.front();
+		_ops.pop_front();
+
+		return op;
+	}
+
+	return NULL;
 }
 
 bool Master::ms_dispatch(Message* m)
@@ -45,6 +90,15 @@ int Master::init()
 	_msgr->add_dispatcher_tail(this);
 	
 	boot();
+
+	_op_pool.start();
+
+	for (uint32_t i = 0; i < 1000; ++i)
+	{
+		Operation* op = new Operation();
+
+		_op_wq.queue(op);
+	}
 }
 
 void Master::new_tick()

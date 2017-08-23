@@ -7,6 +7,19 @@
 #include "mastermap.h"
 #include "timer.h"
 #include "callback.h"
+#include "thread_pool.h"
+
+class Operation
+{
+public:
+	Operation() {};
+	virtual ~Operation() {};
+
+	void op()
+	{
+		DEBUG_LOG("Operation::op");
+	}
+};
 
 class Master : public Dispatcher
 {
@@ -27,6 +40,38 @@ public:
 	void tick();
 	
 	void boot();
+
+public:
+
+	class OPWorkQueue : public ThreadPool::WorkQueue<Operation>
+	{
+	public:
+		OPWorkQueue(ThreadPool* p) : ThreadPool::WorkQueue<Operation>(p)
+		{}
+		
+		virtual ~OPWorkQueue() {}
+
+		virtual void _clear()
+		{
+			_ops.clear();
+		}
+
+		virtual bool _empty()
+		{
+			return _ops.empty();
+		}
+
+		virtual void _process(Operation* op);
+		// 入列
+	    virtual bool _enqueue(Operation* op);
+		// 出列
+	    virtual void _dequeue(Operation* op);
+		// 出列
+	    virtual Operation* _dequeue();
+
+	private:
+		std::list<Operation*> _ops;
+	};
 
 private:
 	
@@ -64,6 +109,7 @@ private:
 	};
 	
 private:
+	
 	Messenger* _msgr;
 
 	// 保存配置的master信息
@@ -75,6 +121,10 @@ private:
 	uint32_t _rank;
 
 	bool _has_ever_joined;
+
+	ThreadPool _op_pool;
+
+	OPWorkQueue _op_wq;
 };
 
 #endif
