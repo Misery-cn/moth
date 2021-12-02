@@ -8,105 +8,105 @@
 
 struct TimerJob
 {
-	TimerJob() : _once(false)
-	{
-		
-	}
-	
-	~TimerJob()
-	{
-	}
-	
-	bool operator>(const TimerJob& other)
-	{
-		return this->_time > other._time;
-	}
-	
-	bool operator<(const TimerJob& other)
-	{
-		return this->_time < other._time;
-	}
-	
-	bool operator>=(const TimerJob& other)
-	{
-		return !operator<(other);
-	}
-	
-	bool operator<=(const TimerJob& other)
-	{
-		return !operator>(other);
-	}
-	
-	bool operator==(const TimerJob& other)
-	{
-		return this->_time == other._time;
-	}
-	
-	bool operator!=(const TimerJob& other)
-	{
-		return this->_time != other._time;
-	}
-	
+    TimerJob() : _once(false)
+    {
+        
+    }
+    
+    ~TimerJob()
+    {
+    }
+    
+    bool operator>(const TimerJob& other)
+    {
+        return this->_time > other._time;
+    }
+    
+    bool operator<(const TimerJob& other)
+    {
+        return this->_time < other._time;
+    }
+    
+    bool operator>=(const TimerJob& other)
+    {
+        return !operator<(other);
+    }
+    
+    bool operator<=(const TimerJob& other)
+    {
+        return !operator>(other);
+    }
+    
+    bool operator==(const TimerJob& other)
+    {
+        return this->_time == other._time;
+    }
+    
+    bool operator!=(const TimerJob& other)
+    {
+        return this->_time != other._time;
+    }
+    
 public:
-	// Ö»Ö´ĞĞÒ»´Î
-	bool _once;
-	// Ö´ĞĞ¼ä¸ô
-	uint64_t _interval;
-	// Ö´ĞĞÊ±¼ä
-	utime_t _time;
-	// »Øµôº¯Êı
-	Callback* _callback;
+    // åªæ‰§è¡Œä¸€æ¬¡
+    bool _once;
+    // æ‰§è¡Œé—´éš”
+    uint64_t _interval;
+    // æ‰§è¡Œæ—¶é—´
+    utime_t _time;
+    // å›æ‰å‡½æ•°
+    Callback* _callback;
 };
 
 class TimerThread;
 
-// ¶¨Ê±Æ÷Àà
+// å®šæ—¶å™¨ç±»
 class Timer
 {
 public:
-	Timer() : _stopping(false), _lock(), _cond(), _thread(NULL)
-	{
-	}
-	
-	~Timer() 
-	{
-	}
-	
-	void init();
-	
-	void shutdown();
-	
-	// ÑÓ³ÙÖ´ĞĞ
-	void add_event_after(int64_t seconds, Callback* cb);
-	
-	void add_event_at(utime_t when, Callback* cb);
-	
-	bool cancel_event(Callback* cb);
-	
-	void cancel_all_events();
-	
+    Timer() : _stopping(false), _lock(), _cond(), _thread(NULL)
+    {
+    }
+    
+    ~Timer() 
+    {
+    }
+    
+    void init();
+    
+    void shutdown();
+    
+    // å»¶è¿Ÿæ‰§è¡Œ
+    void add_event_after(int64_t seconds, Callback* cb);
+    
+    void add_event_at(utime_t when, Callback* cb);
+    
+    bool cancel_event(Callback* cb);
+    
+    void cancel_all_events();
+    
 private:
-	friend class TimerThread;
-	
-	void timer_thread();
-	
+    friend class TimerThread;
+    
+    void timer_thread();
+    
 private:
-	bool _stopping;
-	Mutex _lock;
-	Cond _cond;
-	TimerThread* _thread;
-	
-	/*
-	std::multiset<TimerJob*> _schedule;
-	std::map<Callback*, std::multiset<TimerJob*>::iterator> _events;
-	
-	typedef std::multiset<TimerJob*>::iterator schedule_iter;
-	typedef std::map<Callback*, schedule_iter>::iterator event_iter;
-	*/
-	
-	std::multimap<utime_t, Callback*> _schedule;
-	std::map<Callback*, std::multimap<utime_t, Callback*>::iterator> _events;
-	
-	typedef std::multimap<utime_t, Callback*>::iterator schedule_iter;
-	typedef std::map<Callback*, schedule_iter>::iterator event_iter;
+    bool _stopping;
+    Mutex _lock;
+    Cond _cond;
+    TimerThread* _thread;
+    
+    /*
+    std::multiset<TimerJob*> _schedule;
+    std::map<Callback*, std::multiset<TimerJob*>::iterator> _events;
+    
+    typedef std::multiset<TimerJob*>::iterator schedule_iter;
+    typedef std::map<Callback*, schedule_iter>::iterator event_iter;
+    */
+    
+    std::multimap<utime_t, Callback*> _schedule;
+    std::map<Callback*, std::multimap<utime_t, Callback*>::iterator> _events;
+    
+    typedef std::multimap<utime_t, Callback*>::iterator schedule_iter;
+    typedef std::map<Callback*, schedule_iter>::iterator event_iter;
 };

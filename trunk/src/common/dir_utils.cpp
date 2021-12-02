@@ -7,7 +7,7 @@
 // UTILS_NS_BEGIN
 
 void DirUtils::list(const std::string& dirpath, std::vector<std::string>* subdir_names, 
-						std::vector<std::string>* file_names, std::vector<std::string>* link_names) throw (SysCallException)
+                        std::vector<std::string>* file_names, std::vector<std::string>* link_names) throw (SysCallException)
 {
     DIR* dir = opendir(dirpath.c_str());
     if (NULL == dir)
@@ -26,7 +26,7 @@ void DirUtils::list(const std::string& dirpath, std::vector<std::string>* subdir
                 int errcode = errno;
                 if (EACCES == errcode)
                 {
-                    // ºöÂÔÎŞÈ¨ÏŞµÄ
+                    // å¿½ç•¥æ— æƒé™çš„
                     continue;
                 }
 
@@ -37,9 +37,9 @@ void DirUtils::list(const std::string& dirpath, std::vector<std::string>* subdir
             break;
         }
 
-        // ÅÅ³ıµ±Ç°Ä¿Â¼ºÍ¸¸Ä¿Â¼
+        // æ’é™¤å½“å‰ç›®å½•å’Œçˆ¶ç›®å½•
         if ((0 == strcmp(ent->d_name, "."))
-			|| (0 == strcmp(ent->d_name, "..")))
+            || (0 == strcmp(ent->d_name, "..")))
         {
             continue;
         }
@@ -84,12 +84,12 @@ bool DirUtils::exist(const std::string& dirpath) throw (SysCallException)
 
     if (-1 == stat(dirpath.c_str(), &buf))
     {
-    	// Ä¿Â¼²»´æÔÚ
+        // ç›®å½•ä¸å­˜åœ¨
         if (ENOENT == errno)
         {
             return false;
         }
-		// ²»ÊÇÒ»¸öÄ¿Â¼
+        // ä¸æ˜¯ä¸€ä¸ªç›®å½•
         if (ENOTDIR == errno)
         {
             return false;
@@ -118,26 +118,26 @@ void DirUtils::create_directory_recursive(const char* dirpath, mode_t permission
     char* pathname = strdupa(dirpath); // _GNU_SOURCE
     char* pathname_p = pathname;
 
-    // ¹ıÂËµôÍ·²¿µÄĞ±¸Ü
+    // è¿‡æ»¤æ‰å¤´éƒ¨çš„æ–œæ 
     while ('/' == *pathname_p)
-	{
-		++pathname_p;
+    {
+        ++pathname_p;
     }
 
     for (;;)
     {
         slash = strchr(pathname_p, '/');
-		// ×ÓÄ¿Â¼
+        // å­ç›®å½•
         if (NULL == slash)
         {
             if (0 == mkdir(pathname, permissions))
-			{
-				break;
+            {
+                break;
             }
-			
+            
             if (EEXIST == errno)
-			{
-				break;
+            {
+                break;
             }
 
             THROW_SYSCALL_EXCEPTION(NULL, errno, "mkdir");
@@ -151,9 +151,9 @@ void DirUtils::create_directory_recursive(const char* dirpath, mode_t permission
 
         *slash++ = '/';
         while ('/' == *slash)
-		{
-			// È¥µôÖØ¸´µÄĞ±¸Ü
-			++slash;
+        {
+            // å»æ‰é‡å¤çš„æ–œæ 
+            ++slash;
         }
         pathname_p = slash;
     }

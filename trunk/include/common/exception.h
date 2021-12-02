@@ -9,37 +9,37 @@
 #include "const.h"
 
 #define THROW_EXCEPTION(errmsg, errcode) \
-	throw Exception(errmsg, errcode, __FILE__, __LINE__)
+    throw Exception(errmsg, errcode, __FILE__, __LINE__)
 
 #define THROW_SYSCALL_EXCEPTION(errmsg, errcode, syscall) \
     throw SysCallException(errmsg, errcode, __FILE__, __LINE__, syscall)
 
 // SYS_NS_BEGIN
 
-// ËùÓĞÒì³£¼Ì³Ğ¸ÃÀà
+// æ‰€æœ‰å¼‚å¸¸ç»§æ‰¿è¯¥ç±»
 class Exception : public std::exception
 {
 public:
-	Exception(const char* errmsg, int errcode, const char* filename, int linenum) throw ();
-	virtual ~Exception() throw ();
+    Exception(const char* errmsg, int errcode, const char* filename, int linenum) throw ();
+    virtual ~Exception() throw ();
 
-	// ÖØĞ´
-	virtual const char* what() const throw ();
+    // é‡å†™
+    virtual const char* what() const throw ();
 
-	virtual std::string to_string() const;
-	
-	// »ñÈ¡Òì³£ËùÔÚÎÄ¼şÃû
+    virtual std::string to_string() const;
+    
+    // è·å–å¼‚å¸¸æ‰€åœ¨æ–‡ä»¶å
     const char* get_filename() const throw () { return _filename.c_str(); }
 
-    // »ñÈ¡Òì³£ËùÔÚĞĞºÅ
+    // è·å–å¼‚å¸¸æ‰€åœ¨è¡Œå·
     int get_linenumber() const throw () { return _linenum; }
 
-    // »ñÈ¡errcode
+    // è·å–errcode
     int get_errcode() const throw () { return _errcode; }
 
-	// »ñÈ¡´íÎóĞÅÏ¢
+    // è·å–é”™è¯¯ä¿¡æ¯
     std::string get_errmessage() const throw () { return _errmsg.c_str(); }
-	
+    
 protected:
     std::string _errmsg;
     int _errcode;
@@ -49,17 +49,17 @@ protected:
 
 
 
-// ÏµÍ³µ÷ÓÃÒì³£
+// ç³»ç»Ÿè°ƒç”¨å¼‚å¸¸
 class SysCallException : public Exception
 {
 public:
-	SysCallException(const char* errmsg, int errcode, const char* filename, int linenum, const char* syscall) throw ();
-	virtual ~SysCallException() throw ();
-	
-	virtual std::string to_string() const throw ();
-	
+    SysCallException(const char* errmsg, int errcode, const char* filename, int linenum, const char* syscall) throw ();
+    virtual ~SysCallException() throw ();
+    
+    virtual std::string to_string() const throw ();
+    
 private:
-	std::string _syscall;
+    std::string _syscall;
 };
 
 // SYS_NS_END

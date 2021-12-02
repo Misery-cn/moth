@@ -22,14 +22,14 @@ public:
 
     ~ScopedPtr()
     {
-    	// 防止T只有声明没有定义
+        // 闃叉T鍙湁澹版槑娌℃湁瀹氫箟
         enum { type_must_be_complete = sizeof(T) };
 
-		if (_ptr)
-		{
-			delete _ptr;
-        	_ptr = reinterpret_cast<T*>(-1);
-		}
+        if (_ptr)
+        {
+            delete _ptr;
+            _ptr = reinterpret_cast<T*>(-1);
+        }
     }
 
     bool operator!() const
@@ -43,11 +43,11 @@ public:
         {
             enum { type_must_be_complete = sizeof(T) };
 
-			if (_ptr)
-			{
-            	delete _ptr;
-			}
-			
+            if (_ptr)
+            {
+                delete _ptr;
+            }
+            
             _ptr = p;
         }
     }
@@ -55,14 +55,14 @@ public:
     T& operator*() const
     {
         assert(NULL != _ptr);
-		
+        
         return *_ptr;
     }
 
     T* operator->() const
     {
         assert(NULL != _ptr);
-		
+        
         return _ptr;
     }
 
@@ -91,7 +91,7 @@ public:
     T* release()
     {
         T* tmp = _ptr;
-		
+        
         _ptr = NULL;
 
         return tmp;
@@ -121,11 +121,11 @@ public:
     {
         enum { type_must_be_complete = sizeof(T) };
 
-		if (_array)
-		{
-			delete[] _array;
-        	_array = reinterpret_cast<T*>(-1);
-		}
+        if (_array)
+        {
+            delete[] _array;
+            _array = reinterpret_cast<T*>(-1);
+        }
     }
 
     bool operator!() const
@@ -139,11 +139,11 @@ public:
         {
             enum { type_must_be_complete = sizeof(T) };
 
-			if (_array)
-			{
-				delete[] _array;
-			}
-			
+            if (_array)
+            {
+                delete[] _array;
+            }
+            
             _array = p;
         }
     }
@@ -162,14 +162,14 @@ public:
     }
 
     bool operator==(T* p) const
-	{
-		return (_array == p);
-	}
-	
+    {
+        return (_array == p);
+    }
+    
     bool operator!=(T* p) const
-	{
-		return (_array != p);
-	}
+    {
+        return (_array != p);
+    }
 
     void swap(ScopedArray& p2)
     {

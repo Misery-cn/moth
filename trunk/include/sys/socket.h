@@ -37,283 +37,297 @@ class Socket : public RefCountable
 {
 public:
     Socket(SimpleMessenger* r, int st, SocketConnection* con);
-	Socket(const Socket& other);
+    Socket(const Socket& other);
     const Socket& operator=(const Socket& other);
     virtual ~Socket();
-	
-	enum SOCKET_STATE
-	{
-		SOCKET_ACCEPTING,
-		SOCKET_CONNECTING,
-		SOCKET_OPEN,
-		SOCKET_STANDBY,
-		SOCKET_CLOSED,
-		SOCKET_CLOSING,
-		SOCKET_WAIT	
-	};
+    
+    enum SOCKET_STATE
+    {
+        SOCKET_ACCEPTING,
+        SOCKET_CONNECTING,
+        SOCKET_OPEN,
+        SOCKET_STANDBY,
+        SOCKET_CLOSED,
+        SOCKET_CLOSING,
+        SOCKET_WAIT    
+    };
 
-	class Reader : public Thread
-	{
-	private:
-		Socket* _socket;
-	public:
-		explicit Reader(Socket* s) : _socket(s) {}
-		void entry() { _socket->reader(); }
-	} _reader_thread;
-	
-	class Writer : public Thread
-	{
-	private:
-		Socket* _socket;
+    // socketçš„è¯»çº¿ç¨‹
+    class Reader : public Thread
+    {
+    private:
+        Socket* _socket;
     public:
-		explicit Writer(Socket* s) : _socket(s) {}
-		void entry() { _socket->writer(); }
-	} _writer_thread;
+        explicit Reader(Socket* s) : _socket(s) {}
+        void entry() { _socket->reader(); }
+    } _reader_thread;
 
-	class DelayedDelivery : public Thread
-	{
-	private:
-		Socket* _socket;
-		std::deque< std::pair<utime_t, Message*> > _delay_queue;
-		Mutex _delay_lock;
-		Cond _delay_cond;
-		int _flush_count;
-		bool _active_flush;
-		bool _stop_delayed_delivery;
-		bool _delay_dispatching;
-		bool _stop_fast_dispatching_flag;
+    // socketçš„å†™çº¿ç¨‹
+    class Writer : public Thread
+    {
+    private:
+        Socket* _socket;
+    public:
+        explicit Writer(Socket* s) : _socket(s) {}
+        void entry() { _socket->writer(); }
+    } _writer_thread;
 
-	public:
-		explicit DelayedDelivery(Socket* s) : _socket(s), _delay_lock(), _flush_count(0),
-					_active_flush(false), _stop_delayed_delivery(false), _delay_dispatching(false),
-					_stop_fast_dispatching_flag(false)
-		{}
-		
-		virtual ~DelayedDelivery()
-		{
-			discard();
-		}
-		
-		void entry();
-		void queue(utime_t release, Message* m)
-		{
-			Mutex::Locker locker(_delay_lock);
-			_delay_queue.push_back(std::make_pair(release, m));
-			_delay_cond.signal();
-		}
-		void discard();
-		void flush();
-		bool is_flushing()
-		{
-			Mutex::Locker locker(_delay_lock);
-			return _flush_count > 0 || _active_flush;
-		}
-		
-		void wait_for_flush()
-		{
-			Mutex::Locker locker(_delay_lock);
-			while (_flush_count > 0 || _active_flush)
-			{
-				_delay_cond.wait(_delay_lock);
-			}
-		}
-		
-		void stop()
-		{
-			Mutex::Locker locker(_delay_lock);
-			_stop_delayed_delivery = true;
-			_delay_cond.signal();
-		}
-		
-		void steal_for_socket(Socket* s)
-		{
-			Mutex::Locker locker(_delay_lock);
-			_socket= s;
-		}
-		
-		void stop_fast_dispatching();
-	} *_delay_thread;
+    // å»¶è¿Ÿå‘é€æ¶ˆæ¯çº¿ç¨‹
+    class DelayedDelivery : public Thread
+    {
+    private:
+        Socket* _socket;
+        // å¾…å‘é€é˜Ÿåˆ—
+        std::deque< std::pair<utime_t, Message*> > _delay_queue;
+        Mutex _delay_lock;
+        Cond _delay_cond;
+        int _flush_count;
+        // çº¿ç¨‹å·²æ¿€æ´»
+        bool _active_flush;
+        // æ˜¯å¦åœæ­¢å‘é€çº¿ç¨‹
+        bool _stop_delayed_delivery;
+        bool _delay_dispatching;
+        bool _stop_fast_dispatching_flag;
 
-	Socket* get()
-	{
-		return static_cast<Socket*>(RefCountable::get());
+    public:
+        explicit DelayedDelivery(Socket* s) : _socket(s), _delay_lock(), _flush_count(0),
+                    _active_flush(false), _stop_delayed_delivery(false), _delay_dispatching(false),
+                    _stop_fast_dispatching_flag(false)
+        {}
+        
+        virtual ~DelayedDelivery()
+        {
+            discard();
+        }
+        
+        void entry();
+        void queue(utime_t release, Message* m)
+        {
+            Mutex::Locker locker(_delay_lock);
+            _delay_queue.push_back(std::make_pair(release, m));
+            _delay_cond.signal();
+        }
+        void discard();
+        void flush();
+        bool is_flushing()
+        {
+            Mutex::Locker locker(_delay_lock);
+            return _flush_count > 0 || _active_flush;
+        }
+        
+        void wait_for_flush()
+        {
+            Mutex::Locker locker(_delay_lock);
+            while (_flush_count > 0 || _active_flush)
+            {
+                _delay_cond.wait(_delay_lock);
+            }
+        }
+        
+        void stop()
+        {
+            Mutex::Locker locker(_delay_lock);
+            _stop_delayed_delivery = true;
+            _delay_cond.signal();
+        }
+        
+        void steal_for_socket(Socket* s)
+        {
+            Mutex::Locker locker(_delay_lock);
+            _socket= s;
+        }
+        
+        void stop_fast_dispatching();
+    } *_delay_thread;
+
+    /**
+     * è·å–socketå¥æŸ„
+     *
+     */
+    Socket* get()
+    {
+        return static_cast<Socket*>(RefCountable::get());
     }
 
-	bool is_connected()
-	{
-		Mutex::Locker l(_lock);
-		return _state == SOCKET_OPEN;
+    /**
+     * åˆ¤æ–­socketæ˜¯å¦å·²æ‰“å¼€
+     *
+     */
+    bool is_connected()
+    {
+        Mutex::Locker l(_lock);
+        return _state == SOCKET_OPEN;
     }
 
-	static const char* get_state_name(int s)
-	{
-		switch (s)
-		{
-			case SOCKET_ACCEPTING: return "accepting";
-			case SOCKET_CONNECTING: return "connecting";
-			case SOCKET_OPEN: return "open";
-			case SOCKET_STANDBY: return "standby";
-			case SOCKET_CLOSED: return "closed";
-			case SOCKET_CLOSING: return "closing";
-			case SOCKET_WAIT: return "wait";
-			default: return "UNKNOWN";
-		}
+    static const char* get_state_name(int s)
+    {
+        switch (s)
+        {
+            case SOCKET_ACCEPTING: return "accepting";
+            case SOCKET_CONNECTING: return "connecting";
+            case SOCKET_OPEN: return "open";
+            case SOCKET_STANDBY: return "standby";
+            case SOCKET_CLOSED: return "closed";
+            case SOCKET_CLOSING: return "closing";
+            case SOCKET_WAIT: return "wait";
+            default: return "UNKNOWN";
+        }
     }
 
-	const char* get_current_state_name()
-	{
-		return get_state_name(_state);
+    const char* get_current_state_name()
+    {
+        return get_state_name(_state);
     }
 
-	int create_socket();
+    int create_socket();
 
-	// closeº¯Êı»á¹Ø±ÕÌ×½Ó×ÖID
-	// Èç¹ûÓĞÆäËûµÄ½ø³Ì¹²Ïí×ÅÕâ¸öÌ×½Ó×Ö,ÄÇÃ´ËüÈÔÈ»ÊÇ´ò¿ªµÄ
-	int close_socket()
-	{
-		recv_reset();
-	
-		if (0 <= _fd)
-		{
-			::close(_fd);
-			_fd = -1;
-		}
-	}
+    // closeå‡½æ•°ä¼šå…³é—­å¥—æ¥å­—ID
+    // å¦‚æœæœ‰å…¶ä»–çš„è¿›ç¨‹å…±äº«ç€è¿™ä¸ªå¥—æ¥å­—,é‚£ä¹ˆå®ƒä»ç„¶æ˜¯æ‰“å¼€çš„
+    int close_socket()
+    {
+        recv_reset();
+    
+        if (0 <= _fd)
+        {
+            ::close(_fd);
+            _fd = -1;
+        }
+    }
 
-	// SHUT_RD ¹Ø±Õ¶Á¹¦ÄÜ
-	// SHUT_WR ¹Ø±ÕĞ´¹¦ÄÜ
-	// SHUT_RDWR ¹Ø±Õ¶ÁĞ´¹¦ÄÜ
-	void shutdown_socket()
-	{
-		recv_reset();
-		
-		if (0 <= _fd)
-		{
-			::shutdown(_fd, SHUT_RDWR);
-			_fd = -1;
-		}
-	}
+    // SHUT_RD å…³é—­è¯»åŠŸèƒ½
+    // SHUT_WR å…³é—­å†™åŠŸèƒ½
+    // SHUT_RDWR å…³é—­è¯»å†™åŠŸèƒ½
+    void shutdown_socket()
+    {
+        recv_reset();
+        
+        if (0 <= _fd)
+        {
+            ::shutdown(_fd, SHUT_RDWR);
+            _fd = -1;
+        }
+    }
 
-	void set_state_close()
-	{
-		_state = SOCKET_CLOSED;
-		atomic_set(&_state_closed, 1);
-	}
-	
-	// ÉèÖÃÑ¡Ïî
-	void set_socket_options();
-	// Æô¶¯¶ÁÏß³Ì
-	void start_reader();
-	// Æô¶¯Ğ´Ïß³Ì
+    void set_state_close()
+    {
+        _state = SOCKET_CLOSED;
+        atomic_set(&_state_closed, 1);
+    }
+    
+    // è®¾ç½®é€‰é¡¹
+    void set_socket_options();
+    // å¯åŠ¨è¯»çº¿ç¨‹
+    void start_reader();
+    // å¯åŠ¨å†™çº¿ç¨‹
     void start_writer();
-	
+    
     void start_delay_thread();
-	
+    
     void join_reader();
 
-	uint64_t get_out_seq() { return _out_seq; }
+    uint64_t get_out_seq() { return _out_seq; }
 
-	bool is_queued() { return !_out_q.empty() || _send_keepalive || _send_keepalive_ack; }
+    bool is_queued() { return !_out_q.empty() || _send_keepalive || _send_keepalive_ack; }
 
-	entity_addr_t& get_peer_addr() { return _peer_addr; }
+    entity_addr_t& get_peer_addr() { return _peer_addr; }
 
-	void set_peer_addr(const entity_addr_t& e)
-	{
-		if (&_peer_addr != &e)
-		{
-			_peer_addr = e;
-		}
-		
-		_connection_state->set_peer_addr(e);
+    void set_peer_addr(const entity_addr_t& e)
+    {
+        if (&_peer_addr != &e)
+        {
+            _peer_addr = e;
+        }
+        
+        _connection_state->set_peer_addr(e);
     }
 
-	void set_peer_type(int t)
-	{
-		_peer_type = t;
-		_connection_state->set_peer_type(t);
+    void set_peer_type(int t)
+    {
+        _peer_type = t;
+        _connection_state->set_peer_type(t);
     }
 
-	void register_socket();
-	
-	void unregister_socket();
+    void register_socket();
+    
+    void unregister_socket();
 
-	void join();
+    void join();
 
-	void stop();
+    void stop();
 
-	void stop_and_wait();
+    void stop_and_wait();
 
-	void send(Message* m)
-	{
-		_out_q[m->get_priority()].push_back(m);
-		_cond.signal();
+    void send(Message* m)
+    {
+        _out_q[m->get_priority()].push_back(m);
+        _cond.signal();
     }
 
-	void send_keepalive()
-	{
-		_send_keepalive = true;
-		_cond.signal();
+    void send_keepalive()
+    {
+        _send_keepalive = true;
+        _cond.signal();
     }
 
-	Message* get_next_outgoing()
-	{
-		Message* m = NULL;
-		while (!m && !_out_q.empty())
-		{
-			std::map<int, std::list<Message*> >::reverse_iterator iter = _out_q.rbegin();
-			if (!iter->second.empty())
-			{
-				m = iter->second.front();
-				iter->second.pop_front();
-			}
-			
-			if (iter->second.empty())
-			{
-				_out_q.erase(iter->first);
-			}
-		}
-		
-		return m;
+    Message* get_next_outgoing()
+    {
+        Message* m = NULL;
+        while (!m && !_out_q.empty())
+        {
+            std::map<int, std::list<Message*> >::reverse_iterator iter = _out_q.rbegin();
+            if (!iter->second.empty())
+            {
+                m = iter->second.front();
+                iter->second.pop_front();
+            }
+            
+            if (iter->second.empty())
+            {
+                _out_q.erase(iter->first);
+            }
+        }
+        
+        return m;
     }
 
-	void requeue_sent();
+    void requeue_sent();
 
-	void discard_requeued_up_to(uint64_t seq);
+    void discard_requeued_up_to(uint64_t seq);
 
-	void discard_out_queue();
+    void discard_out_queue();
 
-	void recv_reset()
-	{
-		_recv_len = 0;
-		_recv_ofs = 0;
+    void recv_reset()
+    {
+        _recv_len = 0;
+        _recv_ofs = 0;
     }
 
-	ssize_t do_recv(char* buf, size_t len, int flags);
+    ssize_t do_recv(char* buf, size_t len, int flags);
 
-	ssize_t buffered_recv(char* buf, size_t len, int flags);
+    ssize_t buffered_recv(char* buf, size_t len, int flags);
 
-	bool has_pending_data() { return _recv_len > _recv_ofs; }
+    bool has_pending_data() { return _recv_len > _recv_ofs; }
 
-	int tcp_read(char* buf, uint32_t len);
+    int tcp_read(char* buf, uint32_t len);
 
-	int tcp_read_wait();
+    int tcp_read_wait();
 
-	ssize_t tcp_read_nonblocking(char* buf, uint32_t len);
+    ssize_t tcp_read_nonblocking(char* buf, uint32_t len);
 
-	int tcp_write(const char* buf, uint32_t len);
-	
-	inline size_t getfd() {return _fd;}
+    int tcp_write(const char* buf, uint32_t len);
+    
+    inline size_t getfd() {return _fd;}
 
 public:
-	
-	static const Socket& Server(int s);
+    
+    static const Socket& Server(int s);
     static const Socket& Client(const entity_addr_t& e);
 
 public:
-	SimpleMessenger* _msgr;
-	uint64_t _conn_id;
+    SimpleMessenger* _msgr;
+    uint64_t _conn_id;
 
-	int _port;
+    int _port;
     int _peer_type;
     entity_addr_t _peer_addr;
     Messenger::Policy _policy;
@@ -322,92 +336,104 @@ public:
     int _state;
     atomic_t _state_closed;
 
-	char* _recv_buf;
+    char* _recv_buf;
     size_t _recv_max_prefetch;
     size_t _recv_ofs;
     size_t _recv_len;
 
 protected:
-	friend class SimpleMessenger;
-	SocketConnection* _connection_state;
-	utime_t _backoff;
-	// ¶ÁÏß³ÌÊÇ·ñÆô¶¯
-	bool _reader_running;
-	bool _reader_needs_join;
-	// ¶ÁÏß³ÌÊÇ·ñÔÚ·¢ËÍÏûÏ¢
-	bool _reader_dispatching;
-	// ÏûÏ¢ÊÇ·ñ·¢ËÍÍê³É
-	bool _notify_on_dispatch_done;
-	bool _writer_running;
-	// ÊÇ·ñÌæ»»socket
-	bool _replaced;
-	bool _is_reset_from_peer;
+    friend class SimpleMessenger;
+    SocketConnection* _connection_state;
+    utime_t _backoff;
+    // è¯»çº¿ç¨‹æ˜¯å¦å¯åŠ¨
+    bool _reader_running;
+    bool _reader_needs_join;
+    // è¯»çº¿ç¨‹æ˜¯å¦åœ¨å‘é€æ¶ˆæ¯
+    bool _reader_dispatching;
+    // æ¶ˆæ¯æ˜¯å¦å‘é€å®Œæˆ
+    bool _notify_on_dispatch_done;
+    bool _writer_running;
+    // æ˜¯å¦æ›¿æ¢socket
+    bool _replaced;
+    bool _is_reset_from_peer;
 
-	std::map<int, std::list<Message*> > _out_q;
+    std::map<int, std::list<Message*> > _out_q;
 
-	DispatchQueue* _in_q;
+    DispatchQueue* _in_q;
 
-	std::list<Message*> _sent;
+    // å‘é€é˜Ÿåˆ—
+    std::list<Message*> _sent;
 
-	Cond _cond;
+    Cond _cond;
     bool _send_keepalive;
     bool _send_keepalive_ack;
     utime_t _keepalive_ack_stamp;
     bool _halt_delivery;
     
     uint32_t _connect_seq;
-	uint32_t _peer_global_seq;
+    uint32_t _peer_global_seq;
     uint64_t _out_seq;
     uint64_t _in_seq;
-	uint64_t _in_seq_acked;
+    uint64_t _in_seq_acked;
 
-	int accept();	
-	
+    int accept();    
+    
     int connect();
 
-	int accepting();
+    int accepting();
 
-	int connecting();
+    int connecting();
 
-	void replace_socket(Socket* other);
+    void replace_socket(Socket* other);
 
-	int open_socket(const msg_connect& connect);
-	
+    int open_socket(const msg_connect& connect);
+    
     void reader();
-	
+    
     void writer();
-	
-	void unlock_maybe_reap();
-	
-	int read_message(Message** pm);
-	
-	int write_message(const msg_header& h, const msg_footer& f, buffer& body);
-	
-	int do_sendmsg(struct msghdr* msg, unsigned len, bool more = false);
-	
-	int write_ack(uint64_t s);
-	
-	int write_keepalive();
-	
-	int write_keepalive(char tag, const utime_t& t);
-	
-	void suppress_signal();
-	
-	void restore_signal();
-	
-	void fault(bool reader = false);
+    
+    void unlock_maybe_reap();
+    
+    int read_message(Message** pm);
+    
+    int write_message(const msg_header& h, const msg_footer& f, buffer& body);
+    
+    int do_sendmsg(struct msghdr* msg, unsigned len, bool more = false);
+    
+    int write_ack(uint64_t s);
+    
+    int write_keepalive();
+    
+    int write_keepalive(char tag, const utime_t& t);
+    
+    void suppress_signal();
+    
+    void restore_signal();
+    
+    void fault(bool reader = false);
 
-	void accept_fail();
+    void accept_fail();
 
-	void connect_fail();
-	
-	void was_session_reset();
+    void connect_fail();
+    
+    void was_session_reset();
 
-	void handle_ack(uint64_t seq);
+    void handle_ack(uint64_t seq);
+
+private:
+
+    int accept_failed();
+
+    int connect_failed();
+
+    int read_failed();
+
+    int write_failed();
+
 
 private:
     size_t _fd;
-	struct iovec _msgvec[SM_IOV_MAX];
+    struct iovec _msgvec[SM_IOV_MAX];
 #if !defined(MSG_NOSIGNAL) && !defined(SO_NOSIGPIPE)
     sigset_t _sigpipe_mask;
     bool _sigpipe_pending;

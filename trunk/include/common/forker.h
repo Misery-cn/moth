@@ -16,135 +16,135 @@
 class Forker
 {
 public:
-	Forker() : _child_pid(0), _forked(false)
-	{}
+    Forker() : _child_pid(0), _forked(false)
+    {}
 
-	int fork(std::string& err)
-	{
-		int r = socketpair(AF_UNIX, SOCK_STREAM, 0, _fd);
-		std::ostringstream oss;
-		if (0 > r)
-		{
-			oss << "[" << getpid() << "]: unable to create socketpair: " << Error::to_string(errno);
-			err = oss.str();
-			return r;
-		}
+    int fork(std::string& err)
+    {
+        int r = socketpair(AF_UNIX, SOCK_STREAM, 0, _fd);
+        std::ostringstream oss;
+        if (0 > r)
+        {
+            oss << "[" << getpid() << "]: unable to create socketpair: " << Error::to_string(errno);
+            err = oss.str();
+            return r;
+        }
 
-		_forked = true;
+        _forked = true;
 
-		_child_pid = ::fork();
-		if (0 > _child_pid)
-		{
-			r = -errno;
-			oss << "[" << getpid() << "]: unable to fork: " << Error::to_string(errno);
-			err = oss.str();
-			return r;
-		}
+        _child_pid = ::fork();
+        if (0 > _child_pid)
+        {
+            r = -errno;
+            oss << "[" << getpid() << "]: unable to fork: " << Error::to_string(errno);
+            err = oss.str();
+            return r;
+        }
 
-		// Èç¹ûÊÇ¸¸½ø³Ì¹Ø±Õfd[1]Ì×½Ó×Ö
-		// Èç¹ûÊÇ×Ó½ø³ÌÔò¹Ø±Õfd[0]Ì×½Ó×Ö
-		// ¸¸½ø³ÌÍ¨¹ıfd[0]¶ÁĞ´Êı¾İ,×Ó½ø³ÌÍ¨¹ıfd[1]¶ÁĞ´Êı¾İ
-		if (0 == _child_pid)
-		{
-			::close(_fd[0]);
-		}
-		else
-		{
-			::close(_fd[1]);
-		}
-		
-		return 0;
-	}
+        // å¦‚æœæ˜¯çˆ¶è¿›ç¨‹å…³é—­fd[1]å¥—æ¥å­—
+        // å¦‚æœæ˜¯å­è¿›ç¨‹åˆ™å…³é—­fd[0]å¥—æ¥å­—
+        // çˆ¶è¿›ç¨‹é€šè¿‡fd[0]è¯»å†™æ•°æ®,å­è¿›ç¨‹é€šè¿‡fd[1]è¯»å†™æ•°æ®
+        if (0 == _child_pid)
+        {
+            ::close(_fd[0]);
+        }
+        else
+        {
+            ::close(_fd[1]);
+        }
+        
+        return 0;
+    }
 
-	bool is_child()
-	{
-		return 0 == _child_pid;
-	}
+    bool is_child()
+    {
+        return 0 == _child_pid;
+    }
 
-	bool is_parent()
-	{
-		return 0 != _child_pid;
-	}
+    bool is_parent()
+    {
+        return 0 != _child_pid;
+    }
 
-	int parent_wait(std::string& err_msg)
-	{
-		int r = -1;
-		std::ostringstream oss;
-		int err = safe_read_exact(_fd[0], &r, sizeof(r));
-		if (0 == err && -1 == r)
-		{
-			// ¸¸½ø³ÌÍË³öÍ¬Ê±¹Ø±Õ±ê×¼ÊäÈë¡¢Êä³ö¡¢´íÎó
-			::close(0);
-			::close(1);
-			::close(2);
-			r = 0;
-		}
-		else if (err)
-		{
-			oss << "[" << getpid() << "]: " << Error::to_string(err);
-		}
-		else
-		{
-			int status;
-			err = waitpid(_child_pid, &status, 0);
-			if (err < 0)
-			{
-				oss << "[" << getpid() << "]" << " waitpid error: " << Error::to_string(err);
-			}
-			else if (WIFSIGNALED(status))
-			{
-				oss << "[" << getpid() << "]" << " exited with a signal";
-			}
-			else if (!WIFEXITED(status))
-			{
-				oss << "[" << getpid() << "]" << " did not exit normally";
-			}
-			else
-			{
-				err = WEXITSTATUS(status);
-				if (err != 0)
-				{
-					oss << "[" << getpid() << "]" << " returned exit_status " << Error::to_string(err);
-				}
-			}
-		}
-		
-		err_msg = oss.str();
-		return err;
-	}
+    int parent_wait(std::string& err_msg)
+    {
+        int r = -1;
+        std::ostringstream oss;
+        int err = safe_read_exact(_fd[0], &r, sizeof(r));
+        if (0 == err && -1 == r)
+        {
+            // çˆ¶è¿›ç¨‹é€€å‡ºåŒæ—¶å…³é—­æ ‡å‡†è¾“å…¥ã€è¾“å‡ºã€é”™è¯¯
+            ::close(0);
+            ::close(1);
+            ::close(2);
+            r = 0;
+        }
+        else if (err)
+        {
+            oss << "[" << getpid() << "]: " << Error::to_string(err);
+        }
+        else
+        {
+            int status;
+            err = waitpid(_child_pid, &status, 0);
+            if (err < 0)
+            {
+                oss << "[" << getpid() << "]" << " waitpid error: " << Error::to_string(err);
+            }
+            else if (WIFSIGNALED(status))
+            {
+                oss << "[" << getpid() << "]" << " exited with a signal";
+            }
+            else if (!WIFEXITED(status))
+            {
+                oss << "[" << getpid() << "]" << " did not exit normally";
+            }
+            else
+            {
+                err = WEXITSTATUS(status);
+                if (err != 0)
+                {
+                    oss << "[" << getpid() << "]" << " returned exit_status " << Error::to_string(err);
+                }
+            }
+        }
+        
+        err_msg = oss.str();
+        return err;
+    }
 
-	int signal_exit(int r)
-	{
-		if (_forked)
-		{
-			int ret = safe_write(_fd[1], &r, sizeof(r));
-			if (0 >= ret)
-			{
-				return ret;
-			}
-		}
-		
-		return r;
-	}
-	
-	void exit(int r)
-	{
-		signal_exit(r);
-		::exit(r);
-	}
+    int signal_exit(int r)
+    {
+        if (_forked)
+        {
+            int ret = safe_write(_fd[1], &r, sizeof(r));
+            if (0 >= ret)
+            {
+                return ret;
+            }
+        }
+        
+        return r;
+    }
+    
+    void exit(int r)
+    {
+        signal_exit(r);
+        ::exit(r);
+    }
 
-	void daemonize()
-	{
-		static int r = -1;
-		::write(_fd[1], &r, sizeof(r));
-	}
+    void daemonize()
+    {
+        static int r = -1;
+        ::write(_fd[1], &r, sizeof(r));
+    }
 
 private:
-	// ×Ó½ø³ÌID
-	pid_t _child_pid;
-	bool _forked;
-	// ¸¸×Ó½ø³ÌÓÃÀ´Í¨ĞÅµÄÎÄ¼şÃèÊö·û
-	int _fd[2];
+    // å­è¿›ç¨‹ID
+    pid_t _child_pid;
+    bool _forked;
+    // çˆ¶å­è¿›ç¨‹ç”¨æ¥é€šä¿¡çš„æ–‡ä»¶æè¿°ç¬¦
+    int _fd[2];
 };
 
 #endif

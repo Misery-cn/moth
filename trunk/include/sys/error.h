@@ -34,49 +34,49 @@ private:
 
 namespace Error
 {
-	inline int code()
-	{
-	    return errno;
-	}
+    inline int code()
+    {
+        return errno;
+    }
 
-	inline void set(int errcode)
-	{
-	    errno = errcode;
-	}
+    inline void set(int errcode)
+    {
+        errno = errcode;
+    }
 
-	inline std::string to_string()
-	{
-	    return strerror(errno);
-	}
+    inline std::string to_string()
+    {
+        return strerror(errno);
+    }
 
-	inline std::string to_string(int errcode)
-	{
-	    char buf[256] = {0};
-		char* errmsg = NULL;
+    inline std::string to_string(int errcode)
+    {
+        char buf[256] = {0};
+        char* errmsg = NULL;
 
-		if (0 > errcode)
-		{
-			errcode = -errcode;
-		}
+        if (0 > errcode)
+        {
+            errcode = -errcode;
+        }
 
-		std::ostringstream oss;
+        std::ostringstream oss;
 
-	#ifdef STRERROR_R_CHAR_P
-		errmsg = strerror_r(errcode, buf, sizeof(buf));
-	#else
-		strerror_r(errcode, buf, sizeof(buf));
-		errmsg = buf;
-	#endif
+    #ifdef STRERROR_R_CHAR_P
+        errmsg = strerror_r(errcode, buf, sizeof(buf));
+    #else
+        strerror_r(errcode, buf, sizeof(buf));
+        errmsg = buf;
+    #endif
 
-		oss << "(" << errcode << ") " << errmsg;
-	
-		return oss.str();
-	}
+        oss << "(" << errcode << ") " << errmsg;
+    
+        return oss.str();
+    }
 
-	inline bool is_not(int errcode)
-	{
-	    return errno != errcode;
-	}
+    inline bool is_not(int errcode)
+    {
+        return errno != errcode;
+    }
 }
 
 // SYS_NS_END

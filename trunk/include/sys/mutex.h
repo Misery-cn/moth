@@ -10,56 +10,41 @@
 
 class Mutex
 {
-	friend class Cond;
+    friend class Cond;
 public:
-	// Ä¬ÈÏ¹¹ÔìÒ»¸öµİ¹é»¥³âËø
-	Mutex(bool recursive = true) throw (SysCallException);
-	virtual ~Mutex() throw ();
-	
-	// ¼ÓËø
-	void lock() throw (SysCallException);
-	// ½âËø
-	void unlock() throw (SysCallException);
-	// ³¢ÊÔ¼ÓËø,¼ÓËø³É¹¦·µ»Øtrue,·ñÔòfalse
-	bool try_lock() throw (SysCallException);
-	// Èç¹ûÔÚÖ¸¶¨µÄºÁÃëÊ±¼äÄÚ¼ÓËø³É¹¦Ôò·µ»Øtrue,·ñÔò·µ»Øfalse
-	bool timed_lock(uint32_t millisecond) throw (SysCallException);
+    // é»˜è®¤æ„é€ ä¸€ä¸ªé€’å½’äº’æ–¥é”
+    Mutex(bool recursive = true) throw (SysCallException);
+    virtual ~Mutex() throw ();
+    
+    // åŠ é”
+    void lock() throw (SysCallException);
+    // è§£é”
+    void unlock() throw (SysCallException);
+    // å°è¯•åŠ é”,åŠ é”æˆåŠŸè¿”å›true,å¦åˆ™false
+    bool try_lock() throw (SysCallException);
+    // å¦‚æœåœ¨æŒ‡å®šçš„æ¯«ç§’æ—¶é—´å†…åŠ é”æˆåŠŸåˆ™è¿”å›true,å¦åˆ™è¿”å›false
+    bool timed_lock(uint32_t millisecond) throw (SysCallException);
 
 public:
-	class Locker 
-	{
-	public:
-		explicit Locker(Mutex& m) : _mutex(m)
-		{
-			_mutex.lock();
-		}
-		
-		~Locker()
-		{
-			_mutex.unlock();
-		}
-	private:
-		Mutex& _mutex;
-	};
-	
+    class Locker 
+    {
+    public:
+        explicit Locker(Mutex& m) : _mutex(m)
+        {
+            _mutex.lock();
+        }
+        
+        ~Locker()
+        {
+            _mutex.unlock();
+        }
+    private:
+        Mutex& _mutex;
+    };
+    
 private:
-	pthread_mutexattr_t _attr;
-	pthread_mutex_t _mutex;
-};
-
-class MutexGuard
-{
-public:
-	MutexGuard(Mutex& lock) : _lock(lock)
-	{
-		lock.lock();
-	}
-	virtual ~MutexGuard()
-	{
-		_lock.unlock();
-	}
-private:
-	Mutex& _lock;
+    pthread_mutexattr_t _attr;
+    pthread_mutex_t _mutex;
 };
 
 // SYS_NS_END

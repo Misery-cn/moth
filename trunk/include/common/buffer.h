@@ -1,6 +1,7 @@
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
+
 #include <list>
 #include <string>
 #include <vector>
@@ -13,986 +14,491 @@
 //#include <type_traits>
 //#include <inttypes.h>
 #include <stdlib.h> // size_t ssize_t
-#include "acconfig.h"
-#include "builtin.h"
-#include "page.h"
-#include "exception.h"
 
+#include "page.h"
 
 class raw;
 
-raw* copy(const char* c, uint32_t len);
+/**
+ * 申请内存
+ */
 raw* create(uint32_t len);
+
 raw* create_aligned(uint32_t len, uint32_t align);
+
 raw* create_page_aligned(uint32_t len);
 
-// ptrΪraw�Ĳ������ݶ�
+raw* copy(const char* c, uint32_t len);
+
+
+// raw部分数据段
 class ptr
 {
 public:
-	ptr() : _raw(0), _off(0), _len(0)
-	{}
-
-	ptr(raw* r);
-	ptr(uint32_t l);
-	ptr(const char* d, uint32_t l);
-	ptr(const ptr& p);
-	ptr(ptr&& p);
-	ptr(const ptr& p, uint32_t o, uint32_t l);
-	ptr& operator=(const ptr& other);
-	ptr& operator=(ptr&& p);
-	~ptr() 
-	{
-		release();
-    }
-
-	bool have_raw() const
-	{
-		return _raw ? true : false;
-	}
-
-	raw* clone();
-
-	void swap(ptr& other);
-
-	ptr& make_shareable();
-
-	bool at_buffer_head() const { return 0 == _off; }
-
-	bool at_buffer_tail() const;
-
-	bool is_aligned(uint32_t align) const
-	{
-		return 0 == ((long)c_str() & (align - 1));
-	}
-
-	bool is_page_aligned() const
-	{
-		return is_aligned(PAGE_SIZE);
-	}
-
-	bool is_n_align_sized(uint32_t align) const
+    ptr() : _raw(NULL), _off(0), _len(0)
     {
-		return 0 == (length() % align);
+        // TODO
     }
 
-	bool is_n_page_sized() const
-	{
-		return is_n_align_sized(PAGE_SIZE);
-	}
+    ptr(raw* r);
+    
+    ptr(uint32_t len);
 
-	bool is_partial() const 
-	{
-		return have_raw() && (0 < start() || end() < raw_length());
+    /**
+     * 拷贝构造
+     *
+     */
+    ptr(const ptr& p);
+
+    ptr(ptr&& p);
+
+    ptr(const ptr& p, uint32_t offset, uint32_t len);
+
+    /**
+     * 重载赋值运算符
+     */
+    ptr& operator=(const ptr& other);
+
+    ptr& operator=(ptr&& other);
+
+    virtual ~ptr()
+    {
+        release();
     }
 
-	raw* get_raw() const { return _raw; }
+    /**
+     * 添加字符串到ptr
+     *
+     * @param p: 源字符串
+     * @param len: 字符串长度
+     * @return: 当前ptr长度
+     */
+    uint32_t append(const char* p, uint32_t len);
 
-	const char *c_str() const;
-	
-	char *c_str();
-	
-	const char* end_c_str() const;
-	
-    char* end_c_str();
+    /**
+     * 添加一个字符到ptr
+     *
+     * @param c: 源字符
+     * @return: 当前ptr长度
+     */
+    uint32_t append(char c);
 
-	uint32_t length() const { return _len; }
+    /**
+     * 转换成char*
+     *
+     * @return: 返回保存的字符串
+     */
+    char* c_str();
 
-	uint32_t offset() const { return _off; }
+    /**
+     * 转换成const char*
+     *
+     * @return: 返回保存的字符串
+     */
+    const char* c_str() const;
 
-	uint32_t start() const { return _off; }
+    const char* end_c_str() const;
 
-	uint32_t end() const { return _off + _len; }
+    /**
+     * 重载运算符
+     *
+     * 根据下标返回字符
+     */
+    const char& operator[](uint32_t n) const;
 
-	uint32_t unused_tail_length() const;
+    char& operator[](uint32_t n);
 
-	const char& operator[](uint32_t n) const;
+    /**
+     * 获取长度
+     */
+    uint32_t length() const { return _len; }
 
-	char& operator[](uint32_t n);
 
-	const char* raw_c_str() const;
+    /**
+     * 获取ptr内部偏移
+     */
+    uint32_t offset() const { return _off; }
 
-	uint32_t raw_length() const;
+    /**
+     * 获取ptr开始地址
+     */
+    uint32_t start() const { return _off; }
 
-	int raw_nref() const;
+    /**
+     * 获取ptr结束地址
+     */
+    uint32_t end() const { return _off + _len; }
 
-	void copy_out(uint32_t o, uint32_t l, char* dest) const;
+    /**
+     * 获取未使用的内存段长度
+     */
+    uint32_t unused_tail_length() const;
 
-	void copy_in(uint32_t o, uint32_t l, const char* src);
-
-	void copy_in(uint32_t o, uint32_t l, const char* src, bool crc_reset);
-
-	bool can_zero_copy() const;
-
-	int zero_copy_to_fd(int fd, int64_t* offset) const;
-
-	uint32_t wasted();
-
-	int cmp(const ptr& other) const;
-
-	bool is_zero() const;
-
-	void set_offset(uint32_t o)
-	{
-		_off = o;
+    void set_length(uint32_t l)
+    {
+        _len = l;
     }
 
-	void set_length(uint32_t l)
-	{
-		_len = l;
+    ptr& make_shareable();
+
+    raw* get_raw() const
+    {
+        return _raw;
     }
 
-	uint32_t append(char c);
+    void copy_in(uint32_t o, uint32_t l, const char* src);
 
-	uint32_t append(const char* p, uint32_t l);
+    void copy_in(uint32_t o, uint32_t l, const char* src, bool crc_reset);
 
-	void zero();
+    void copy_out(uint32_t o, uint32_t l, char* dest) const;
 
-	void zero(bool crc_reset);
+    void swap(ptr& other);
 
-	void zero(uint32_t o, uint32_t l);
+private:
 
-	void zero(uint32_t o, uint32_t l, bool crc_reset);
+    void release();
 
 public:
-	class iterator
-	{
-		const ptr* _p;
-		const char* _begin;
-		const char* _pos;
-		const char* _end;
-		bool _deep;
+    class iterator
+    {
+    public:
+        iterator(const ptr* p, size_t offset, bool d) : _ptr(p), _begin(p->c_str() + offset), _end(p->end_c_str()),
+            _pos(_begin), _deep(d)
+        {
+        }
 
-		iterator(const ptr* p, size_t offset, bool d) : _p(p), _begin(p->c_str() + offset), _pos(_begin),
-				_end(p->end_c_str()), _deep(d)
-		{}
+        const char* get_pos()
+        {
+            return _pos;
+        }
 
-		friend class ptr;
+        const char* get_end()
+        {
+            return _end;
+        }
 
-	public:
-		const char* get_pos_add(size_t n)
-		{
-			const char* r = _pos;
-			_pos += n;
-			if (_pos > _end)
-			{
-				THROW_SYSCALL_EXCEPTION(NULL, -1, "get_pos_add");
-			}
-			
-			return r;
-		}
-
-		ptr get_ptr(size_t len)
-		{
-			if (_deep)
-			{
-				return copy(get_pos_add(len), len);
-			}
-			else
-			{
-				size_t off = _pos - _p->c_str();
-				_pos += len;
-				if (_pos > _end)
-				{
-					THROW_SYSCALL_EXCEPTION(NULL, -1, "get_ptr");
-				}
-				
-				return ptr(*_p, off, len);
-			}
-		}
-		
-		ptr get_preceding_ptr(size_t len)
-		{
-			if (_deep)
-			{
-				return copy(get_pos() - len, len);
-			}
-			else
-			{
-				size_t off = _pos - _p->c_str();
-				return ptr(*_p, off - len, len);
-			}
-		}
-
-		void advance(size_t len)
-		{
-			_pos += len;
-			if (_pos > _end)
-			{
-				THROW_SYSCALL_EXCEPTION(NULL, -1, "advance");
-			}
-		}
-
-		const char* get_pos()
-		{
-			return _pos;
-		}
-		
-		const char* get_end()
-		{
-			return _end;
-		}
-
-		size_t get_offset()
-		{
-			return _pos - _begin;
-		}
-
-		bool end() const
-		{
-			return _pos == _end;
-		}
+        size_t get_offset()
+        {
+            return _pos - _begin;
+        }
+        
+    private:
+        const ptr* _ptr;
+        const char* _begin;
+        const char* _end;
+        const char* _pos;
+        bool _deep;
     };
-	
+
 
 private:
-	void release();
-	
-private:
-	// 
-	raw* _raw;
-	// _raw���ƫ����
-	uint32_t _off;
-	// prt�ĳ���
-	uint32_t _len;
+    // 已申请的内存对象
+    raw* _raw;
+    // 偏移
+    uint32_t _off;
+    // 当前长度
+    uint32_t _len;
 };
 
-// ���ptr���б�
 class buffer
 {
 public:
-	class iterator;
+    
+    buffer() : _len(0), _memcopy_count(0), _last_p(this) {}
+
+    /**
+     * 构造函数
+     *
+     * @param prealloc: 预分配长度
+     *
+     */
+    buffer(uint32_t prealloc) : _len(0), _memcopy_count(0), _last_p(this)
+    {
+        reserve(prealloc);
+    }
+
+    buffer(const buffer& other) : _ptrs(other._ptrs), _len(other._len), _memcopy_count(other._memcopy_count), _last_p(this)
+    {
+        make_shareable();
+    }
+
+    /**
+     * 移动构造函数
+     *
+     */
+    buffer(buffer&& other);
+    
+    buffer& operator=(const buffer& other)
+    {
+        if (this != &other)
+        {
+            _ptrs = other._ptrs;
+            _len = other._len;
+            make_shareable();
+        }
+        
+        return *this;
+    }
+
+    buffer& operator=(buffer&& other)
+    {
+        _ptrs = std::move(other._ptrs);
+        _len = other._len;
+        _memcopy_count = other._memcopy_count;
+        _last_p = begin();
+        _append_ptr.swap(other._append_ptr);
+        other.clear();
+        return *this;
+    }
+
+    // 申明iterator
+    class iterator;
 
 private:
-	template<bool is_const>
-	class iterator_impl : public std::iterator<std::forward_iterator_tag, char>
-	{
-	protected:
-		typedef typename std::conditional<is_const, const buffer, buffer>::type bl_t;
-		typedef typename std::conditional<is_const, const std::list<ptr>, std::list<ptr> >::type list_t;
-		typedef typename std::conditional<is_const, typename std::list<ptr>::const_iterator, typename std::list<ptr>::iterator>::type list_iter_t;
 
-		bl_t* _bl;
-		list_t* _ls;
-		uint32_t _off;
-		uint32_t _p_off;
-		list_iter_t _iter;
-		friend class iterator_impl<true>;
-	public:
-		iterator_impl() : _bl(NULL), _ls(NULL), _off(0), _p_off(0) {}
-		iterator_impl(bl_t* l, uint32_t o = 0);
-		iterator_impl(bl_t* l, uint32_t o, list_iter_t li, uint32_t po) : _bl(l), _ls(&_bl->_buffers), _off(o), _p_off(po), _iter(li) {}
-		iterator_impl(const buffer::iterator& i);
+    template<bool is_const>
+    class iterator_impl : public std::iterator<std::forward_iterator_tag, char>
+    {
+    protected:
+        typedef typename std::conditional<is_const, const buffer, buffer>::type buf_t;
 
-		uint32_t get_off() const { return _off; }
-		
-		unsigned get_remaining() const { return _bl->length() - _off; }
+        typedef typename std::conditional<is_const, const std::list<ptr>, std::list<ptr>>::type bufs_t;
 
-		bool end() const
-		{
-			return _iter == _ls->end();
-			//return _off == _bl->length();
-		}
+        typedef typename std::conditional<is_const, typename std::list<ptr>::const_iterator, typename std::list<ptr>::iterator>::type bufs_iter_t;
 
-		void advance(ssize_t o);
+        // buffer对象
+        buf_t* _buffer;
+        // buffer中的prt列表
+        bufs_t* _ptrs;
+        bufs_iter_t _iter;
+        uint32_t _offset;
+        uint32_t _p_offset;
 
-		void seek(size_t o);
+    public:
+        
+        iterator_impl() : _buffer(NULL), _ptrs(NULL), _offset(0), _p_offset(0)
+        {
+        }
 
-		char operator *() const;
-		
-		iterator_impl& operator ++();
-		
-		ptr get_current_ptr() const;
+        iterator_impl(buf_t* buf, uint32_t offset = 0);
 
-		bl_t& get_bl() const { return *_bl; }
+        iterator_impl(buf_t* buf, uint32_t offset, bufs_iter_t iter, uint32_t p_offset) : _buffer(buf), 
+            _ptrs(&(_buffer->_ptrs)), _offset(offset), _p_offset(p_offset), _iter(iter)
+        {
+        }
 
-		void copy(uint32_t len, char* dest);
+        iterator_impl(const buffer::iterator& iter);
 
-		void copy(uint32_t len, ptr& dest);
+        /**
+         * 增加指定偏移量
+         *
+         */
+        void advance(ssize_t offset);
 
-		void copy(uint32_t len, buffer& dest);
+        ptr get_current_ptr() const;
 
-		void copy(unsigned len, std::string& dest);
+        void seek(size_t offset);
 
-		void copy_all(buffer& dest);
+        buffer& get_buffer() const { return *_buffer; }
 
-		size_t get_ptr_and_advance(size_t want, const char** p);
+        uint32_t get_off() const { return _offset; }
+        
+        unsigned get_remaining() const { return _ptrs->length() - _offset; }
 
-		uint32_t crc32(size_t length, uint32_t crc);
+        bool end() const
+        {
+            return _iter == _ptrs->end();
+            //return _off == _ptrs->length();
+        }
 
-		friend bool operator ==(const iterator_impl& lhs, const iterator_impl& rhs)
-		{
-			return &lhs.get_bl() == &rhs.get_bl() && lhs.get_off() == rhs.get_off();
-		}
+        void copy(uint32_t len, char* dest);
 
-		friend bool operator !=(const iterator_impl& lhs, const iterator_impl& rhs)
-		{
-			return &lhs.get_bl() != &rhs.get_bl() || lhs.get_off() != rhs.get_off();
-		}
-		
-	};
+        void copy(uint32_t len, ptr& dest);
 
-public:
-	typedef iterator_impl<true> const_iterator;
+        void copy(uint32_t len, buffer& dest);
 
-	class iterator : public iterator_impl<false>
-	{
-	public:
-		iterator() {};
-		iterator(bl_t *l, uint32_t o = 0);
-		iterator(bl_t *l, uint32_t o, list_iter_t ip, uint32_t po);
+        void copy(uint32_t len, std::string& dest);
 
-		void advance(ssize_t o);
-		void seek(size_t o);
-		char operator*();
-		iterator& operator++();
-		ptr get_current_ptr();
+        void copy_all(buffer& dest);
 
-		void copy(uint32_t len, char* dest);
-		void copy(uint32_t len, ptr& dest);
-		void copy(uint32_t len, buffer& dest);
-		void copy(uint32_t len, std::string& dest);
-		void copy_all(buffer& dest);
+        friend bool operator ==(const iterator_impl& lhs, const iterator_impl& rhs)
+        {
+            return &lhs.get_buffer() == &rhs.get_buffer() && lhs.get_off() == rhs.get_off();
+        }
 
-		void copy_in(uint32_t len, const char *src);
-		void copy_in(uint32_t len, const char *src, bool crc_reset);
-		void copy_in(uint32_t len, const buffer& otherl);
-
-		bool operator==(const iterator& rhs) const
-		{
-			return _bl == rhs._bl && _off == rhs._off;
-		}
-		
-		bool operator!=(const iterator& rhs) const
-		{
-			return _bl != rhs._bl || _off != rhs._off;
-		}
-		
-	};
-
-	class page_aligned_appender
-	{
-		buffer* _buf;
-		size_t _offset;
-		uint32_t _min_alloc;
-		ptr _p;
-		char* _pos;
-		char* _end;
-
-		page_aligned_appender(buffer* b, uint32_t min_pages) : _buf(b), _min_alloc(min_pages * PAGE_SIZE), _pos(NULL), _end(NULL)
-		{}
-
-		friend class buffer;
-
-	public:
-		~page_aligned_appender()
-		{
-			flush();
-		}
-
-		void flush()
-		{
-			if (_pos && _pos != _p.c_str())
-			{
-				size_t len = _pos - _p.c_str();
-				_buf->append(_p, 0, len);
-				_p.set_length(_p.length() - len);
-				_p.set_offset(_p.offset() + len);
-			}
-		}
-
-		void append(const char* buf, size_t len)
-		{
-			while (0 < len)
-			{
-				if (!_pos)
-				{
-					size_t alloc = (len + PAGE_SIZE - 1) & PAGE_MASK;
-					if (alloc < _min_alloc)
-					{
-						alloc = _min_alloc;
-					}
-					
-					_p = create_page_aligned(alloc);
-					_pos = _p.c_str();
-					_end = _p.end_c_str();
-				}
-				
-				size_t l = len;
-				if (l > (size_t)(_end - _pos))
-				{
-					l = _end - _pos;
-				}
-				
-				memcpy(_pos, buf, l);
-				_pos += l;
-				buf += l;
-				len -= l;
-				
-				if (_pos == _end)
-				{
-					_buf->append(_p, 0, _p.length());
-					_pos = _end = NULL;
-				}
-			}
-		}
-	};
-
-	page_aligned_appender get_page_aligned_appender(uint32_t min_pages = 1)
-	{
-		return page_aligned_appender(this, min_pages);
-	}
-
-	
-	class contiguous_appender
-	{
-		buffer* _buf;
-		char* _pos;
-		ptr _p;
-		bool _deep;
-	
-		size_t out_of_band_offset = 0;
-	
-		contiguous_appender(buffer* b, size_t len, bool d) : _buf(b), _deep(d)
-		{
-			size_t unused = _buf->_append_buffer.unused_tail_length();
-			if (len > unused)
-			{
-				_p = create(len);
-				_pos = _p.c_str();
-			}
-			else
-			{
-				_pos = _buf->_append_buffer.end_c_str();
-			}
-		}
-	
-		void flush_and_continue()
-		{
-			if (_p.have_raw())
-			{
-				size_t l = _pos - _p.c_str();
-				_buf->append(ptr(_p, 0, l));
-				_p.set_length(_p.length() - l);
-				_p.set_offset(_p.offset() + l);
-			}
-			else
-			{
-				size_t l = _pos - _buf->_append_buffer.end_c_str();
-				if (l)
-				{
-					_buf->_append_buffer.set_length(_buf->_append_buffer.length() + l);
-					_buf->append(_buf->_append_buffer, _buf->_append_buffer.end() - l, l);
-					_pos = _buf->_append_buffer.end_c_str();
-				}
-			}
-		}
-	
-		friend class buffer;
-	
-	public:
-		~contiguous_appender()
-		{
-			if (_p.have_raw())
-			{
-				_p.set_length(_pos - _p.c_str());
-				_buf->append(std::move(_p));
-			}
-			else
-			{
-				size_t l = _pos - _buf->_append_buffer.end_c_str();
-				if (l)
-				{
-					_buf->_append_buffer.set_length(_buf->_append_buffer.length() + l);
-					_buf->append(_buf->_append_buffer, _buf->_append_buffer.end() - l, l);
-				}
-			}
-		}
-	
-		size_t get_out_of_band_offset() const
-		{
-			return out_of_band_offset;
-		}
-		
-		void append(const char* p, size_t l)
-		{
-			maybe_inline_memcpy(_pos, p, l, 16);
-			_pos += l;
-		}
-		
-		char* get_pos_add(size_t len)
-		{
-			char* r = _pos;
-			_pos += len;
-			return r;
-		}
-		
-		char* get_pos()
-		{
-			return _pos;
-		}
-	
-		void append(const ptr& p)
-		{
-			if (!p.length())
-			{
-				return;
-			}
-			
-			if (_deep)
-			{
-				append(p.c_str(), p.length());
-			}
-			else
-			{
-				flush_and_continue();
-				_buf->append(p);
-				out_of_band_offset += p.length();
-			}
-		}
-		
-		void append(const buffer& l)
-		{
-			if (!l.length())
-			{
-				return;
-			}
-			
-			if (_deep)
-			{
-				for (const auto &p : l._buffers)
-				{
-					append(p.c_str(), p.length());
-				}
-			}
-			else
-			{
-				flush_and_continue();
-				_buf->append(l);
-				out_of_band_offset += l.length();
-			}
-		}
-	
-		size_t get_logical_offset()
-		{
-			if (_p.have_raw())
-			{
-				return out_of_band_offset + (_pos - _p.c_str());
-			}
-			else
-			{
-				return out_of_band_offset + (_pos - _buf->_append_buffer.end_c_str());
-			}
-		}
-	};
-	
-	contiguous_appender get_contiguous_appender(size_t len, bool deep = false)
-	{
-		return contiguous_appender(this, len, deep);
-	}
+        friend bool operator !=(const iterator_impl& lhs, const iterator_impl& rhs)
+        {
+            return &lhs.get_buffer() != &rhs.get_buffer() || lhs.get_off() != rhs.get_off();
+        }
+        
+    };
 
 public:
-	buffer() : _len(0), _memcopy_count(0), _last_p(this) {}
+    class iterator : public iterator_impl<false>
+    {
+    public:
+        iterator()
+        {
+        }
 
-	buffer(uint32_t prealloc) : _len(0), _memcopy_count(0), _last_p(this)
-	{
-		reserve(prealloc);
+        iterator(buf_t* buf, uint32_t offset = 0);
+
+        iterator(buf_t* buf, uint32_t offset, bufs_iter_t iter, uint32_t p_offset);
+
+        ptr get_current_ptr();
+
+        void copy(uint32_t len, char* dest);
+
+        void copy(uint32_t len, ptr& dest);
+        void copy(uint32_t len, buffer& dest);
+        void copy(uint32_t len, std::string& dest);
+        void copy_all(buffer& dest);
+
+        void copy_in(uint32_t len, const char* src);
+        void copy_in(uint32_t len, const char* src, bool crc_reset);
+        void copy_in(uint32_t len, const buffer& otherl);
+
+        bool operator==(const iterator& rhs) const
+        {
+            return _buffer == rhs._buffer && _offset == rhs._offset;
+        }
+        
+        bool operator!=(const iterator& rhs) const
+        {
+            return _buffer != rhs._buffer || _offset != rhs._offset;
+        }
+    };
+
+public:
+    
+    iterator begin()
+    {
+        return iterator(this, 0);
     }
 
-	buffer(const buffer& other) : _buffers(other._buffers), _len(other._len), _memcopy_count(other._memcopy_count), _last_p(this)
-	{
-		make_shareable();
+    iterator end()
+    {
+        return iterator(this, _len, _ptrs.end(), 0);
     }
 
-	buffer(buffer&& other);
-	
-    buffer& operator=(const buffer& other)
-	{
-		if (this != &other)
-		{
-        	_buffers = other._buffers;
-        	_len = other._len;
-			make_shareable();
-		}
-		
-		return *this;
+
+public:
+    
+    /**
+     * 预留内存大小
+     *
+     * @param prealloc: 预分配长度
+     *
+     */
+    void reserve(uint32_t prealloc)
+    {
+        if (_append_ptr.unused_tail_length() < prealloc)
+        {
+            _append_ptr = create(prealloc);
+            _append_ptr.set_length(0);
+        }
     }
 
-	buffer& operator=(buffer&& other)
-	{
-		_buffers = std::move(other._buffers);
-		_len = other._len;
-		_memcopy_count = other._memcopy_count;
-		_last_p = begin();
-		_append_buffer.swap(other._append_buffer);
-		other.clear();
-		return *this;
+    void make_shareable()
+    {
+        std::list<ptr>::iterator iter;
+        for (iter = _ptrs.begin(); iter != _ptrs.end(); ++iter)
+        {
+            (void)iter->make_shareable();
+        }
     }
 
-	unsigned get_num_buffers() const { return _buffers.size(); }
-
-	const ptr& front() const { return _buffers.front(); }
-
-	const ptr& back() const { return _buffers.back(); }
-
-	uint32_t get_memcopy_count() const {return _memcopy_count; }
-
-	const std::list<ptr>& buffers() const { return _buffers; }
-
-	void swap(buffer& other);
-
-	uint32_t length() const { return _len; }
-
-	bool contents_equal(buffer& other);
-
-	bool contents_equal(const buffer& other) const;
-
-	bool can_zero_copy() const;
-
-	bool is_provided_buffer(const char* dst) const;
-
-	bool is_aligned(uint32_t align) const;
-
-	bool is_page_aligned() const;
-
-	bool is_n_align_sized(uint32_t align) const;
-
-	bool is_n_page_sized() const;
-
-	bool is_aligned_size_and_memory(uint32_t align_size, uint32_t align_memory) const;
-
-	bool is_zero() const;
-
-	void clear()
-	{
-		_buffers.clear();
-		_len = 0;
-		_memcopy_count = 0;
-		_last_p = begin();
-		_append_buffer = ptr();
-    }
-
-	void push_front(ptr& bp)
-	{
-		if (0 == bp.length())
-		{
-			return;
-		}
-		
-      	_buffers.push_front(bp);
-      	_len += bp.length();
-    }
-
-	void push_front(ptr&& bp)
-	{
-		if (0 == bp.length())
-		{
-			return;
-		}
-		
-		_len += bp.length();
-		_buffers.push_front(std::move(bp));
-    }
-
-	void push_front(raw* r)
-	{
-		push_front(ptr(r));
-    }
-
-	void push_back(const ptr& bp)
-	{
-		if (0 == bp.length())
-		{
-			return;
-		}
-		
-		_buffers.push_back(bp);
-		_len += bp.length();
-    }
-
-	void push_back(ptr&& bp)
-	{
-		if (0 == bp.length())
-		{
-			return;
-		}
-		
-      	_len += bp.length();
-		_buffers.push_back(std::move(bp));
-    }
-
-	void push_back(raw* r)
-	{
-		push_back(ptr(r));
-    }
-
-	void zero();
-
-	void zero(uint32_t o, uint32_t l);
-
-	bool is_contiguous() const;
-
-	void rebuild();
-
-	void rebuild(ptr& nb);
-
-	bool rebuild_aligned(uint32_t align);
-
-	bool rebuild_aligned_size_and_memory(uint32_t align_size, uint32_t align_memory);
-
-	bool rebuild_page_aligned();
-
-	void reserve(size_t prealloc)
-	{
-		if (_append_buffer.unused_tail_length() < prealloc)
-		{
-			_append_buffer = create(prealloc);
-			_append_buffer.set_length(0);
-		}
-    }
-
-	const static unsigned int CLAIM_DEFAULT = 0;
+    const static unsigned int CLAIM_DEFAULT = 0;
     const static unsigned int CLAIM_ALLOW_NONSHAREABLE = 1;
 
-	void claim(buffer& bl, unsigned int flags = CLAIM_DEFAULT);
+    /**
+     * 根据buf初始化本对象
+     *
+     */
+    void claim(buffer& buf, unsigned int flags = CLAIM_DEFAULT);
 
-	void claim_append(buffer& bl, unsigned int flags = CLAIM_DEFAULT);
+    /**
+     * 追加buf至本对象
+     *
+     */
+    void claim_append(buffer& buf, unsigned int flags = CLAIM_DEFAULT);
 
-	void claim_prepend(buffer& bl, unsigned int flags = CLAIM_DEFAULT);
+    uint32_t length() const { return _len; }
 
-	void make_shareable()
-	{
-		std::list<ptr>::iterator iter;
-		for (iter = _buffers.begin(); iter != _buffers.end(); ++iter)
-		{
-        	(void)iter->make_shareable();
-		}
-    }
+    // void set_length(const uint32_t len) { _len = len; }
 
-	void share(const buffer& bl)
+    void clear()
     {
-		if (this != &bl)
-		{
-        	clear();
-			std::list<ptr>::const_iterator iter;
-        	for (iter = bl._buffers.begin(); iter != bl._buffers.end(); ++iter)
-			{
-          		push_back(*iter);
-			}
-		}
+        _ptrs.clear();
+        _len = 0;
+        _memcopy_count = 0;
+        _last_p = begin();
+        _append_ptr = ptr();
     }
 
-	iterator begin()
-	{
-		return iterator(this, 0);
-    }
-
-	iterator end()
-	{
-		return iterator(this, _len, _buffers.end(), 0);
-    }
-
-	const_iterator begin() const
-	{
-		return const_iterator(this, 0);
-    }
-
-	const_iterator end() const
-	{
-		return const_iterator(this, _len, _buffers.end(), 0);
-    }
-
-	void copy(uint32_t off, uint32_t len, char* dest) const;
-    void copy(uint32_t off, uint32_t len, buffer& dest) const;
-    void copy(uint32_t off, uint32_t len, std::string& dest) const;
-    void copy_in(uint32_t off, uint32_t len, const char* src);
-    void copy_in(uint32_t off, uint32_t len, const char* src, bool crc_reset);
-    void copy_in(uint32_t off, uint32_t len, const buffer& src);
-
+    /**
+     * 向buffer中追加字符或字符串
+     *
+     */
     void append(char c);
     void append(const char* data, uint32_t len);
     void append(const std::string& s)
-	{
-		append(s.data(), s.length());
+    {
+        append(s.data(), s.length());
     }
-    void append(const ptr& bp);
-    void append(ptr&& bp);
-    void append(const ptr& bp, uint32_t off, uint32_t len);
-    void append(const buffer& bl);
-    void append(std::istream& in);
+    void append(const ptr& p);
+    void append(ptr&& p);
+    void append(const ptr& p, uint32_t off, uint32_t len);
+    void append(const buffer& buf);
     void append_zero(uint32_t len);
 
-	const char& operator[](uint32_t n) const;
-
-	char* c_str();
-
-	std::string to_str() const;
-
-	void substr_of(const buffer& other, uint32_t off, uint32_t len);
-
-	char* get_contiguous(uint32_t off, uint32_t len);
-
-	void splice(uint32_t off, uint32_t len, buffer* claim_by = 0);
-
-	void write(uint32_t off, uint32_t len, std::ostream& out) const;
-
-	void encode_base64(buffer& o);
-
-	void decode_base64(buffer& o);
-
-	void write_stream(std::ostream& out) const;
-
-	void hexdump(std::ostream& out, bool trailing_newline = true) const;
-
-	int read_file(const char* fn, std::string* error);
-
-	ssize_t read_fd(int fd, size_t len);
-
-	int read_fd_zero_copy(int fd, size_t len);
-
-	int write_file(const char* fn, int mode = 0644);
-
-	int write_fd(int fd) const;
-
-	int write_fd(int fd, uint64_t offset) const;
-
-	int write_fd_zero_copy(int fd) const;
-
-	void prepare_iov(std::vector<iovec>* piov) const;
-
-	uint32_t crc32(uint32_t crc) const;
-
-	void invalidate_crc();
-
-private:
-    int zero_copy_to_fd(int fd) const;
-	
-private:
-	std::list<ptr> _buffers;
-	uint32_t _len;
-	uint32_t _memcopy_count;
-	ptr _append_buffer;
-	mutable iterator _last_p;
-};
-
-class hash
-{
-private:
-	uint32_t _crc;
-
-public:
-    hash() : _crc(0) {}
-    hash(uint32_t init) : _crc(init) {}
-
-    void update(buffer& bl)
-	{
-		_crc = bl.crc32(_crc);
+    /**
+     * 共享buf的数据
+     *
+     */
+    void share(const buffer& buf)
+    {
+        if (this != &buf)
+        {
+            clear();
+            
+            std::list<ptr>::const_iterator it;
+            for (it = buf._ptrs.begin(); it != buf._ptrs.end(); ++it)
+            {
+                  push_back(*it);
+            }
+        }
     }
 
-    uint32_t digest()
-	{
-		return _crc;
-    }
+    void push_back(const ptr& p);
+
+    const std::list<ptr>& ptrs() const { return _ptrs; }
+
+    uint32_t crc32(uint32_t crc) const;
+
+    char* c_str();
+
+    void rebuild();
+
+    void rebuild(ptr& nb);
+
+    void invalidate_crc();
+
+    uint32_t get_num_buffers() const { return _ptrs.size(); }
+
+    const ptr& front() const { return _ptrs.front(); }
+
+    const ptr& back() const { return _ptrs.back(); }
+
+private:
+    // ptr列表
+    std::list<ptr> _ptrs;
+    // buffer长度
+    uint32_t _len;
+    uint32_t _memcopy_count;
+    // 用于追加内容的内存段
+    ptr _append_ptr;
+    mutable iterator _last_p;
 };
-
-inline bool operator>(buffer& l, buffer& r)
-{
-	for (uint32_t p = 0; ; p++)
-	{
-    	if (l.length() > p && r.length() == p)
-    	{
-			return true;
-    	}
-		
-    	if (l.length() == p)
-    	{
-			return false;
-    	}
-		
-    	if (l[p] > r[p])
-    	{
-			return true;
-    	}
-		
-    	if (l[p] < r[p])
-    	{
-			return false;
-    	}
-	}
-}
-
-inline bool operator>=(buffer& l, buffer& r)
-{
-	for (uint32_t p = 0; ; p++)
-	{
-    	if (l.length() > p && r.length() == p)
-    	{
-			return true;
-    	}
-		
-    	if (r.length() == p && l.length() == p)
-    	{
-			return true;
-    	}
-		
-    	if (l.length() == p && r.length() > p)
-    	{
-			return false;
-    	}
-		
-    	if (l[p] > r[p])
-    	{
-			return true;
-    	}
-		
-    	if (l[p] < r[p])
-    	{
-			return false;
-    	}
-	}
-}
-
-inline bool operator==(const buffer &l, const buffer &r)
-{
-	if (l.length() != r.length())
-	{
-		return false;
-	}
-	
-	for (uint32_t p = 0; p < l.length(); p++)
-	{
-    	if (l[p] != r[p])
-    	{
-			return false;
-    	}
-	}
-	
-	return true;
-}
-
-inline bool operator<(buffer& l, buffer& r)
-{
-	return r > l;
-}
-
-inline bool operator<=(buffer& l, buffer& r)
-{
-	return r >= l;
-}
-
-
-std::ostream& operator<<(std::ostream& out, const ptr& bp);
-
-std::ostream& operator<<(std::ostream& out, const raw& r);
-
-std::ostream& operator<<(std::ostream& out, const buffer& bl);
-
-std::ostream& operator<<(std::ostream& out, const SysCallException& e);
-
-inline hash& operator<<(hash& l, buffer& r)
-{
-	l.update(r);
-	return l;
-}
 
 #endif

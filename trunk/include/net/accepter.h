@@ -10,31 +10,52 @@ class SimpleMessenger;
 class Accepter : public Thread
 {
 private:
-	SimpleMessenger* _msgr;
-	// ÊÇ·ñÍ£Ö¹
-	bool _done;
-	// ±¾µØ¼àÌıµÄÎÄ¼şÃèÊö·û
-	int _listen_fd;
-	int _shutdown_rd_fd;
-	int _shutdown_wr_fd;
-	
-	int create_socket(int* rd, int* wr);
+    SimpleMessenger* _msgr;
+    // æ˜¯å¦åœæ­¢
+    bool _done;
+    // æœ¬åœ°ç›‘å¬çš„æ–‡ä»¶æè¿°ç¬¦
+    int _listen_fd;
+
+    // ç®¡é“çš„è¯»\å†™æè¿°ç¬¦
+    int _shutdown_rd_fd;
+    int _shutdown_wr_fd;
+    
+    int create_socket(int* rd, int* wr);
 
 public:
-	Accepter(SimpleMessenger* r) : _msgr(r), _done(false), _listen_fd(-1),
-				_shutdown_rd_fd(-1), _shutdown_wr_fd(-1)
-	{}
+    Accepter(SimpleMessenger* r) : _msgr(r), _done(false), _listen_fd(-1),
+                _shutdown_rd_fd(-1), _shutdown_wr_fd(-1)
+    {}
     
-	// Ïß³ÌÈë¿Ú
-	void entry();
-	// Í£Ö¹Ïß³Ì
-	void stop();
-	// °ó¶¨²¢¿ªÊ¼¼àÌı
-	int bind(const entity_addr_t& bind_addr, const std::set<int>& avoid_ports);
-	// ÖØĞÂ°ó¶¨
-	int rebind(const std::set<int>& avoid_port);
-	// Æô¶¯Ïß³Ì
-	int start();
+    /**
+     * çº¿ç¨‹å…¥å£
+     *
+     */
+    void entry();
+                
+    /**
+     * åœæ­¢çº¿ç¨‹
+     *
+     */
+    void stop();
+
+    /**
+     * ç»‘å®šå¹¶å¼€å§‹ç›‘å¬
+     *
+     */
+    int bind(const entity_addr_t& bind_addr, const std::set<int>& avoid_ports);
+ 
+    /**
+     * é‡æ–°ç»‘å®š
+     *
+     */
+    int rebind(const std::set<int>& avoid_port);
+
+    /**
+     * å¯åŠ¨çº¿ç¨‹
+     *
+     */
+    int start();
 };
 
 #endif

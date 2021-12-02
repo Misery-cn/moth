@@ -1,74 +1,81 @@
 #include <ctype.h>
 #include <limits>
 #include <stdarg.h>
+#include <climits>
 #include "string_utils.h"
 #include "tokener.h"
 
 
 // UTILS_NS_BEGIN
 
-// ¿ìËÙ×Ö·û´®×ª»»³ÉÕûÊıÄ£°åÍ¨ÓÃº¯Êı
-// str: ĞèÒª±»×ª»»µÄ×Ö·û´®
-// dst: ×ª»»ºóµÄ½á¹û
-// max_length: ¸ÃÕûÊıÀàĞÍ¶ÔÓ¦µÄ×Ö·û´®µÄ×î¶à×Ö·û¸öÊı£¬²»°üÀ¨½áÎ²·û
-// converted_length: ĞèÒª×ª»»µÄ×Ö·û´®³¤¶È£¬Èç¹ûÎª0Ôò±íÊ¾×ª»»Õû¸ö×Ö·û´®
-// ignored_zero: ÊÇ·ñºöÂÔ¿ªÍ·µÄ0
-// return: Èç¹û×ª»»³É¹¦·µ»Øtrue, ·ñÔò·µ»Øfalse
+/**
+  * å¿«é€Ÿå­—ç¬¦ä¸²è½¬æ¢æˆæ•´æ•°æ¨¡æ¿é€šç”¨å‡½æ•°
+  * @param src: éœ€è¦è¢«è½¬æ¢çš„å­—ç¬¦ä¸²
+  * @param result: å­˜å‚¨è½¬æ¢åçš„ç»“æœ
+  * @param max_length: è¯¥æ•´æ•°ç±»å‹å¯¹åº”çš„å­—ç¬¦ä¸²çš„æœ€å¤šå­—ç¬¦ä¸ªæ•°ï¼Œä¸åŒ…æ‹¬ç»“å°¾ç¬¦
+  * @param converted_length: éœ€è¦è½¬æ¢çš„å­—ç¬¦ä¸²é•¿åº¦ï¼Œå¦‚æœä¸º0åˆ™è¡¨ç¤ºè½¬æ¢æ•´ä¸ªå­—ç¬¦ä¸²
+  * @param ignored_zero: æ˜¯å¦å¿½ç•¥å¼€å¤´çš„0
+  * @return: å¦‚æœè½¬æ¢æˆåŠŸè¿”å›true, å¦åˆ™è¿”å›false
+  */
 template <typename IntType>
 static bool fast_string2int(const char* str, IntType& dst, uint8_t max_length, uint8_t converted_length, bool ignored_zero)
 {
+    // æ˜¯å¦æ˜¯è´Ÿæ•°
     bool negative = false;
-    const char* tmp_str = str;
+    
+    const char* tmp = str;
+    
     if (NULL == str)
-	{
-		return false;
+    {
+        return false;
     }
 
-    // ´¦Àí¸ºÊı
-    if ('-' == tmp_str[0])
+    // è´Ÿæ•°
+    if ('-' == tmp[0])
     {
-        // ¸ºÊı
         negative = true;
-        ++tmp_str;
+        ++tmp;
     }
 
-    // ´¦Àí¿Õ×Ö·û´®
-    if ('\0' == tmp_str[0])
-	{
-		return false;
-    }
-
-    // ´¦Àí0´òÍ·µÄ
-    if ('0' == tmp_str[0])
+    if ('\0' == tmp[0])
     {
-        // Èç¹ûÊÇ0¿ªÍ·£¬ÔòÖ»ÄÜÓĞÒ»Î»Êı×Ö
-        if (('\0' == tmp_str[1]) || (1 == converted_length))
+        return false;
+    }
+
+    // ä»¥0å¼€å§‹çš„æ•°
+    if ('0' == tmp[0])
+    {
+        // å°±æ˜¯0
+        if (('\0' == tmp[1]) || (1 == converted_length))
         {
             dst = 0;
             return true;
         }
         else
         {
+            // å¦‚æœå­—ç¬¦ä¸²ä»¥0å¼€å§‹ä¸”ä¸å¸Œæœ›å¿½ç•¥å¼€å§‹çš„0åˆ™è½¬æ¢å¤±è´¥
             if (!ignored_zero)
-			{
-				return false;
+            {
+                return false;
             }
-			
+
+            // æ‰¾åˆ°å­—ç¬¦ä¸²ä¸­çš„ä¸€ä¸ªä¸ä¸º0çš„ä½ç½®
             for (;;)
             {
-                ++tmp_str;
-                if (tmp_str - str > max_length-1)
-				{
-					return false;
+                ++tmp;
+                
+                if (tmp - str > max_length - 1)
+                {
+                    return false;
                 }
-				
-                if (*tmp_str != '0')
-				{
-					break;
+                
+                if (*tmp != '0')
+                {
+                    break;
                 }
             }
-			
-            if ('\0' == *tmp_str)
+            
+            if ('\0' == *tmp)
             {
                 dst = 0;
                 return true;
@@ -76,49 +83,51 @@ static bool fast_string2int(const char* str, IntType& dst, uint8_t max_length, u
         }
     }
 
-    // ¼ì²éµÚÒ»¸ö×Ö·û
-    if (('0' > *tmp_str) || ('9' < *tmp_str))
-	{
-		return false;
-    }
-	
-    dst = (*tmp_str - '0');
-
-    while ((0 == converted_length) || (tmp_str - str < converted_length - 1))
+    // éæ³•æ•°å­—è½¬æ¢å¤±è´¥
+    if (('0' > *tmp) || ('9' < *tmp))
     {
-        ++tmp_str;
-        if ('\0' == *tmp_str)
-		{
-			break;
+        return false;
+    }
+    
+    dst = (*tmp - '0');
+
+    while ((0 == converted_length) || (tmp - str < converted_length - 1))
+    {
+        ++tmp;
+        
+        if ('\0' == *tmp)
+        {
+            break;
         }
-		
-        if (tmp_str - str > max_length - 1)
-		{
-			return false;
+        
+        if (tmp - str > max_length - 1)
+        {
+            return false;
         }
 
-        if (('0' > *tmp_str) || ('9' < *tmp_str))
-		{
-			return false;
+        if (('0' > *tmp) || ('9' < *tmp))
+        {
+            return false;
         }
 
         dst = dst * 10;
-        dst += (*tmp_str - '0');
+        dst += (*tmp - '0');
     }
 
-	// ¸ºÊı
+    // è´Ÿæ•°
     if (negative)
     {
         dst = -dst;
     }
-	
+    
     return true;
 }
 
 void StringUtils::remove_last(std::string& source, char c)
 {
     std::string::size_type pos = source.rfind(c);
-    if (pos + 1 != source.length())
+    
+    if (pos != std::string::npos)
     {
         source.erase(pos);
     }
@@ -127,6 +136,7 @@ void StringUtils::remove_last(std::string& source, char c)
 void StringUtils::remove_last(std::string& source, const std::string& sep)
 {
     std::string::size_type pos = source.rfind(sep);
+    
     if (pos != std::string::npos)
     {
         source.erase(pos);
@@ -135,45 +145,49 @@ void StringUtils::remove_last(std::string& source, const std::string& sep)
 
 void StringUtils::to_upper(char* source)
 {
-    char* tmp_source = source;
-    while ('\0' != *tmp_source)
+    char* tmp = source;
+    
+    while ('\0' != *tmp)
     {
-        if (('a' <= *tmp_source) && ('z' >= *tmp_source))
+        if (('a' <= *tmp) && ('z' >= *tmp))
         {
-            *tmp_source += 'A' - 'a';
+            *tmp += 'A' - 'a';
         }
 
-        ++tmp_source;
+        ++tmp;
     }
 }
 
 void StringUtils::to_lower(char* source)
 {
-    char* tmp_source = source;
-    while ('\0' != *tmp_source)
+    char* tmp = source;
+    
+    while ('\0' != *tmp)
     {
-        if (('A' <= *tmp_source) && ('Z' >= *tmp_source))
+        if (('A' <= *tmp) && ('Z' >= *tmp))
         {
-            *tmp_source += 'a' - 'A';
+            *tmp += 'a' - 'A';
         }
 
-        ++tmp_source;
+        ++tmp;
     }
 }
 
 void StringUtils::to_upper(std::string& source)
 {
-    char* tmp_source = (char *)source.c_str();
-    to_upper(tmp_source);
+    char* tmp = (char *)source.c_str();
+    
+    to_upper(tmp);
 }
 
 void StringUtils::to_lower(std::string& source)
 {
-    char* tmp_source = (char *)source.c_str();
-    to_lower(tmp_source);
+    char* tmp = (char *)source.c_str();
+    
+    to_lower(tmp);
 }
 
-// ÅĞ¶Ï×Ö·ûÊÇ·ñÎª¿Õ¸ñ»òTAB·û(\t)»ò»Ø³µ·û(\r)»ò»»ĞĞ·û(\n)
+// åˆ¤æ–­æŒ‡å®šå­—ç¬¦æ˜¯å¦ä¸ºç©ºæ ¼æˆ–TABç¬¦(\t)æˆ–å›è½¦ç¬¦(\r)æˆ–æ¢è¡Œç¬¦(\n)
 bool StringUtils::is_space(char c)
 {
     return (' ' == c) || ('\t' == c) || ('\r' == c) || ('\n' == c);
@@ -182,26 +196,26 @@ bool StringUtils::is_space(char c)
 void StringUtils::trim(char* source)
 {
     char* space = NULL;
-    char* tmp_source = source;
-	
-    while (' ' == *tmp_source)
-	{
-		++tmp_source;
+    char* tmp = source;
+    
+    while (' ' == *tmp)
+    {
+        ++tmp;
     }
 
     for (;;)
     {
-        *source = *tmp_source;
-        if ('\0' == *tmp_source)
+        *source = *tmp;
+        if ('\0' == *tmp)
         {
             if (NULL != space)
             {
                 *space = '\0';
             }
-			
+            
             break;
         }
-        else if (is_space(*tmp_source))
+        else if (is_space(*tmp))
         {
             if (NULL == space)
             {
@@ -214,49 +228,50 @@ void StringUtils::trim(char* source)
         }
 
         ++source;
-        ++tmp_source;
+        ++tmp;
     }
 }
 
 void StringUtils::trim_left(char* source)
 {
-    char* tmp_source = source;
-    while (is_space(*tmp_source)) ++tmp_source;
+    char* tmp = source;
+    
+    while (is_space(*tmp)) ++tmp;
 
     for (;;)
     {
-        *source = *tmp_source;
-        if ('\0' == *tmp_source)
-		{
-			break;
+        *source = *tmp;
+        if ('\0' == *tmp)
+        {
+            break;
         }
 
         ++source;
-        ++tmp_source;
+        ++tmp;
     }
 }
 
 void StringUtils::trim_right(char* source)
 {
     char* space = NULL;
-    char* tmp_source = source;
+    char* tmp = source;
 
     for (;;)
     {
-        if ('\0' == *tmp_source)
+        if ('\0' == *tmp)
         {
             if (space != NULL)
             {
                 *space = '\0';
             }
-			
+            
             break;
         }
-        else if (is_space(*tmp_source))
+        else if (is_space(*tmp))
         {
             if (NULL == space)
             {
-                space = tmp_source;
+                space = tmp;
             }
         }
         else
@@ -264,7 +279,7 @@ void StringUtils::trim_right(char* source)
             space = NULL;
         }
 
-        ++tmp_source;
+        ++tmp;
     }
 }
 
@@ -276,264 +291,309 @@ void StringUtils::trim(std::string& source)
 
 void StringUtils::trim_left(std::string& source)
 {
-    // ²»ÄÜÖ±½Ó¶Ôc_str()½øĞĞĞŞ¸Ä£¬ÒòÎª³¤¶È·¢ÉúÁË±ä»¯
     size_t length = source.length();
-    char* tmp_source = new char[length + 1];
-    PointGuard<char> guard(tmp_source, true);
+    char* tmp = new char[length + 1];
+    PointGuard<char> guard(tmp, true);
 
-    strncpy(tmp_source, source.c_str(), length);
-    tmp_source[length] = '\0';
+    strncpy(tmp, source.c_str(), length);
+    tmp[length] = '\0';
 
-    trim_left(tmp_source);
-    source = tmp_source;
+    trim_left(tmp);
+    source = tmp;
 }
 
 void StringUtils::trim_right(std::string& source)
 {
-    // ²»ÄÜÖ±½Ó¶Ôc_str()½øĞĞĞŞ¸Ä£¬ÒòÎª³¤¶È·¢ÉúÁË±ä»¯
     size_t length = source.length();
-    char* tmp_source = new char[length + 1];
-    PointGuard<char> guard(tmp_source, true);
+    char* tmp = new char[length + 1];
+    PointGuard<char> guard(tmp, true);
 
-    strncpy(tmp_source, source.c_str(), length);
-    tmp_source[length] = '\0';
+    strncpy(tmp, source.c_str(), length);
+    tmp[length] = '\0';
 
-    trim_right(tmp_source);
-    source = tmp_source;
-}
-
-bool StringUtils::string2int8(const char* source, int8_t& dst, uint8_t converted_length, bool ignored_zero)
-{
-    return string2int(source, dst, converted_length, ignored_zero);
+    trim_right(tmp);
+    source = tmp;
 }
 
 bool StringUtils::string2int(const char* source, int8_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     int16_t value = 0;
 
-    if (!string2int16(source, value, converted_length, ignored_zero))
-	{
-		return false;
+    if (!string2int(source, value, converted_length, ignored_zero))
+    {
+        return false;
     }
-	
+    
     if (value < std::numeric_limits<int8_t>::min() 
-		|| value > std::numeric_limits<int8_t>::max())
-	{
-		return false;
+        || value > std::numeric_limits<int8_t>::max())
+    {
+        return false;
     }
     
     dst = (int8_t)value;
-	
+    
     return true;
-}
-
-bool StringUtils::string2int16(const char* source, int16_t& dst, uint8_t converted_length, bool ignored_zero)
-{
-    return string2int(source, dst, converted_length, ignored_zero);
 }
 
 bool StringUtils::string2int(const char* source, int16_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     int32_t value = 0;
 
-    if (!string2int32(source, value, converted_length, ignored_zero))
-	{
-		return false;
+    if (!string2int(source, value, converted_length, ignored_zero))
+    {
+        return false;
     }
-	
+    
     if (value < std::numeric_limits<int16_t>::min()
-		|| value > std::numeric_limits<int16_t>::max())
-	{
-		return false;
+        || value > std::numeric_limits<int16_t>::max())
+    {
+        return false;
     }
 
     dst = (int16_t)value;
-	
+    
     return true;
-}
-
-bool StringUtils::string2int32(const char* source, int32_t& dst, uint8_t converted_length, bool ignored_zero)
-{
-    return string2int(source, dst, converted_length, ignored_zero);
 }
 
 bool StringUtils::string2int(const char* source, int32_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     if (NULL == source)
-	{
-		return false;
+    {
+        return false;
     }
 
     long value;
+    // unsigned int 0~4294967295
+    // int -2147483648ï½2147483647
+    // unsigned long 0~4294967295
+    // long -2147483648ï½2147483647
+    // long long -9223372036854775808~9223372036854775807
+    // unsigned long long 0~1844674407370955165
     if (!fast_string2int<long>(source, value, sizeof("-2147483648") - 1, converted_length, ignored_zero))
-	{
-		return false;
+    {
+        return false;
     }
-	
+    
     if ((value < std::numeric_limits<int32_t>::min())
-		|| (value > std::numeric_limits<int32_t>::max()))
-	{
-		return false;
+        || (value > std::numeric_limits<int32_t>::max()))
+    {
+        return false;
     }
 
     dst = (int32_t)value;
-	
+    
     return true;
-}
-
-bool StringUtils::string2int64(const char* source, int64_t& dst, uint8_t converted_length, bool ignored_zero)
-{
-    return string2int(source, dst, converted_length, ignored_zero);
 }
 
 bool StringUtils::string2int(const char* source, int64_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     long long value;
-    if (!fast_string2int<long long>(source, value, sizeof("-9223372036854775808")-1, converted_length, ignored_zero))
-	{
-		return false;
+    
+    if (!fast_string2int<long long>(source, value, sizeof("-9223372036854775808") - 1, converted_length, ignored_zero))
+    {
+        return false;
     }
 
     dst = (int64_t)value;
-	
+    
     return true;
-}
-
-bool StringUtils::string2uint8(const char* source, uint8_t& dst, uint8_t converted_length, bool ignored_zero)
-{
-    return string2int(source, dst, converted_length, ignored_zero);
 }
 
 bool StringUtils::string2int(const char* source, uint8_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     uint16_t value = 0;
-	
-    if (!string2uint16(source, value, converted_length, ignored_zero))
-	{
-		return false;
+    
+    if (!string2int(source, value, converted_length, ignored_zero))
+    {
+        return false;
     }
-	
+    
     if (value > std::numeric_limits<uint8_t>::max())
-	{
-		return false;
+    {
+        return false;
     }
 
     dst = (uint8_t)value;
-	
+    
     return true;
-}
-
-bool StringUtils::string2uint16(const char* source, uint16_t& dst, uint8_t converted_length, bool ignored_zero)
-{
-    return string2int(source, dst, converted_length, ignored_zero);
 }
 
 bool StringUtils::string2int(const char* source, uint16_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     uint32_t value = 0;
-	
-    if (!string2uint32(source, value, converted_length, ignored_zero))
-	{
-		return false;
+    
+    if (!string2int(source, value, converted_length, ignored_zero))
+    {
+        return false;
     }
-	
+    
     if (value > std::numeric_limits<uint16_t>::max())
-	{
-		return false;
+    {
+        return false;
     }
 
     dst = (uint16_t)value;
-	
+    
     return true;
-}
-
-bool StringUtils::string2uint32(const char* source, uint32_t& dst, uint8_t converted_length, bool ignored_zero)
-{
-    return string2int(source, dst, converted_length, ignored_zero);
 }
 
 bool StringUtils::string2int(const char* source, uint32_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     unsigned long value;
-	
+    
     if (!fast_string2int<unsigned long>(source, value, sizeof("4294967295") - 1, converted_length, ignored_zero))
-	{
-		return false;
+    {
+        return false;
     }
 
     dst = (uint32_t)value;
-	
+    
     return true;
-}
-
-bool StringUtils::string2uint64(const char* source, uint64_t& dst, uint8_t converted_length, bool ignored_zero)
-{
-    return string2int(source, dst, converted_length, ignored_zero);
 }
 
 bool StringUtils::string2int(const char* source, uint64_t& dst, uint8_t converted_length, bool ignored_zero)
 {
     unsigned long long value;
-	
-    if (!fast_string2int<unsigned long long>(source, value, sizeof("18446744073709551615")-1, converted_length, ignored_zero))
-	{
-		return false;
+    
+    if (!fast_string2int<unsigned long long>(source, value, sizeof("18446744073709551615") - 1, converted_length, ignored_zero))
+    {
+        return false;
     }
 
     dst = (uint64_t)value;
-	
+    
     return true;
 }
 
-std::string StringUtils::int16_tostring(int16_t source)
+bool StringUtils::string2ll(const char* str, int base, long long& result)
 {
-    return int_tostring(source);
+    char* endptr = NULL;
+    errno = 0;
+    
+    long long ret = strtoll(str, &endptr, base);
+
+    if ((errno == ERANGE && (ret == LLONG_MAX || ret == LLONG_MIN)) 
+        || (0 != errno && 0 == ret))
+    {
+        return false;
+    }
+
+    // ä¸èƒ½è½¬æ¢
+    if (endptr == str)
+    {
+        return false;
+    }
+
+    // å­˜åœ¨éæ•°å­—å­—ç¬¦
+    if (*endptr != '\0')
+    {
+        return false;
+    }
+
+    result = ret;
+    
+    return true;
+}
+
+bool StringUtils::string2l(const char* str, int base, long& result)
+{
+    long long ret = 0;
+    if (!string2ll(str, base, ret))
+    {
+        return false;
+    }
+    
+    if ((INT_MIN >= ret) || (INT_MAX <= ret))
+    {
+        return false;
+    }
+    
+    result = static_cast<int>(ret);
+
+    return true;
+}
+
+bool StringUtils::string2double(const char* str, double& result)
+{
+    char* endptr = NULL;
+    errno = 0;
+    double ret = strtod(str, &endptr);
+    
+    if (ERANGE == errno)
+    {
+        return false;
+    }
+    
+    if (endptr == str)
+    {
+        return false;
+    }
+    
+    if ('\0' != *endptr)
+    {
+        return false;
+    }
+
+    result = ret;
+
+    return true;
+}
+
+bool StringUtils::string2float(const char* str, float& result)
+{
+    char* endptr = NULL;
+    errno = 0;
+    float ret = strtof(str, &endptr);
+    
+    if (ERANGE == errno)
+    {
+        return false;
+    }
+    
+    if (endptr == str)
+    {
+        return false;
+    }
+    
+    if ('\0' != *endptr)
+    {
+        return false;
+    }
+
+    result = ret;
+    
+    return true;
 }
 
 std::string StringUtils::int_tostring(int16_t source)
 {
-    char str[sizeof("065535")]; // 0xFFFF
+    char str[sizeof("065535")];
     
     snprintf(str, sizeof(str), "%d", source);
-	
+    
     return str;
-}
-
-std::string StringUtils::int32_tostring(int32_t source)
-{
-    return int_tostring(source);
 }
 
 std::string StringUtils::int_tostring(int32_t source)
 {
-    char str[sizeof("04294967295")]; // 0xFFFFFFFF
+    char str[sizeof("04294967295")];
     
     snprintf(str, sizeof(str), "%d", source);
-	
+    
     return str;
-}
-
-std::string StringUtils::int64_tostring(int64_t source)
-{
-    return int_tostring(source);
 }
 
 std::string StringUtils::int_tostring(int64_t source)
 {
-    char str[sizeof("018446744073709551615")]; // 0xFFFFFFFFFFFFFFFF
+    char str[sizeof("018446744073709551615")];
     // snprintf(str, sizeof(str), "%"PRId64, source);
-	#if __WORDSIZE==64
-		snprintf(str, sizeof(str), "%ld", source);
-	#else
-		snprintf(str, sizeof(str), "%lld", source);
-	#endif
-	
+    #if __WORDSIZE==64
+        snprintf(str, sizeof(str), "%ld", source);
+    #else
+        snprintf(str, sizeof(str), "%lld", source);
+    #endif
+    
     return str;
-}
-
-std::string StringUtils::uint16_tostring(uint16_t source)
-{
-    return int_tostring(source);
 }
 
 std::string StringUtils::int_tostring(uint16_t source)
@@ -541,13 +601,8 @@ std::string StringUtils::int_tostring(uint16_t source)
     char str[sizeof("065535")]; // 0xFFFF
     
     snprintf(str, sizeof(str), "%u", source);
-	
+    
     return str;
-}
-
-std::string StringUtils::uint32_tostring(uint32_t source)
-{
-    return int_tostring(source);
 }
 
 std::string StringUtils::int_tostring(uint32_t source)
@@ -555,13 +610,8 @@ std::string StringUtils::int_tostring(uint32_t source)
     char str[sizeof("04294967295")]; // 0xFFFFFFFF
     
     snprintf(str, sizeof(str), "%u", source);
-	
+    
     return str;
-}
-
-std::string StringUtils::uint64_tostring(uint64_t source)
-{
-    return int_tostring(source);
 }
 
 std::string StringUtils::int_tostring(uint64_t source)
@@ -575,48 +625,31 @@ std::string StringUtils::int_tostring(uint64_t source)
     return str;
 }
 
-char* StringUtils::skip_spaces(char* buffer)
+char* StringUtils::skip_spaces(char* source)
 {
-    char* iter = buffer;
-    while (' ' == *iter)
-	{
-		++iter;
-    }
-
-    return iter;
-}
-
-const char* StringUtils::skip_spaces(const char* buffer)
-{
-    const char* iter = buffer;
-    while (' ' == *iter)
-	{
-		++iter;
-    }
-
-    return iter;
-}
-
-uint32_t StringUtils::hash(const char *str, int len)
-{
-    uint32_t g = 0;
-    uint32_t h = 0;
-    const char *p = str;
-
-    while (p < str + len)
+    char* tmp = source;
+    
+    while (' ' == *tmp)
     {
-        h = (h << 4) + *p++;
-        if ((g = (h & 0xF0000000)))
-        {
-            h = h ^ (g >> 24);
-            h = h ^ g;
-        }
+        ++tmp;
     }
 
-    return h;
+    return tmp;
 }
 
-int StringUtils::fix_snprintf(char *str, size_t size, const char *format, ...)
+const char* StringUtils::skip_spaces(const char* source)
+{
+    const char* tmp = source;
+    
+    while (' ' == *tmp)
+    {
+        ++tmp;
+    }
+
+    return tmp;
+}
+
+int StringUtils::fix_snprintf(char* str, size_t size, const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);
@@ -626,7 +659,7 @@ int StringUtils::fix_snprintf(char *str, size_t size, const char *format, ...)
     return expected;
 }
 
-int StringUtils::fix_vsnprintf(char *str, size_t size, const char *format, va_list ap)
+int StringUtils::fix_vsnprintf(char* str, size_t size, const char* format, va_list ap)
 {
     int expected = vsnprintf(str, size, format, ap);
 
@@ -638,45 +671,26 @@ int StringUtils::fix_vsnprintf(char *str, size_t size, const char *format, va_li
     return static_cast<int>(size);
 }
 
-std::string StringUtils::path2filename(const std::string& path, const std::string& join_string)
-{
-    std::string filename;
-    std::list<std::string> tokens;
-    Tokener::split(&tokens, path, "/");
-
-    if (!tokens.empty())
-    {
-        filename = tokens.front();
-        tokens.pop_front();
-    }
-
-    while (!tokens.empty())
-    {
-        filename += join_string + tokens.front();
-        tokens.pop_front();
-    }
-
-    return filename;
-}
-
 int StringUtils::chr_index(const char* str, char c) 
 {
     const char* c_position = strchr(str, c);
+    
     return (NULL == c_position) ? -1 : c_position - str;
 }
 
 int StringUtils::chr_rindex(const char* str, char c) 
 {
     const char* c_position = strrchr(str, c);
+    
     return (NULL == c_position) ? -1 : c_position - str;
 }
 
 std::string StringUtils::extract_dirpath(const char* filepath)
 {
     std::string dirpath;
-	
+    
     int index = chr_rindex(filepath, '/');
-	
+    
     if (-1 != index)
     {
         dirpath.assign(filepath, index);
@@ -685,12 +699,11 @@ std::string StringUtils::extract_dirpath(const char* filepath)
     return dirpath;
 }
 
-// ½âÎö³öÎÄ¼şÃû
 std::string StringUtils::extract_filename(const std::string& filepath)
 {
     std::string filename;
     const char* slash_position = strrchr(filepath.c_str(), '/');
-	
+    
     if (NULL == slash_position)
     {
         filename = filepath;
@@ -706,7 +719,7 @@ std::string StringUtils::extract_filename(const std::string& filepath)
 const char* StringUtils::extract_filename(const char* filepath)
 {
     const char* slash_position = strrchr(filepath, '/');
-	
+    
     if (NULL == slash_position)
     {
         return filepath;
@@ -724,45 +737,27 @@ std::string StringUtils::format_string(const char* format, ...)
     for (;;)
     {
         va_start(ap, format);
-
-        // vsnprintfÖĞµÄµÚ¶ş²ÎÊı´óĞ¡ÊÇÒªÇó°üº¬½áÎ²·ûµÄ
+        // sizeè¦æ±‚åŒ…å«ç»“æŸç¬¦
         int expected = vsnprintf(buffer.get(), size, format, ap);
-
         va_end(ap);
+        
         if (expected > -1 && expected < (int)size)
             break;
 
         /* Else try again with more space. */
         if (expected > -1)    /* glibc 2.1 */
         {
-        	size = (size_t)expected + 1; /* precisely what is needed */
+            size = (size_t)expected + 1; /* precisely what is needed */
         }
         else           /* glibc 2.0 */
         {
-        	size *= 2;  /* twice the old size */
+            size *= 2;  /* twice the old size */
         }
 
         buffer.reset(new char[size]);
     }
 
     return buffer.get();
-}
-
-bool StringUtils::is_numeric_string(const char* str)
-{
-    const char* p = str;
-
-    while ('\0' != *p)
-    {
-        if (!(*p >= '0' && *p <= '9'))
-        {
-            return false;
-        }
-
-        ++p;
-    }
-
-    return true;
 }
 
 bool StringUtils::is_alphabetic_string(const char* str)
@@ -793,13 +788,13 @@ bool StringUtils::is_variable_string(const char* str)
             ++p;
             continue;
         }
-		
+        
         if (('a' <= *p && 'z' >= *p) || ('A' <= *p && 'Z' >= *p))
         {
             ++p;
             continue;
         }
-		
+        
         if (('_' == *p) || ('-' == *p))
         {
             ++p;
@@ -812,78 +807,28 @@ bool StringUtils::is_variable_string(const char* str)
     return true;
 }
 
-bool StringUtils::is_regex_string(const char* str)
+bool StringUtils::is_digit(char c)
 {
-    const char* p = str;
+    return ('0' <= c && '9' >= c);
+}
 
-    while ('\0' != *p)
+bool StringUtils::is_digit_string(const char* str)
+{
+    if (!str)
     {
-        if ('0' <= *p && '9' >= *p)
+        return false;
+    }
+
+    const char* tmp = str;
+
+    while ('\0' != *tmp)
+    {
+        if (!is_digit(*tmp))
         {
-            ++p;
-            continue;
-        }
-		
-        if (('a' <= *p && 'z' >= *p) || ('A' <= *p && 'Z' >= *p))
-        {
-            ++p;
-            continue;
-        }
-		
-        if (('_' == *p) || ('-' == *p))
-        {
-            ++p;
-            continue;
-        }
-		
-        if (('\\' == *p) || ('/' == *p))
-        {
-            ++p;
-            continue;
-        }
-		
-        if (('+' == *p) || ('*' == *p))
-        {
-            ++p;
-            continue;
-        }
-        if (('.' == *p) || (',' == *p))
-        {
-            ++p;
-            continue;
-        }
-		
-        if (('<' == *p) || ('>' == *p))
-        {
-            ++p;
-            continue;
-        }
-		
-        if (('{' == *p) || ('}' == *p))
-        {
-            ++p;
-            continue;
-        }
-		
-        if (('(' == *p) || (')' == *p))
-        {
-            ++p;
-            continue;
-        }
-		
-        if (('[' == *p) || (']' == *p))
-        {
-            ++p;
-            continue;
-        }
-		
-        if (('$' == *p) || ('%' == *p) || ('^' == *p) || ('?' == *p) || ('"' == *p) || (' ' == *p))
-        {
-            ++p;
-            continue;
+            return false;
         }
 
-        return false;
+        ++tmp;
     }
 
     return true;
@@ -892,7 +837,7 @@ bool StringUtils::is_regex_string(const char* str)
 std::string StringUtils::remove_suffix(const std::string& filename)
 {
     std::string::size_type pos = filename.find('.');
-	
+    
     if (pos == std::string::npos)
     {
         return filename;
@@ -906,7 +851,7 @@ std::string StringUtils::remove_suffix(const std::string& filename)
 std::string StringUtils::replace_suffix(const std::string& filepath, const std::string& new_suffix)
 {
     std::string::size_type pos = filepath.find('.');
-	
+    
     if (pos == std::string::npos)
     {
         if (new_suffix.empty() || new_suffix == ".")
@@ -929,7 +874,6 @@ std::string StringUtils::replace_suffix(const std::string& filepath, const std::
     {
         if (new_suffix.empty() || new_suffix == ".")
         {
-            // Ïàµ±ÓÚÉ¾³ıÁËºó×º
             return filepath.substr(0, pos);
         }
         else
@@ -949,15 +893,17 @@ std::string StringUtils::replace_suffix(const std::string& filepath, const std::
 std::string StringUtils::to_hex(const std::string& source, bool lowercase)
 {
     std::string hex;
-    hex.resize(source.size()*2);
-
+    hex.resize(source.size() * 2);
     char* hex_p = const_cast<char*>(hex.data());
+    
     for (std::string::size_type i = 0; i < source.size(); ++i)
     {
+        // å°å†™
         if (lowercase)
         {
             snprintf(hex_p, 3, "%02x", source[i]);
         }
+        // å¤§å†™
         else
         {
             snprintf(hex_p, 3, "%02X", source[i]);
@@ -967,119 +913,17 @@ std::string StringUtils::to_hex(const std::string& source, bool lowercase)
     }
 
     *hex_p = '\0';
-	
+    
     return hex;
 }
 
-// Ò»¸öºº×Ö,GBK±àÂëÊ±Õ¼2×Ö½Ú,UTF8±àÂëÊ±Õ¼3×Ö½Ú
-std::string StringUtils::encode_url(const std::string& url, bool space2plus)
-{
-    return encode_url(url.c_str(), url.size(), space2plus);
-}
 
-std::string StringUtils::encode_url(const char* url, size_t url_length, bool space2plus)
-{
-    static char hex[] = "0123456789ABCDEF";
-    std::string result(url_length * 3 + 1, '\0');
-
-    int i = 0;
-    while ('\0' != *url)
-    {
-        char c = *url++;
-
-        if (' ' == c)
-        {
-            if (space2plus)
-            {
-                result[i++] = '+';
-            }
-            else
-            {
-                // ĞÂ±ê×¼½«¿Õ¸ñÌæ»»Îª¼ÓºÅ+
-                result[i + 0] = '%';
-                result[i + 1] = '2';
-                result[i + 2] = '0';
-                i += 3;
-            }
-        }
-        else if (('0' <= c && '9' >= c) ||
-                 ('a' <= c && 'z' >= c) ||
-                 ('A' <= c && 'Z' >= c) ||
-                 ('-' == c) || ('_' == c) ||
-                 ('.' == c) || ('~' == c))
-        {
-            // RFC 3986±ê×¼¶¨ÒåµÄÎ´±£Áô×Ö·û (2005Äê1ÔÂ)
-            result[i++] = c;
-        }
-        else
-        {
-            // ÓĞ·ûºÅµÄcÖµ¿ÉÄÜÊÇ¸ºÊı
-            result[i + 0] = '%';
-            result[i + 1] = hex[static_cast<unsigned char>(c) / 16];
-            result[i + 2] = hex[static_cast<unsigned char>(c) % 16];
-            i += 3;
-        }
-    }
-
-    result.resize(i);
-    return result;
-}
-
-std::string StringUtils::decode_url(const std::string& encoded_url)
-{
-    return decode_url(encoded_url.c_str(), encoded_url.size());
-}
-
-std::string StringUtils::decode_url(const char* encoded_url, size_t encoded_url_length)
-{
-    std::string result(encoded_url_length+1, '\0');
-
-    int i = 0;
-    while ('\0' != *encoded_url)
-    {
-        char c = *encoded_url++;
-
-        if ('+' == c)
-        {
-            result[i++] = ' ';
-        }
-        else if (c != '%')
-        {
-            result[i++] = c;
-        }
-        else
-        {
-            if (!isxdigit(encoded_url[0]) ||
-                !isxdigit(encoded_url[1]))
-            {
-                result[i++] = '%';
-            }
-            else
-            {
-                char hex[3];
-                hex[0] = encoded_url[0];
-                hex[1] = encoded_url[1];
-                hex[2] = '\0';
-
-                char x = strtol(hex, NULL, 16);
-                result[i++] = x;
-                encoded_url += 2;
-            }
-        }
-    }
-
-    result.resize(i);
-	
-    return result;
-}
-
-// CR: Carriage Return
-// LF: Line Feed
 void StringUtils::trim_CR(char* line)
 {
     if (NULL != line)
     {
         size_t len = strlen(line);
+        
         if ('\r' == line[len - 1])
         {
             line[len - 1] = '\0';
@@ -1090,7 +934,7 @@ void StringUtils::trim_CR(char* line)
 void StringUtils::trim_CR(std::string& line)
 {
     std::string::size_type tail = line.size() - 1;
-	
+    
     if ('\r' == line[tail])
     {
         line.resize(tail);
@@ -1104,7 +948,7 @@ std::string StringUtils::char2hex(unsigned char c)
 
     hex[0] = hex_table[(c >> 4) & 0x0F];
     hex[1] = hex_table[c & 0x0F];
-	
+    
     return hex;
 }
 

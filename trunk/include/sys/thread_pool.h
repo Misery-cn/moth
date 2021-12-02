@@ -8,7 +8,7 @@
 
 // SYS_NS_BEGIN
 
-// Ïß³Ì³ØÀà
+// çº¿ç¨‹æ± ç±»
 class ThreadPool
 {
 public:
@@ -16,8 +16,8 @@ public:
     ThreadPool(uint32_t thread_num);
 
     virtual ~ThreadPool();
-	
-	// ÈÎÎñ¶ÓÁĞ»ùÀà
+    
+    // ä»»åŠ¡é˜Ÿåˆ—åŸºç±»
     class BaseWorkQueue
     {
     public:
@@ -36,21 +36,21 @@ public:
         virtual void _void_process_finish(void*) = 0;
     };
 
-    // »ñÈ¡Ïß³ÌÊı
+    // è·å–çº¿ç¨‹æ•°
     uint32_t get_num_threads()
     {
         Mutex::Locker locker(_lock);
         return _num_threads;
     }
 
-    // Ìí¼ÓÈÎÎñ¶ÓÁĞ
+    // æ·»åŠ ä»»åŠ¡é˜Ÿåˆ—
     void add_work_queue(BaseWorkQueue* wq)
     {
         Mutex::Locker locker(_lock);
         _work_queues.push_back(wq);
     }
 
-	// É¾³ıÈÎÎñ¶ÓÁĞ
+    // åˆ é™¤ä»»åŠ¡é˜Ÿåˆ—
     void remove_work_queue(BaseWorkQueue* wq)
     {
         Mutex::Locker locker(_lock);
@@ -89,160 +89,160 @@ public:
         _cond.wait(_lock);
     }
 
-	// Æô¶¯Ïß³Ì³Ø
+    // å¯åŠ¨çº¿ç¨‹æ± 
     void start();
 
-	// Í£Ö¹Ïß³Ì³Ø
+    // åœæ­¢çº¿ç¨‹æ± 
     void stop(bool clear_after=true);
 
-	// ÔİÍ£Ïß³Ì³ØÖĞËùÓĞÏß³Ì
+    // æš‚åœçº¿ç¨‹æ± ä¸­æ‰€æœ‰çº¿ç¨‹
     void pause();
-	// »Ö¸´±»ÔİÍ£µÄÏß³Ì
+    // æ¢å¤è¢«æš‚åœçš„çº¿ç¨‹
     void unpause();
-	// µÈ´ıÈÎÎñÍê³É
+    // ç­‰å¾…ä»»åŠ¡å®Œæˆ
     void drain(BaseWorkQueue* wq = NULL);
 
 private:
-	// ¹¤×÷Ïß³ÌÀà
+    // å·¥ä½œçº¿ç¨‹ç±»
     class WorkThread : public Thread
     {
-	public:
-	
+    public:
+    
         WorkThread(ThreadPool* p) : _pool(p) {}
-        // ¹¤×÷Ïß³ÌÆô¶¯ºó,¼´µ÷ÓÃpoolµÄworkerº¯Êı
+        // å·¥ä½œçº¿ç¨‹å¯åŠ¨å,å³è°ƒç”¨poolçš„workerå‡½æ•°
         void entry()
         {
             _pool->worker(this);
         }
-		
-	private:	
-		ThreadPool* _pool;
+        
+    private:    
+        ThreadPool* _pool;
     };
 
-	// Æô¶¯Ïß³Ì³ØÖĞµÄÏß³Ì
+    // å¯åŠ¨çº¿ç¨‹æ± ä¸­çš„çº¿ç¨‹
     void start_threads();
 
-    // joinÏß³Ì
+    // joinçº¿ç¨‹
     void join_old_threads();
 
-	// Ïß³Ì³Ø¹¤×÷º¯Êı
+    // çº¿ç¨‹æ± å·¥ä½œå‡½æ•°
     void worker(WorkThread* wt);
 
 public:
-	template<class T>
-	class WorkQueue : public BaseWorkQueue
-	{
-	public:
-		WorkQueue(ThreadPool* p) : _pool(p)
-		{
-			_pool->add_work_queue(this);
-		}
-		
-		virtual ~WorkQueue()
-		{
-			_pool->remove_work_queue(this);
-		}
+    template<class T>
+    class WorkQueue : public BaseWorkQueue
+    {
+    public:
+        WorkQueue(ThreadPool* p) : _pool(p)
+        {
+            _pool->add_work_queue(this);
+        }
+        
+        virtual ~WorkQueue()
+        {
+            _pool->remove_work_queue(this);
+        }
 
-		// ÈëÁĞº¯Êı,ĞèÒªµ÷ÓÃÅÉÉúÀàÊµÏÖµÄ_enqueue
-		bool queue(T* item)
-		{
-      		Mutex::Locker locker(_pool->_lock);
-			bool r = _enqueue(item);
-			_pool->_cond.signal();
-			return r;
-		}
+        // å…¥åˆ—å‡½æ•°,éœ€è¦è°ƒç”¨æ´¾ç”Ÿç±»å®ç°çš„_enqueue
+        bool queue(T* item)
+        {
+              Mutex::Locker locker(_pool->_lock);
+            bool r = _enqueue(item);
+            _pool->_cond.signal();
+            return r;
+        }
 
-		// ³öÁĞº¯Êı,ĞèÒªµ÷ÓÃÅÉÉúÀàÊµÏÖµÄ_dequeue
-		void dequeue(T *item)
-		{
-			Mutex::Locker locker(_pool->_lock);
-			_dequeue(item);
-		}
-		
-		void clear()
-		{
-			Mutex::Locker locker(_pool->_lock);
-			_clear();
-		}
+        // å‡ºåˆ—å‡½æ•°,éœ€è¦è°ƒç”¨æ´¾ç”Ÿç±»å®ç°çš„_dequeue
+        void dequeue(T *item)
+        {
+            Mutex::Locker locker(_pool->_lock);
+            _dequeue(item);
+        }
+        
+        void clear()
+        {
+            Mutex::Locker locker(_pool->_lock);
+            _clear();
+        }
 
-		void lock()
-		{
-			_pool->lock();
-		}
-		
-		void unlock()
-		{
-			_pool->unlock();
-		}
-		
-		void wakeup()
-		{
-			_pool->wakeup();
-		}
-		
-		void _wait()
-		{
-			_pool->wait();
-		}
-		
-		void drain()
-		{
-			_pool->drain(this);
-		}
+        void lock()
+        {
+            _pool->lock();
+        }
+        
+        void unlock()
+        {
+            _pool->unlock();
+        }
+        
+        void wakeup()
+        {
+            _pool->wakeup();
+        }
+        
+        void _wait()
+        {
+            _pool->wait();
+        }
+        
+        void drain()
+        {
+            _pool->drain(this);
+        }
 
-	protected:
+    protected:
 
-		virtual void _process(T* t) = 0;
+        virtual void _process(T* t) = 0;
 
-	private:
-		// ÈëÁĞ
-	    virtual bool _enqueue(T*) = 0;
-		// ³öÁĞ
-	    virtual void _dequeue(T*) = 0;
-		// ³öÁĞ
-	    virtual T* _dequeue() = 0;
-		
-	    virtual void _process_finish(T*) {}
+    private:
+        // å…¥åˆ—
+        virtual bool _enqueue(T*) = 0;
+        // å‡ºåˆ—
+        virtual void _dequeue(T*) = 0;
+        // å‡ºåˆ—
+        virtual T* _dequeue() = 0;
+        
+        virtual void _process_finish(T*) {}
 
-	    void* _void_dequeue()
-		{
-			return (void *)_dequeue();
-	    }
-		
-	    void _void_process(void* p)
-		{
-			_process(static_cast<T*>(p));
-	    }
-		
-	    void _void_process_finish(void* p)
-		{
-			_process_finish(static_cast<T*>(p));
-	    }
+        void* _void_dequeue()
+        {
+            return (void *)_dequeue();
+        }
+        
+        void _void_process(void* p)
+        {
+            _process(static_cast<T*>(p));
+        }
+        
+        void _void_process_finish(void* p)
+        {
+            _process_finish(static_cast<T*>(p));
+        }
 
-	private:
-		ThreadPool* _pool;
-	};
+    private:
+        ThreadPool* _pool;
+    };
 
 private:
     Mutex _lock;
     Cond _cond;
-    // µÈ´ıÕıÔÚÖ´ĞĞÏß³ÌµÄÌõ¼ş±äÁ¿
+    // ç­‰å¾…æ­£åœ¨æ‰§è¡Œçº¿ç¨‹çš„æ¡ä»¶å˜é‡
     Cond _wait_cond;
-    // Ïß³Ì³ØÊÇ·ñÍ£Ö¹
+    // çº¿ç¨‹æ± æ˜¯å¦åœæ­¢
     bool _stop;
-	uint32_t _pause;
-	uint32_t _draining;
-    // Ïß³ÌÊı
+    uint32_t _pause;
+    uint32_t _draining;
+    // çº¿ç¨‹æ•°
     uint32_t _num_threads;
-    // ¹¤×÷¶ÓÁĞ
+    // å·¥ä½œé˜Ÿåˆ—
     std::vector<BaseWorkQueue*> _work_queues;
-    // ÉÏÒ»´Î¹¤×÷¶ÓÁĞË÷ÒıºÅ
+    // ä¸Šä¸€æ¬¡å·¥ä½œé˜Ÿåˆ—ç´¢å¼•å·
     uint32_t _last_work_index;
-    // ¹¤×÷Ïß³Ì
+    // å·¥ä½œçº¿ç¨‹
     std::set<WorkThread*> _threads;
-    // µÈ´ıjoinµÄÏß³Ì
+    // ç­‰å¾…joinçš„çº¿ç¨‹
     std::list<WorkThread*> _old_threads;
-    // ÕıÔÚ¹¤×÷µÄÏß³ÌÊı
+    // æ­£åœ¨å·¥ä½œçš„çº¿ç¨‹æ•°
     uint32_t _processing;
 };
 

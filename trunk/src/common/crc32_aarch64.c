@@ -10,47 +10,47 @@
 
 uint32_t crc32c_aarch64(uint32_t crc, unsigned char const* buffer, unsigned len)
 {
-	int64_t length = len;
+    int64_t length = len;
 
-	if (!buffer)
-	{
+    if (!buffer)
+    {
 
-		while ((length -= sizeof(uint64_t)) >= 0)
-			CRC32CX(crc, 0);
+        while ((length -= sizeof(uint64_t)) >= 0)
+            CRC32CX(crc, 0);
 
-		/* The following is more efficient than the straight loop */
-		if (length & sizeof(uint32_t))
-			CRC32CW(crc, 0);
+        /* The following is more efficient than the straight loop */
+        if (length & sizeof(uint32_t))
+            CRC32CW(crc, 0);
 
-		if (length & sizeof(uint16_t))
-			CRC32CH(crc, 0);
+        if (length & sizeof(uint16_t))
+            CRC32CH(crc, 0);
 
-		if (length & sizeof(uint8_t))
-			CRC32CB(crc, 0);
-	}
-	else
-	{
-		while ((length -= sizeof(uint64_t)) >= 0)
-		{
-			CRC32CX(crc, *(uint64_t *)buffer);
-			buffer += sizeof(uint64_t);
-		}
+        if (length & sizeof(uint8_t))
+            CRC32CB(crc, 0);
+    }
+    else
+    {
+        while ((length -= sizeof(uint64_t)) >= 0)
+        {
+            CRC32CX(crc, *(uint64_t *)buffer);
+            buffer += sizeof(uint64_t);
+        }
 
-		/* The following is more efficient than the straight loop */
-		if (length & sizeof(uint32_t))
-		{
-			CRC32CW(crc, *(uint32_t *)buffer);
-			buffer += sizeof(uint32_t);
-		}
-		if (length & sizeof(uint16_t))
-		{
-			CRC32CH(crc, *(uint16_t *)buffer);
-			buffer += sizeof(uint16_t);
-		}
-		if (length & sizeof(uint8_t))
-			CRC32CB(crc, *buffer);
-	}
-	return crc;
+        /* The following is more efficient than the straight loop */
+        if (length & sizeof(uint32_t))
+        {
+            CRC32CW(crc, *(uint32_t *)buffer);
+            buffer += sizeof(uint32_t);
+        }
+        if (length & sizeof(uint16_t))
+        {
+            CRC32CH(crc, *(uint16_t *)buffer);
+            buffer += sizeof(uint16_t);
+        }
+        if (length & sizeof(uint8_t))
+            CRC32CB(crc, *buffer);
+    }
+    return crc;
 }
 #endif
 

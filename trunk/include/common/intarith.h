@@ -24,7 +24,7 @@
 /*
  * Macro to determine if value is a power of 2
  */
-#define ISP2(x)		(((x) & ((x) - 1)) == 0)
+#define ISP2(x)        (((x) & ((x) - 1)) == 0)
 
 /*
  * Macros for various sorts of alignment and rounding.  The "align" must
@@ -38,14 +38,14 @@
  * eg, P2ALIGN(0x1234, 0x100) == 0x1200 (0x12*align)
  * eg, P2ALIGN(0x5600, 0x100) == 0x5600 (0x56*align)
  */
-#define P2ALIGN(x, align)		((x) & -(align))
+#define P2ALIGN(x, align)        ((x) & -(align))
 
 /*
  * return x % (mod) align
  * eg, P2PHASE(0x1234, 0x100) == 0x34 (x-0x12*align)
  * eg, P2PHASE(0x5600, 0x100) == 0x00 (x-0x56*align)
  */
-#define P2PHASE(x, align)		((x) & ((align) - 1))
+#define P2PHASE(x, align)        ((x) & ((align) - 1))
 
 /*
  * return how much space is left in this block (but if it's perfectly
@@ -53,14 +53,14 @@
  * eg, P2NPHASE(0x1234, 0x100) == 0xcc (0x13*align-x)
  * eg, P2NPHASE(0x5600, 0x100) == 0x00 (0x56*align-x)
  */
-#define P2NPHASE(x, align)		(-(x) & ((align) - 1))
+#define P2NPHASE(x, align)        (-(x) & ((align) - 1))
 
 /*
  * return x rounded up to an align boundary
  * eg, P2ROUNDUP(0x1234, 0x100) == 0x1300 (0x13*align)
  * eg, P2ROUNDUP(0x5600, 0x100) == 0x5600 (0x56*align)
  */
-#define P2ROUNDUP(x, align)		(-(-(x) & -(align)))
+#define P2ROUNDUP(x, align)        (-(-(x) & -(align)))
 
 // count trailing zeros.
 // NOTE: the builtin is nondeterministic on 0 input

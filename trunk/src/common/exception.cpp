@@ -4,7 +4,7 @@
 
 
 Exception::Exception(const char* errmsg, int errcode, const char* filename, int linenum) throw ()
-				: _errmsg(errmsg), _errcode(errcode), _filename(filename), _linenum(linenum)
+                : _errmsg(errmsg), _errcode(errcode), _filename(filename), _linenum(linenum)
 {
 
 }
@@ -16,7 +16,7 @@ Exception::~Exception() throw ()
 
 const char* Exception::what() const throw ()
 {
-	return _errmsg.c_str();
+    return _errmsg.c_str();
 }
 
 
@@ -33,15 +33,15 @@ std::string Exception::to_string() const
 }
 
 SysCallException::SysCallException(const char* errmsg, int errcode, const char* filename, int linenum, const char* syscall) throw ()
-			: Exception(errmsg, errcode, filename, linenum)
+            : Exception(errmsg, errcode, filename, linenum)
 {
-	_errmsg = strerror(errno);
-	_syscall = syscall;
+    _errmsg = strerror(errno);
+    _syscall = syscall;
 }
 
 SysCallException::~SysCallException() throw ()
 {
-	
+    
 }
 
 std::string SysCallException::to_string() const throw ()

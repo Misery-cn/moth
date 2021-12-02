@@ -13,11 +13,11 @@
 #include "int_types.h"
 #include "exception.h"
 
-// пб╢╢╫╗нд╪Ч╣дд╛хох╗оч
+// Ф√╟Е┬⌡Е╩╨Ф√┤Д╩╤Г └И╩≤Х╝╓Ф²┐И≥░
 #define FILE_DEFAULT_PERM (S_IRUSR|S_IWUSR | S_IRGRP | S_IROTH)
-// пб╢╢╫╗д©б╪╣дд╛хох╗оч
+// Ф√╟Е┬⌡Е╩╨Г⌡╝Е╫∙Г └И╩≤Х╝╓Ф²┐И≥░
 #define DIRECTORY_DEFAULT_PERM (S_IRWXU | S_IXGRP | S_IXOTH)
-// пб╢╢╫╗╣дIPC(╟Эю╗shm╨мsem╣х)д╛хох╗оч
+// Ф√╟Е┬⌡Е╩╨Г └IPC(Е▄┘Ф▀╛shmЕ▓▄semГ╜┴)И╩≤Х╝╓Ф²┐И≥░
 #define IPC_DEFAULT_PERM  (S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH)
 
 

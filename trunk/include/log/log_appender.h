@@ -22,82 +22,82 @@ typedef enum
 
 // 
 const int LOG_LINE_SIZE = 512;
-// ×î´óÈÕÖ¾ÎÄ¼ş´óĞ¡
+// æœ€å¤§æ—¥å¿—æ–‡ä»¶å¤§å°
 const int MAX_LOG_FILE_SIZE = 1000 * M;
-// ×î´óÈÕÖ¾ÎÄ¼ş¸öÊı
+// æœ€å¤§æ—¥å¿—æ–‡ä»¶ä¸ªæ•°
 const int MAX_LOG_FILE_SEQ = 10;
 
 
 class LogEvent
 {
 public:
-	LogEvent();
-	virtual ~LogEvent();
+    LogEvent();
+    virtual ~LogEvent();
 
-	virtual std::string format() = 0;
+    virtual std::string format() = 0;
 
 public:
-	log_level_t _level;
-	
-	char _content[LOG_LINE_SIZE];
+    log_level_t _level;
+    
+    char _content[LOG_LINE_SIZE];
 };
 
-// ÔËĞĞÊ±ÈÕÖ¾
+// è¿è¡Œæ—¶æ—¥å¿—
 class RunLogEvent : public LogEvent
 {
 public:
-	RunLogEvent(log_level_t level);
-	virtual ~RunLogEvent();
+    RunLogEvent(log_level_t level);
+    virtual ~RunLogEvent();
 
-	std::string format();
+    std::string format();
 };
 
 
 class Appender
 {
 public:
-	Appender() : item(this)
-	{
-		// TODO
-	}
-	
-	virtual ~Appender()
-	{
-		// TODO
-	}
+    Appender() : item(this)
+    {
+        // TODO
+    }
+    
+    virtual ~Appender()
+    {
+        // TODO
+    }
 
-	virtual void do_appender(LogEvent* logevent) = 0;
-	
-	ArrayList<Appender*>::Item item;
+    virtual void do_appender(LogEvent* logevent) = 0;
+    
+    ArrayList<Appender*>::Item item;
 };
 
 
 class FileAppender : public Appender
 {
 public:
-	FileAppender(const char* filename);
-	virtual ~FileAppender();
+    FileAppender(const char* filename);
+    virtual ~FileAppender();
 
-	void init();
+    void init();
 
-	// ¼ì²éµ±Ç°ÈÕÖ¾ÎÄ¼ş,ÊÇ·ñĞèÒªÖØĞÂ´´½¨
-	void check_log_file();
+    // æ£€æŸ¥å½“å‰æ—¥å¿—æ–‡ä»¶,æ˜¯å¦éœ€è¦é‡æ–°åˆ›å»º
+    void check_log_file();
 
-	void create_log_file();
+    void create_log_file();
 
-	// Ğ´ÎÄ¼ş
-	void do_appender(LogEvent* logevent);
+    // å†™æ–‡ä»¶
+    void do_appender(LogEvent* logevent);
 
 private:
-	int _log_fd;
-	// µ±Ç°ÎÄ¼şĞòºÅ
-	int _log_file_seq;
-	// ÈÕÖ¾ÎÄ¼şÃû
-	char _log_file_name[FILENAME_MAX];
-	// µ±Ç°ÈÕÖ¾ÎÄ¼şÃû
-	char _current_file_name[FILENAME_MAX];
-	// ÈÕÖ¾Â·¾¶
-	char _log_path[PATH_MAX];
+    int _log_fd;
+    // å½“å‰æ–‡ä»¶åºå·
+    int _log_file_seq;
+    // æ—¥å¿—æ–‡ä»¶å
+    char _log_file_name[FILENAME_MAX];
+    // å½“å‰æ—¥å¿—æ–‡ä»¶å
+    char _current_file_name[FILENAME_MAX];
+    // æ—¥å¿—è·¯å¾„
+    char _log_path[PATH_MAX];
 };
 
 #endif

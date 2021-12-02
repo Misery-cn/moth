@@ -29,32 +29,32 @@ public:
     virtual ~PointGuard();
 private:
     T* _point;
-	bool _is_arrary;
+    bool _is_arrary;
 };
 
 template<typename T>
 PointGuard<T>::PointGuard(T * p, bool is_arrary)
 {
-	_point = p;
-	_is_arrary = is_arrary;
+    _point = p;
+    _is_arrary = is_arrary;
 }
 
 template<typename T>
 PointGuard<T>::~PointGuard()
 {
-	if (!_is_arrary)
-	{
-		delete _point;
-	}
-	else
-	{
-		delete[] _point;
-	}
-	
-	_point = NULL;
+    if (!_is_arrary)
+    {
+        delete _point;
+    }
+    else
+    {
+        delete[] _point;
+    }
+    
+    _point = NULL;
 }
 
-// ÀàÀàĞÍcloseÖúÊÖº¯Êı£¬ÒªÇó¸ÃÀàÓĞ¹«ÓĞµÄclose·½·¨
+// ç±»ç±»å‹closeåŠ©æ‰‹å‡½æ•°ï¼Œè¦æ±‚è¯¥ç±»æœ‰å…¬æœ‰çš„closeæ–¹æ³•
 template <typename T>
 class CloseHelper
 {
@@ -182,100 +182,100 @@ private:
 class Utils
 {
 public:
-	// ºÁÃë¼¶sleepº¯Êı
+    // æ¯«ç§’çº§sleepå‡½æ•°
     static void millisleep(uint32_t millisecond);
 
-    // »ñÈ¡Ö¸¶¨ÏµÍ³µ÷ÓÃ´íÎóÂëµÄ×Ö·û´®´íÎóĞÅÏ¢
+    // è·å–æŒ‡å®šç³»ç»Ÿè°ƒç”¨é”™è¯¯ç çš„å­—ç¬¦ä¸²é”™è¯¯ä¿¡æ¯
     static std::string get_error_message(int errcode);
 
-    // µÃµ½×î½üÒ»´ÎµÄ³ö´íĞÅÏ¢
+    // å¾—åˆ°æœ€è¿‘ä¸€æ¬¡çš„å‡ºé”™ä¿¡æ¯
     static std::string get_last_error_message();
 
-    // µÃµ½×î½üÒ»´ÎµÄ³ö´í´úÂë
+    // å¾—åˆ°æœ€è¿‘ä¸€æ¬¡çš„å‡ºé”™ä»£ç 
     static int get_last_error_code();
 
-    // µÃµ½µ±Ç°½ø³ÌºÅ
+    // å¾—åˆ°å½“å‰è¿›ç¨‹å·
     static int get_current_process_id();
 
-    // µÃµ½µ±Ç°½ø³ÌËùÊô¿ÉÖ´ĞĞÎÄ¼şËùÔÚµÄ¾ø¶ÔÂ·¾¶£¬½áÎ²·û²»º¬·´Ğ±¸Ü
+    // å¾—åˆ°å½“å‰è¿›ç¨‹æ‰€å±å¯æ‰§è¡Œæ–‡ä»¶æ‰€åœ¨çš„ç»å¯¹è·¯å¾„ï¼Œç»“å°¾ç¬¦ä¸å«åæ–œæ 
     static std::string get_program_path();
     
-    // µÃµ½ÓëÖ¸¶¨fdÏà¶ÔÓ¦µÄÎÄ¼şÃû£¬°üÀ¨Â·¾¶²¿·Ö
-	static std::string get_filename(int fd);
+    // å¾—åˆ°ä¸æŒ‡å®šfdç›¸å¯¹åº”çš„æ–‡ä»¶åï¼ŒåŒ…æ‹¬è·¯å¾„éƒ¨åˆ†
+    static std::string get_filename(int fd);
 
-    // µÃµ½Ò»¸öÄ¿Â¼µÄ¾ø¶ÔÂ·¾¶£¬Â·¾¶ÖĞ²»»á°üº¬../ºÍ./µÈ£¬ÊÇÒ»¸öÍêÕûµÄÔ­Ê¼Â·¾¶
+    // å¾—åˆ°ä¸€ä¸ªç›®å½•çš„ç»å¯¹è·¯å¾„ï¼Œè·¯å¾„ä¸­ä¸ä¼šåŒ…å«../å’Œ./ç­‰ï¼Œæ˜¯ä¸€ä¸ªå®Œæ•´çš„åŸå§‹è·¯å¾„
     static std::string get_full_directory(const char* directory);
 
-    // µÃµ½CPUºË¸öÊı
-	static uint16_t get_cpu_number();    
+    // å¾—åˆ°CPUæ ¸ä¸ªæ•°
+    static uint16_t get_cpu_number();    
 
-	// µÃµ½µ±Ç°µ÷ÓÃÕ»;×¢ÒâÊÂÏî: ±àÒëÔ´´úÂëÊ±´øÉÏ-rdynamicºÍ-gÑ¡Ïî£¬·ñÔò¿ÉÄÜ¿´µ½µÄÊÇº¯ÊıµØÖ·£¬¶ø²»ÊÇº¯Êı·ûºÅÃû³Æ
+    // å¾—åˆ°å½“å‰è°ƒç”¨æ ˆ;æ³¨æ„äº‹é¡¹: ç¼–è¯‘æºä»£ç æ—¶å¸¦ä¸Š-rdynamicå’Œ-gé€‰é¡¹ï¼Œå¦åˆ™å¯èƒ½çœ‹åˆ°çš„æ˜¯å‡½æ•°åœ°å€ï¼Œè€Œä¸æ˜¯å‡½æ•°ç¬¦å·åç§°
     static bool get_backtrace(std::string& call_stack);
 
-	// µÃµ½Ö¸¶¨Ä¿Â¼×Ö½ÚÊı´óĞ¡£¬·ÇÏß³Ì°²È«º¯Êı£¬Í¬Ò»Ê±¿ÌÖ»ÄÜ±»Ò»¸öÏß³Ìµ÷ÓÃ
+    // å¾—åˆ°æŒ‡å®šç›®å½•å­—èŠ‚æ•°å¤§å°ï¼Œéçº¿ç¨‹å®‰å…¨å‡½æ•°ï¼ŒåŒä¸€æ—¶åˆ»åªèƒ½è¢«ä¸€ä¸ªçº¿ç¨‹è°ƒç”¨
     static off_t du(const char* dirpath);
 
-    // µÃµ½ÄÚ´æÒ³´óĞ¡
+    // å¾—åˆ°å†…å­˜é¡µå¤§å°
     static int get_page_size();
 
-	// µÃµ½Ò»¸ö½ø³Ì¿É³ÖÓĞµÄ×î¶àÎÄ¼ş(°üÀ¨Ì×½Ó×ÖµÈ)¾ä±úÊı
+    // å¾—åˆ°ä¸€ä¸ªè¿›ç¨‹å¯æŒæœ‰çš„æœ€å¤šæ–‡ä»¶(åŒ…æ‹¬å¥—æ¥å­—ç­‰)å¥æŸ„æ•°
     static int get_fd_max();
 
-	// ÅĞ¶ÏÖ¸¶¨fd¶ÔÓ¦µÄÊÇ·ñÎªÎÄ¼ş
+    // åˆ¤æ–­æŒ‡å®šfdå¯¹åº”çš„æ˜¯å¦ä¸ºæ–‡ä»¶
     static bool is_file(int fd);
-	// ÅĞ¶ÏÖ¸¶¨PathÊÇ·ñÎªÒ»¸öÎÄ¼ş
+    // åˆ¤æ–­æŒ‡å®šPathæ˜¯å¦ä¸ºä¸€ä¸ªæ–‡ä»¶
     static bool is_file(const char* path);
-	// ÅĞ¶ÏÖ¸¶¨fd¶ÔÓ¦µÄÊÇ·ñÎªÈíÁ´½Ó
+    // åˆ¤æ–­æŒ‡å®šfdå¯¹åº”çš„æ˜¯å¦ä¸ºè½¯é“¾æ¥
     static bool is_link(int fd);
-	// ÅĞ¶ÏÖ¸¶¨PathÊÇ·ñÎªÒ»¸öÈíÁ´½Ó
+    // åˆ¤æ–­æŒ‡å®šPathæ˜¯å¦ä¸ºä¸€ä¸ªè½¯é“¾æ¥
     static bool is_link(const char* path);
-	// ÅĞ¶ÏÖ¸¶¨fd¶ÔÓ¦µÄÊÇ·ñÎªÄ¿Â¼
+    // åˆ¤æ–­æŒ‡å®šfdå¯¹åº”çš„æ˜¯å¦ä¸ºç›®å½•
     static bool is_directory(int fd);
-	// ÅĞ¶ÏÖ¸¶¨PathÊÇ·ñÎªÒ»¸öÄ¿Â¼
+    // åˆ¤æ–­æŒ‡å®šPathæ˜¯å¦ä¸ºä¸€ä¸ªç›®å½•
     static bool is_directory(const char* path);
     
-	// ÊÇ·ñÔÊĞíµ±Ç°½ø³ÌÉú³ÉcoredumpÎÄ¼ş
+    // æ˜¯å¦å…è®¸å½“å‰è¿›ç¨‹ç”Ÿæˆcoredumpæ–‡ä»¶
     static void enable_core_dump(bool enabled=true, int core_file_size=-1);
 
-	// µÃµ½µ±Ç°½ø³Ì³ÌĞòµÄÃû³Æ£¬½á¹ûºÍmainº¯ÊıµÄargv[0]ÏàÍ¬
+    // å¾—åˆ°å½“å‰è¿›ç¨‹ç¨‹åºçš„åç§°ï¼Œç»“æœå’Œmainå‡½æ•°çš„argv[0]ç›¸åŒ
     static std::string get_program_long_name();
 
-	// µÃµ½µ±Ç°½ø³ÌµÄµÄÃû³Æ£¬²»°üº¬Ä¿Â¼²¿·Ö£¬Èç¡°./abc.exe¡±ÖµÎª¡°abc.exe¡±
-	// Èç¹ûµ÷ÓÃÁËset_process_title()£¬
-	// ÔòÍ¨¹ıprogram_invocation_short_name¿ÉÄÜÈ¡²»µ½Ô¤ÆÚµÄÖµ£¬ÉõÖÁ·µ»ØµÄÊÇ¿Õ
+    // å¾—åˆ°å½“å‰è¿›ç¨‹çš„çš„åç§°ï¼Œä¸åŒ…å«ç›®å½•éƒ¨åˆ†ï¼Œå¦‚â€œ./abc.exeâ€å€¼ä¸ºâ€œabc.exeâ€
+    // å¦‚æœè°ƒç”¨äº†set_process_title()ï¼Œ
+    // åˆ™é€šè¿‡program_invocation_short_nameå¯èƒ½å–ä¸åˆ°é¢„æœŸçš„å€¼ï¼Œç”šè‡³è¿”å›çš„æ˜¯ç©º
     static std::string get_program_short_name();
 
 
-	// È¡Â·¾¶µÄÎÄ¼şÃû²¿·Ö£¬½á¹û°üº¬ºó×º²¿·Ö
+    // å–è·¯å¾„çš„æ–‡ä»¶åéƒ¨åˆ†ï¼Œç»“æœåŒ…å«åç¼€éƒ¨åˆ†
     static std::string get_filename(const std::string& filepath);
 
-	// È¡Â·¾¶µÄÄ¿Â¼²¿·Ö£¬²»°üº¬ÎÄ¼şÃû²¿·Ö£¬²¢±£Ö¤²»ÒÔ·´Ğ±¸Ü½áÎ²
+    // å–è·¯å¾„çš„ç›®å½•éƒ¨åˆ†ï¼Œä¸åŒ…å«æ–‡ä»¶åéƒ¨åˆ†ï¼Œå¹¶ä¿è¯ä¸ä»¥åæ–œæ ç»“å°¾
     static std::string get_dirpath(const std::string& filepath);
 
-	// ÉèÖÃ½ø³ÌÃû
+    // è®¾ç½®è¿›ç¨‹å
     static void set_process_name(const std::string& new_name);
     static void set_process_name(const char* format, ...);
 
-	// ÉèÖÃ½ø³Ì±êÌâ£¬psÃüÁî¿´µ½µÄ½á¹û£¬±ØĞëÏÈµ÷ÓÃinit_program_title()ºó£¬²Å¿ÉÒÔµ÷ÓÃset_program_title()
+    // è®¾ç½®è¿›ç¨‹æ ‡é¢˜ï¼Œpså‘½ä»¤çœ‹åˆ°çš„ç»“æœï¼Œå¿…é¡»å…ˆè°ƒç”¨init_program_title()åï¼Œæ‰å¯ä»¥è°ƒç”¨set_program_title()
     static void init_process_title(int argc, char *argv[]);    
     static void set_process_title(const std::string& new_title);
     static void set_process_title(const char* format, ...);
 
-	// Í¨ÓÃµÄpipe¶ÁÈ¡²Ù×÷
-	// ¶ÁÈ¡·½·¨Îª£ºÏÈ¶ÁÒ»¸ö4×Ö½ÚµÄ³¤¶È£¬È»ºó¸ù¾İ³¤¶È¶ÁÈ¡ÄÚÈİ
-	// fd pipeµÄ¾ä±ú
-	// buffer ´æ´¢´ÓpipeÖĞ¶ÁÈ¡µÄÊı¾İ£¬×¢Òâµ÷ÓÃÕßÊ¹ÓÃºó±ØĞëµ÷ÓÃdelete []bufferÒÔÊÍ·ÅÄÚ´æ
-	// buffer_size ´æ´¢´ÓpipeÖĞ¶ÁÈ¡µ½µÄÊı¾İ×Ö½ÚÊı
+    // é€šç”¨çš„pipeè¯»å–æ“ä½œ
+    // è¯»å–æ–¹æ³•ä¸ºï¼šå…ˆè¯»ä¸€ä¸ª4å­—èŠ‚çš„é•¿åº¦ï¼Œç„¶åæ ¹æ®é•¿åº¦è¯»å–å†…å®¹
+    // fd pipeçš„å¥æŸ„
+    // buffer å­˜å‚¨ä»pipeä¸­è¯»å–çš„æ•°æ®ï¼Œæ³¨æ„è°ƒç”¨è€…ä½¿ç”¨åå¿…é¡»è°ƒç”¨delete []bufferä»¥é‡Šæ”¾å†…å­˜
+    // buffer_size å­˜å‚¨ä»pipeä¸­è¯»å–åˆ°çš„æ•°æ®å­—èŠ‚æ•°
     static void common_pipe_read(int fd, char** buffer, int32_t* buffer_size);
 
-	// Í¨ÓÃµÄpipeĞ´²Ù×÷
-	// ¶ÁÈ¡·½·¨Îª£ºÏÈĞ´Ò»¸ö4×Ö½ÚµÄ³¤¶Èbuffer_size£¬È»ºó¸ù¾İ³¤¶Èbuffer_sizeĞ´ÈëÄÚÈİ
-	// fd pipeµÄ¾ä±ú
-	// buffer ĞèÒªĞ´ÈëpipeµÄÄÚÈİ
-	// buffer_size ĞèÒªĞ´ÈëµÄ×Ö½ÚÊı
+    // é€šç”¨çš„pipeå†™æ“ä½œ
+    // è¯»å–æ–¹æ³•ä¸ºï¼šå…ˆå†™ä¸€ä¸ª4å­—èŠ‚çš„é•¿åº¦buffer_sizeï¼Œç„¶åæ ¹æ®é•¿åº¦buffer_sizeå†™å…¥å†…å®¹
+    // fd pipeçš„å¥æŸ„
+    // buffer éœ€è¦å†™å…¥pipeçš„å†…å®¹
+    // buffer_size éœ€è¦å†™å…¥çš„å­—èŠ‚æ•°
     static void common_pipe_write(int fd, const char* buffer, int32_t buffer_size);
 
-    // È¡Ëæ»úÊı
+    // å–éšæœºæ•°
     template <typename T>
     static T get_random_number(unsigned int i, T max_number)
     {
@@ -283,34 +283,34 @@ public:
         struct timezone *tz = NULL;
 
         gettimeofday(&tv, tz);
-        srandom(tv.tv_usec + i); // ¼ÓÈëi£¬ÒÔ½â¾ö¹ı¿ìÊ±tv_usecÖµÏàÍ¬
+        srandom(tv.tv_usec + i); // åŠ å…¥iï¼Œä»¥è§£å†³è¿‡å¿«æ—¶tv_usecå€¼ç›¸åŒ
 
-        // RAND_MAX ÀàËÆÓÚINT_MAX
+        // RAND_MAX ç±»ä¼¼äºINT_MAX
         return static_cast<T>(random() % max_number);
     }
 
-	static int get_random_bytes(char* buf, int len)
-	{
-		int fd = TEMP_FAILURE_RETRY(::open("/dev/urandom", O_RDONLY));
-		if (0 > fd)
-		{
-			return -errno;
-		}
-		
-		int ret = safe_read_exact(fd, buf, len);
-		VOID_TEMP_FAILURE_RETRY(::close(fd));
-		return ret;
-	}
+    static int get_random_bytes(char* buf, int len)
+    {
+        int fd = TEMP_FAILURE_RETRY(::open("/dev/urandom", O_RDONLY));
+        if (0 > fd)
+        {
+            return -errno;
+        }
+        
+        int ret = safe_read_exact(fd, buf, len);
+        VOID_TEMP_FAILURE_RETRY(::close(fd));
+        return ret;
+    }
 
-	uint64_t get_random(uint64_t min_val, uint64_t max_val)
-	{
-		uint64_t r;
-		get_random_bytes((char *)&r, sizeof(r));
-		r = min_val + r % (max_val - min_val + 1);
-		return r;
-	}
+    uint64_t get_random(uint64_t min_val, uint64_t max_val)
+    {
+        uint64_t r;
+        get_random_bytes((char *)&r, sizeof(r));
+        r = min_val + r % (max_val - min_val + 1);
+        return r;
+    }
 
-    // ½«Ò»¸övectorËæ»ú»¯
+    // å°†ä¸€ä¸ªvectoréšæœºåŒ–
     template <typename T>
     static void randomize_vector(std::vector<T>& vec)
     {

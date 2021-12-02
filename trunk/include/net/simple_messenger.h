@@ -16,169 +16,256 @@
 class SimpleMessenger : public PolicyMessenger
 {
 public:
-	SimpleMessenger(entity_name_t name, std::string mname);
+    SimpleMessenger(entity_name_t name, std::string mname);
 
-	virtual ~SimpleMessenger();
+    virtual ~SimpleMessenger();
 
-	void set_addr_unknowns(entity_addr_t& addr);
+    void set_addr_unknowns(entity_addr_t& addr);
 
-	// »ñÈ¡ÏûÏ¢×ª·¢¶ÓÁĞ´óĞ¡
-	int get_dispatch_queue_len()
-	{
-		return _dispatch_queue.get_queue_len();
-	}
+    /**
+     * è·å–æ¶ˆæ¯è½¬å‘é˜Ÿåˆ—å¤§å°
+     *
+     */
+    int get_dispatch_queue_len()
+    {
+        return _dispatch_queue.get_queue_len();
+    }
 
-	// »ñÈ¡ÏûÏ¢×ª·¢¶ÓÁĞÖĞ×î´óÊ±¼ä
-	double get_dispatch_queue_max_age(utime_t now)
-	{
-		return _dispatch_queue.get_max_age(now);
-	}
+    /**
+     * è·å–æ¶ˆæ¯è½¬å‘é˜Ÿåˆ—ä¸­æœ€å¤§æ—¶é—´
+     *
+     */
+    double get_dispatch_queue_max_age(utime_t now)
+    {
+        return _dispatch_queue.get_max_age(now);
+    }
 
-	// °ó¶¨¶Ë¿Ú
-	int bind(const entity_addr_t& bind_addr);
+    /**
+     * ç»‘å®šç«¯å£
+     *
+     */
+    int bind(const entity_addr_t& bind_addr);
 
-	// ÖØĞÂ°ó¶¨¶Ë¿Ú
-	int rebind(const std::set<int>& avoid_ports);
+    /**
+     * é‡æ–°ç»‘å®šç«¯å£
+     *
+     */
+    int rebind(const std::set<int>& avoid_ports);
 
-	// Æô¶¯messenger
-	int start();
-	// µÈ´ıÏß³ÌÍË³ö
-	void wait();
-	// Í£Ö¹messenger
-	int shutdown();
-	// ¸ù¾İµØÖ·ĞÅÏ¢·¢ËÍÏûÏ¢
-	int send_message(Message* m, const entity_inst_t& dest);
-	// ¸ù¾İÒÑÓĞÁ¬½Ó·¢ËÍÏûÏ¢
-	int send_message(Message* m, Connection* con);
-	// ¸ù¾İµØÖ·»ñÈ¡Á¬½Ó
-	Connection* get_connection(const entity_inst_t& dest);
-	// »ñÈ¡±¾µØÁ¬½Ó
-	Connection* get_loopback_connection()
-	{
-		return _local_connection;
-	}
-	// ·¢ËÍĞÄÌø
-	int send_keepalive(Connection* con);
-	// ¸ù¾İµØÖ·ĞÅÏ¢Í£Ö¹Á¬½Ó
-	void mark_down(const entity_addr_t& addr);
-	// ¸ù¾İÁ¬½ÓĞÅÏ¢Í£Ö¹Á¬½Ó
-	void mark_down(Connection* con);
-	
-	void mark_disposable(Connection* con);
-	// ¹Ø±ÕËùÓĞÁ¬½Ó
-	void mark_down_all();
+    /**
+     * å¯åŠ¨messenger
+     *
+     */
+    int start();
+
+    /**
+     * ç­‰å¾…çº¿ç¨‹é€€å‡º
+     *
+     */
+    void wait();
+    
+    /**
+     * åœæ­¢messenger
+     *
+     */
+    int shutdown();
+
+    /**
+     * æ ¹æ®åœ°å€ä¿¡æ¯å‘é€æ¶ˆæ¯
+     *
+     */
+    int send_message(Message* m, const entity_inst_t& dest);
+
+    /**
+     * æ ¹æ®å·²æœ‰è¿æ¥å‘é€æ¶ˆæ¯
+     *
+     */
+    int send_message(Message* m, Connection* con);
+    
+    /**
+     * æ ¹æ®åœ°å€è·å–è¿æ¥
+     *
+     */
+    Connection* get_connection(const entity_inst_t& dest);
+    
+    /**
+     * è·å–æœ¬åœ°è¿æ¥
+     *
+     */
+    Connection* get_loopback_connection()
+    {
+        return _local_connection;
+    }
+
+    /**
+     * å‘é€å¿ƒè·³
+     *
+     */
+    int send_keepalive(Connection* con);
+
+    /**
+     * æ ¹æ®åœ°å€ä¿¡æ¯åœæ­¢è¿æ¥
+     *
+     */
+    void mark_down(const entity_addr_t& addr);
+
+    /**
+     * æ ¹æ®è¿æ¥ä¿¡æ¯åœæ­¢è¿æ¥
+     *
+     */
+    void mark_down(Connection* con);
+    
+    void mark_disposable(Connection* con);
+    
+    /**
+     * å…³é—­æ‰€æœ‰è¿æ¥
+     *
+     */
+    void mark_down_all();
 
 protected:
-	void ready();
+    void ready();
 
 public:
-	// ¸ºÔğ°ó¶¨¶Ë¿Ú¡¢¼àÌıµÄaccepterÏß³Ì
-	Accepter _accepter;
-	// ·¢ËÍ¶ÓÁĞ
-	DispatchQueue _dispatch_queue;
+    // è´Ÿè´£ç»‘å®šç«¯å£ã€ç›‘å¬çš„accepterçº¿ç¨‹
+    Accepter _accepter;
+    // å‘é€é˜Ÿåˆ—
+    DispatchQueue _dispatch_queue;
 
-	friend class Accepter;
+    friend class Accepter;
 
-	Socket* add_accept_socket(int fd);
-
-private:
-	// ¸ºÔğ¹Ø±ÕsocketµÄÏß³Ì
-	class ReaperThread : public Thread
-	{
-		SimpleMessenger* _msgr;
-	public:
-		explicit ReaperThread(SimpleMessenger* m) : _msgr(m) {}
-		void entry()
-		{
-			_msgr->reaper_entry();
-		}
-	} _reaper_thread;
-
-	Socket* connect_rank(const entity_addr_t& addr, int type, SocketConnection* con, Message* first);
-
-	void submit_message(Message* m, SocketConnection* con, const entity_addr_t& addr, int dest_type, bool already_locked);
-	
-	// ¹Ø±Õsocket
-	void reaper();
+    /**
+     * å°†è¿æ¥æ·»åŠ åˆ°_accepting_socketsåŠ
+     *
+     */
+    Socket* add_accept_socket(int fd);
 
 private:
-	
-	Mutex _lock;
-	
-	// ÊÇ·ñÒÑ°ó¶¨
-	bool _did_bind;
-	
-	// È«¾Ösequence
-	uint32_t _global_seq;
-	
-	// _global_seqËø
-	SpinLock _global_seq_lock;
+    // è´Ÿè´£å…³é—­socketçš„çº¿ç¨‹
+    class ReaperThread : public Thread
+    {
+        SimpleMessenger* _msgr;
+    public:
+        explicit ReaperThread(SimpleMessenger* m) : _msgr(m) {}
+        void entry()
+        {
+            _msgr->reaper_entry();
+        }
+    } _reaper_thread;
 
-	// std::unordered_map<entity_addr_t, Socket*> _rank_socket;
-	std::map<entity_addr_t, Socket*> _rank_socket;
+    Socket* connect_rank(const entity_addr_t& addr, int type, SocketConnection* con, Message* first);
 
-	std::set<Socket*> _accepting_sockets;
+    void submit_message(Message* m, SocketConnection* con, const entity_addr_t& addr, int dest_type, bool already_locked);
+    
+    // å…³é—­socket
+    void reaper();
 
-	std::set<Socket*> _sockets;
-	
-	// ´ı¹Ø±Õsocket¶ÓÁĞ
-	std::list<Socket*> _socket_reap_queue;
+private:
+    
+    Mutex _lock;
+    
+    // æ˜¯å¦å·²ç»‘å®š
+    bool _did_bind;
+    
+    // å…¨å±€sequence
+    uint32_t _global_seq;
+    
+    // _global_seqé”
+    SpinLock _global_seq_lock;
 
-	Cond  _stop_cond;
-	bool _stopped = true;
-	Throttle _dispatch_throttler;
-	bool _reaper_started;
-	bool _reaper_stop;
-	Cond _reaper_cond;
+    // std::unordered_map<entity_addr_t, Socket*> _rank_socket;
+    std::map<entity_addr_t, Socket*> _rank_socket;
 
-	Cond  _wait_cond;
+    // æ­£åœ¨è¿æ¥çš„socket.çŠ¶æ€ä¸ºSOCKET_ACCEPTING
+    std::set<Socket*> _accepting_sockets;
 
-	friend class Socket;
+    // æ‰€æœ‰çš„socket
+    std::set<Socket*> _sockets;
+    
+    // å¾…å…³é—­socketé˜Ÿåˆ—
+    std::list<Socket*> _socket_reap_queue;
 
-	Socket* lookup_socket(const entity_addr_t& k)
-	{
-		// std::unordered_map<entity_addr_t, Socket*>::iterator iter = _rank_socket.find(k);
-		std::map<entity_addr_t, Socket*>::iterator iter = _rank_socket.find(k);
-		if (iter == _rank_socket.end())
-		{
-			return NULL;
-		}
+    Cond _stop_cond;
+    // messengeræ˜¯å¦å·²åœæ­¢
+    bool _stopped = true;
+    Throttle _dispatch_throttler;
 
-		if (atomic_read(&(iter->second->_state_closed)))
-		{
-			return NULL;
-		}
-		
-		return iter->second;
-	}
+    // å›æ”¶socketçº¿ç¨‹æ˜¯å¦å·²å¯åŠ¨
+    bool _reaper_started;
+
+    // å›æ”¶socketçº¿ç¨‹æ˜¯å¦å·²åœæ­¢
+    bool _reaper_stop;
+
+    Cond _reaper_cond;
+
+    Cond  _wait_cond;
+
+    friend class Socket;
+
+    /**
+     * æŸ¥æ‰¾å·²æœ‰çš„è¿æ¥
+     *
+     */
+    Socket* lookup_socket(const entity_addr_t& k)
+    {
+        // std::unordered_map<entity_addr_t, Socket*>::iterator iter = _rank_socket.find(k);
+        std::map<entity_addr_t, Socket*>::iterator iter = _rank_socket.find(k);
+        if (iter == _rank_socket.end())
+        {
+            return NULL;
+        }
+
+        if (atomic_read(&(iter->second->_state_closed)))
+        {
+            return NULL;
+        }
+        
+        return iter->second;
+    }
 
 public:
 
-	int _timeout;
+    int _timeout;
 
-	Connection* _local_connection;
-	
-	uint32_t get_global_seq(uint32_t old = 0)
-	{
-    	SpinLock::Locker locker(_global_seq_lock);
-		
-		if (old > _global_seq)
-		{
-			_global_seq = old;
-		}
-		
-		uint32_t ret = ++_global_seq;
-			
-		return ret;
-	}
+    Connection* _local_connection;
 
-	void init_local_connection();
-	
-	void reaper_entry();
+    /**
+     * è·å–sequence
+     *
+     */
+    uint32_t get_global_seq(uint32_t old = 0)
+    {
+        SpinLock::Locker locker(_global_seq_lock);
+        
+        if (old > _global_seq)
+        {
+            _global_seq = old;
+        }
+        
+        uint32_t ret = ++_global_seq;
+            
+        return ret;
+    }
 
-	void queue_reap(Socket* s);
+    void init_local_connection();
 
-	bool is_connected(Connection *con);
+    /**
+     * å›æ”¶socket
+     *
+     */
+    void reaper_entry();
+
+    /**
+     * å°†socketæ”¾å…¥å¾…å›æ”¶é˜Ÿåˆ—
+     *
+     */
+    void queue_reap(Socket* s);
+
+    /**
+     * åˆ¤æ–­socketæ˜¯å¦open
+     *
+     */
+    bool is_connected(Connection *con);
 };
 
 #endif

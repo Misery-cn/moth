@@ -10,7 +10,7 @@ public:
     virtual unsigned length() const = 0;
 
     virtual void remove_by_filter(std::function<bool (T)> f) = 0;
-	
+    
     virtual void remove_by_class(K k, std::list<T>* out) = 0;
 
     virtual void enqueue_strict(K cl, unsigned priority, T item) = 0;

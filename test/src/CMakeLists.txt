@@ -31,7 +31,7 @@ SET(SRC_LIST test.cpp
     ../../trunk/src/sys/share_memory.cpp
     ../../trunk/src/sys/spinlock.cpp
     ../../trunk/src/exception/exception.cpp
-	../../trunk/src/common/argparse.cpp
+    ../../trunk/src/common/argparse.cpp
     ../../trunk/src/common/armor.cpp
     ../../trunk/src/common/buffer.cpp
     ../../trunk/src/common/config_utils.cpp
@@ -40,12 +40,11 @@ SET(SRC_LIST test.cpp
     ../../trunk/src/common/crc32_intel_baseline.c
     ../../trunk/src/common/crc32_intel_fast.c
     ../../trunk/src/common/crc32_sctp.c
-	${yasm_srcs}
+    ${yasm_srcs}
     ../../trunk/src/common/env.cpp
     ../../trunk/src/common/page.cpp
     ../../trunk/src/common/safe_io.cpp
     ../../trunk/src/common/singleton.cpp
-    ../../trunk/src/common/strtol.cpp
     ../../trunk/src/common/throttle.cpp
     ../../trunk/src/common/timer.cpp
     ../../trunk/src/common/time_utils.cpp

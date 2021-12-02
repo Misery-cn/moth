@@ -5,7 +5,7 @@
 
 
 Thread::Thread() throw (Exception, SysCallException)
-	// ´´½¨Ò»¸öµİ¹éËø
+    // åˆ›å»ºä¸€ä¸ªé€’å½’é”
     : _lock(true), _stop(false), _state(state_sleeping), _stack_size(0)
 {
     int r = pthread_attr_init(&_attr);
@@ -18,15 +18,15 @@ Thread::Thread() throw (Exception, SysCallException)
 
 Thread::~Thread() throw ()
 {
-	pthread_attr_destroy(&_attr);
+    pthread_attr_destroy(&_attr);
 }
 
 void* Thread::thread_proc(void* thread_param)
 {
     Thread* thread = (Thread *)thread_param;
-	// go!
+    // go!
     thread->entry();
-	
+    
     return NULL;
 }
 
@@ -41,29 +41,29 @@ void Thread::create(bool detach) throw (Exception, SysCallException)
 
     int r = 0;
 
-    // ÉèÖÃÏß³ÌÕ»´óĞ¡
+    // è®¾ç½®çº¿ç¨‹æ ˆå¤§å°
     if (0 < _stack_size)
-	{
-		r = pthread_attr_setstacksize(&_attr, _stack_size);
-		if (0 != r)
-		{
-			THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_attr_setstacksize");
-		}
-	}
+    {
+        r = pthread_attr_setstacksize(&_attr, _stack_size);
+        if (0 != r)
+        {
+            THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_attr_setstacksize");
+        }
+    }
         
-	// ÉèÖÃÏß³ÌÔËĞĞ·½Ê½
-	r = pthread_attr_setdetachstate(&_attr, detach ? PTHREAD_CREATE_DETACHED : PTHREAD_CREATE_JOINABLE);
-	if (0 != r)
-	{
-		THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_attr_setdetachstate");
-	}
+    // è®¾ç½®çº¿ç¨‹è¿è¡Œæ–¹å¼
+    r = pthread_attr_setdetachstate(&_attr, detach ? PTHREAD_CREATE_DETACHED : PTHREAD_CREATE_JOINABLE);
+    if (0 != r)
+    {
+        THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_attr_setdetachstate");
+    }
        
-	// ´´½¨Ïß³Ì
+    // åˆ›å»ºçº¿ç¨‹
     r = pthread_create(&_thread, &_attr, thread_proc, this);
-	if (0 != r)
-	{
-		THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_create");
-	}
+    if (0 != r)
+    {
+        THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_create");
+    }
 }
 
 size_t Thread::get_stack_size() const throw (SysCallException)
@@ -71,28 +71,28 @@ size_t Thread::get_stack_size() const throw (SysCallException)
     size_t stack_size = 0;
     int r = pthread_attr_getstacksize(&_attr, &stack_size);
     if (0 != r)
-	{
-		// RUNLOG or export exception
-		THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_attr_getstacksize");
-	}
+    {
+        // RUNLOG or export exception
+        THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_attr_getstacksize");
+    }
 
     return stack_size;
 }
 
 void Thread::join() throw (SysCallException)
 {
-    // Ïß³Ì×Ô¼º²»ÄÜµ÷ÓÃjoin
+    // çº¿ç¨‹è‡ªå·±ä¸èƒ½è°ƒç”¨join
     if (Thread::get_current_thread_id() != this->get_thread_id())
     {
-    	if (0 < _thread)
-		{
-			int r = pthread_join(_thread, NULL);
-	        if (0 != r)
-			{
-				// RUNLOG or export exception
-				THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_join");
-			}
-		}
+        if (0 < _thread)
+        {
+            int r = pthread_join(_thread, NULL);
+            if (0 != r)
+            {
+                // RUNLOG or export exception
+                THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_join");
+            }
+        }
     }
 }
 
@@ -100,10 +100,10 @@ void Thread::detach() throw (SysCallException)
 {
     int r = pthread_detach(_thread);
     if (0 != r)
-	{
-		// RUNLOG or export exception
-		THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_detach");
-	}
+    {
+        // RUNLOG or export exception
+        THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_detach");
+    }
 }
 
 bool Thread::can_join() const throw (SysCallException)
@@ -111,10 +111,10 @@ bool Thread::can_join() const throw (SysCallException)
     int state;
     int r = pthread_attr_getdetachstate(&_attr, &state);
     if (0 != r)
-	{
-		// RUNLOG or export exception
-		THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_attr_getdetachstate");
-	}
+    {
+        // RUNLOG or export exception
+        THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_attr_getdetachstate");
+    }
 
     return (PTHREAD_CREATE_JOINABLE == state);
 }
@@ -126,13 +126,13 @@ bool Thread::is_stop() const
 
 void Thread::do_wakeup(bool stop)
 {   
-    // Ïß³ÌÖÕÖ¹±êÊ¶
+    // çº¿ç¨‹ç»ˆæ­¢æ ‡è¯†
     if (stop)
-	{
-		_stop = stop;
-	}
+    {
+        _stop = stop;
+    }
     
-    // ±£Ö¤ÔÚ»½ĞÑÏß³ÌÖ®Ç°£¬ÒÑ¾­½«ËüµÄ×´Ì¬ĞŞ¸ÄÎªstate_wakeup
+    // ä¿è¯åœ¨å”¤é†’çº¿ç¨‹ä¹‹å‰ï¼Œå·²ç»å°†å®ƒçš„çŠ¶æ€ä¿®æ”¹ä¸ºstate_wakeup
     if (state_sleeping == _state)
     {
         _state = state_wakeuped;
@@ -146,7 +146,7 @@ void Thread::do_wakeup(bool stop)
 
 void Thread::wakeup()
 {
-    MutexGuard g(_lock);
+    Mutex::Locker locker(_lock);
     do_wakeup(false);
 }
 
@@ -156,10 +156,10 @@ void Thread::stop(bool wait_stop) throw (Exception, SysCallException)
     {
         _stop = true;
         before_stop();
-        MutexGuard g(_lock);
+        Mutex::Locker locker(_lock);
         do_wakeup(true);
     }
-	
+    
     if (wait_stop && can_join())
     {
         join();
@@ -168,26 +168,26 @@ void Thread::stop(bool wait_stop) throw (Exception, SysCallException)
 
 void Thread::do_sleep(int milliseconds)
 {
-    // ·Ç±¾Ïß³Ìµ÷ÓÃÎŞĞ§
+    // éæœ¬çº¿ç¨‹è°ƒç”¨æ— æ•ˆ
     if (this->get_thread_id() == Thread::get_current_thread_id())
     {    
-        MutexGuard g(_lock);
+        Mutex::Locker locker(_lock);
         if (!is_stop())
         {
             if (_state != state_wakeuped)
             {        
                 _state = state_sleeping;
                 if (0 > milliseconds)
-				{
+                {
                     _cond.wait(_lock);
-				}
+                }
                 else
-				{
-					_cond.timed_wait(_lock, milliseconds); 
-				}               
+                {
+                    _cond.timed_wait(_lock, milliseconds); 
+                }               
             }
 
-            // ²»ÉèÖÃÎªstate_wakeup£¬±£Ö¤ÔÙ´Î¶¼¿ÉÒÔµ÷ÓÃdo_millisleep
+            // ä¸è®¾ç½®ä¸ºstate_wakeupï¼Œä¿è¯å†æ¬¡éƒ½å¯ä»¥è°ƒç”¨do_millisleep
             _state = state_running;
         }
     }

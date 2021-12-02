@@ -10,102 +10,102 @@
 class Thread
 {
 public:
-    // »ñÈ¡µ±Ç°Ïß³ÌºÅ
+    // è·å–å½“å‰çº¿ç¨‹å·
     static uint32_t get_current_thread_id() throw ();
 
 public:
-	Thread() throw (Exception, SysCallException);
-	virtual ~Thread() throw ();
-	
-	// ÓÉÅÉÉúÀàÊµÏÖ
-	// ²»ÄÜÖ±½Óµ÷ÓÃentry,²»ÄÜÖ±½Óµ÷ÓÃ,Ó¦¸Ãµ÷ÓÃcreateÆô¶¯Ïß³Ì
-	virtual void entry() = 0;
+    Thread() throw (Exception, SysCallException);
+    virtual ~Thread() throw ();
+    
+    // ç”±æ´¾ç”Ÿç±»å®ç°
+    // ä¸èƒ½ç›´æ¥è°ƒç”¨entry,ä¸èƒ½ç›´æ¥è°ƒç”¨,åº”è¯¥è°ƒç”¨createå¯åŠ¨çº¿ç¨‹
+    virtual void entry() = 0;
 
-    // ½«stop_³ÉÔ±ÉèÖÃÎªtrue£¬Ïß³Ì¿ÉÒÔ¸ù¾İ_stop×´Ì¬À´¾ö¶¨ÊÇ·ñÍË³öÏß³Ì      
-    // wait_stop: ÊÇ·ñµÈ´ıÏß³Ì½áÊø£¬Ö»ÓĞµ±Ïß³ÌÊÇ¿ÉJoinÊ±²ÅÓĞĞ§
+    // å°†stop_æˆå‘˜è®¾ç½®ä¸ºtrueï¼Œçº¿ç¨‹å¯ä»¥æ ¹æ®_stopçŠ¶æ€æ¥å†³å®šæ˜¯å¦é€€å‡ºçº¿ç¨‹      
+    // wait_stop: æ˜¯å¦ç­‰å¾…çº¿ç¨‹ç»“æŸï¼Œåªæœ‰å½“çº¿ç¨‹æ˜¯å¯Joinæ—¶æ‰æœ‰æ•ˆ
     virtual void stop(bool wait_stop = true) throw (Exception, SysCallException);
 
-	// Ä¬ÈÏÆô¶¯Ò»¸ö¿ÉjoinµÄÏß³Ì
-    // detach: ÊÇ·ñÒÔ¿É·ÖÀëÄ£Ê½Æô¶¯Ïß³Ì
-	void create(bool detach = false) throw (Exception, SysCallException);
+    // é»˜è®¤å¯åŠ¨ä¸€ä¸ªå¯joinçš„çº¿ç¨‹
+    // detach: æ˜¯å¦ä»¥å¯åˆ†ç¦»æ¨¡å¼å¯åŠ¨çº¿ç¨‹
+    void create(bool detach = false) throw (Exception, SysCallException);
 
-    // ÉèÖÃÏß³ÌÕ»´óĞ¡¡£Ó¦µ±ÔÚstartÖ®Ç°µ÷ÓÃ£¬·ñÔòÉèÖÃÎŞĞ§£¬Èç·ÅÔÚbefore_startµ±ÖĞ
+    // è®¾ç½®çº¿ç¨‹æ ˆå¤§å°ã€‚åº”å½“åœ¨startä¹‹å‰è°ƒç”¨ï¼Œå¦åˆ™è®¾ç½®æ— æ•ˆï¼Œå¦‚æ”¾åœ¨before_startå½“ä¸­
     void set_stack_size(uint32_t stack_size) { _stack_size = stack_size; }
     
-    // µÃµ½Ïß³ÌÕ»´óĞ¡×Ö½ÚÊı
+    // å¾—åˆ°çº¿ç¨‹æ ˆå¤§å°å­—èŠ‚æ•°
     size_t get_stack_size() const throw (SysCallException);
 
-    // µÃµ½±¾Ïß³ÌºÅ
+    // å¾—åˆ°æœ¬çº¿ç¨‹å·
     uint32_t get_thread_id() const { return _thread; }
     
-    // µÈ´ıÏß³Ì·µ»Ø
+    // ç­‰å¾…çº¿ç¨‹è¿”å›
     void join() throw (SysCallException);
 
-    // ½«Ïß³ÌÉèÖÃÎª¿É·ÖÀëµÄ
+    // å°†çº¿ç¨‹è®¾ç½®ä¸ºå¯åˆ†ç¦»çš„
     void detach() throw (SysCallException);
 
-    // ·µ»ØÏß³ÌÊÇ·ñ¿Éjoin
+    // è¿”å›çº¿ç¨‹æ˜¯å¦å¯join
     bool can_join() const throw (SysCallException);
 
-    // Èç¹ûÏß³ÌÕı´¦ÓÚµÈ´ı×´Ì¬£¬Ôò»½ĞÑ
+    // å¦‚æœçº¿ç¨‹æ­£å¤„äºç­‰å¾…çŠ¶æ€ï¼Œåˆ™å”¤é†’
     void wakeup();
 
-	// ÖÕÖ¹
-	int kill(int signal);
-	
-	// °ó¶¨cpuºË
-	int set_affinity(int cpuid);
+    // ç»ˆæ­¢
+    int kill(int signal);
+    
+    // ç»‘å®šcpuæ ¸
+    int set_affinity(int cpuid);
 
-	// ÊÇ·ñÒÑÆô¶¯
-	bool is_started() const { return 0 != _thread; }
-	
-	// ÊÇ·ñÊÇµ±Ç°Ïß³Ì
-	bool am_self() const { return pthread_self() == _thread; }
-	
+    // æ˜¯å¦å·²å¯åŠ¨
+    bool is_started() const { return 0 != _thread; }
+    
+    // æ˜¯å¦æ˜¯å½“å‰çº¿ç¨‹
+    bool am_self() const { return pthread_self() == _thread; }
+    
 protected:
 
-	// ÅĞ¶ÏÏß³ÌÊÇ·ñÓ¦µ±ÍË³ö£¬Ä¬ÈÏ·µ»Østop_µÄÖµ
+    // åˆ¤æ–­çº¿ç¨‹æ˜¯å¦åº”å½“é€€å‡ºï¼Œé»˜è®¤è¿”å›stop_çš„å€¼
     virtual bool is_stop() const;
 
-	// Ïß³Ì¿ÉÒÔµ÷ÓÃËü½øÈëË¯Ãß×´Ì¬£¬²¢ÇÒ¿ÉÒÔÍ¨¹ıµ÷ÓÃdo_wakeup»½ĞÑ
+    // çº¿ç¨‹å¯ä»¥è°ƒç”¨å®ƒè¿›å…¥ç¡çœ çŠ¶æ€ï¼Œå¹¶ä¸”å¯ä»¥é€šè¿‡è°ƒç”¨do_wakeupå”¤é†’
     void do_sleep(int milliseconds);
 
 private:
-	// Ïß³ÌÖ´ĞĞº¯Êı
-	static void* thread_proc(void* thread_param);
-	
-	// »½ĞÑÏß³Ì
+    // çº¿ç¨‹æ‰§è¡Œå‡½æ•°
+    static void* thread_proc(void* thread_param);
+    
+    // å”¤é†’çº¿ç¨‹
     void do_wakeup(bool stop);
-	
-	// Ïß³ÌÆô¶¯Ç°µÄ²Ù×÷
-	// ÓÉÅÉÉúÀàÊµÏÖ
+    
+    // çº¿ç¨‹å¯åŠ¨å‰çš„æ“ä½œ
+    // ç”±æ´¾ç”Ÿç±»å®ç°
     virtual void before_start() {}
 
-	// Ïß³Ì½áÊøÇ°µÄ²Ù×÷
-	// ÓÉÅÉÉúÀàÊµÏÖ
+    // çº¿ç¨‹ç»“æŸå‰çš„æ“ä½œ
+    // ç”±æ´¾ç”Ÿç±»å®ç°
     virtual void before_stop() {}
 
 protected:
-	// »¥³âËø
+    // äº’æ–¥é”
     Mutex _lock;
 
 private:
-	// Ìõ¼ş±äÁ¿
+    // æ¡ä»¶å˜é‡
     Cond _cond;
-	// ÊÇ·ñÍ£Ö¹Ïß³Ì±êÊ¶
+    // æ˜¯å¦åœæ­¢çº¿ç¨‹æ ‡è¯†
     volatile bool _stop;
-	// Ïß³Ì×´Ì¬
+    // çº¿ç¨‹çŠ¶æ€
     volatile enum 
-	{
-		state_sleeping, 
-		state_wakeuped, 
-		state_running
-	} _state;
-	
-	// Ïß³Ìid
+    {
+        state_sleeping, 
+        state_wakeuped, 
+        state_running
+    } _state;
+    
+    // çº¿ç¨‹id
     pthread_t _thread;
     pthread_attr_t _attr;
-	// Õ»´óĞ¡
+    // æ ˆå¤§å°
     uint32_t _stack_size;    
 };
 

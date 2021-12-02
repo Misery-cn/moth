@@ -10,23 +10,23 @@ class Cond
 public:
     Cond() throw (SysCallException);
 
-	// ²»»áÅ×³öÒì³£
+    // ä¸ä¼šæŠ›å‡ºå¼‚å¸¸
     ~Cond() throw ();
 
-	// Ïß³Ì¹ÒÆğ,µÈ´ı±»»½ĞÑ
+    // çº¿ç¨‹æŒ‚èµ·,ç­‰å¾…è¢«å”¤é†’
     void wait(Mutex& lock) throw (SysCallException);
 
-	// Ïß³Ì¹ÒÆğ,±»»½ĞÑ»òÕß³¬Ê±
+    // çº¿ç¨‹æŒ‚èµ·,è¢«å”¤é†’æˆ–è€…è¶…æ—¶
     bool timed_wait(Mutex& lock, uint32_t millisecond) throw (SysCallException);
 
-	// »½ĞÑ¹ÒÆğµÄÏß³Ì
+    // å”¤é†’æŒ‚èµ·çš„çº¿ç¨‹
     void signal() throw (SysCallException);
 
-	// »½ĞÑËùÓĞµÄ¹ÒÆğÏß³Ì
+    // å”¤é†’æ‰€æœ‰çš„æŒ‚èµ·çº¿ç¨‹
     void broadcast() throw (SysCallException);
     
 private:
-	pthread_condattr_t _attr;
+    pthread_condattr_t _attr;
     pthread_cond_t _cond;
 };
 

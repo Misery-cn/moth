@@ -1,76 +1,75 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include "time_utils.h"
-#include "string_utils.h"
 
 // UTILS_NS_BEGIN
 
 /*
- * ÄÜ±»4Õû³ýµÄÎªÈòÄê
- * Èç¹ûÊÇÊÀ¼ÍÄê(1900,2000),Ö»ÓÐ±»400Õû³ý²ÅÎªÈòÄê,
- * ÄÜ±»100Õû³ýµ«ÊÇ²»ÄÜ±»400Õû³ýµÄÔòÎªÆ½Äê
+ * èƒ½è¢«4æ•´é™¤çš„ä¸ºé—°å¹´
+ * å¦‚æžœæ˜¯ä¸–çºªå¹´(1900,2000),åªæœ‰è¢«400æ•´é™¤æ‰ä¸ºé—°å¹´,
+ * èƒ½è¢«100æ•´é™¤ä½†æ˜¯ä¸èƒ½è¢«400æ•´é™¤çš„åˆ™ä¸ºå¹³å¹´
 */
 int32_t is_leap(int32_t year)
 {
-	if(year % 400 == 0)
-		return 1;
-	if(year % 100 == 0)
-		return 0;
-	if(year % 4 == 0)
-		return 1;
-	return 0;
+    if(year % 400 == 0)
+        return 1;
+    if(year % 100 == 0)
+        return 0;
+    if(year % 4 == 0)
+        return 1;
+    return 0;
 }
 
 int32_t days_from_0(int32_t year)
 {
-	year--;
-	// ÈòÄêÓÐ¶àÒ»Ìì
-	return 365 * year + (year / 400) - (year / 100) + (year / 4);
+    year--;
+    // é—°å¹´æœ‰å¤šä¸€å¤©
+    return 365 * year + (year / 400) - (year / 100) + (year / 4);
 }
 
 int32_t days_from_1970(int32_t year)
 {
-	static const int days_from_0_to_1970 = days_from_0(1970);
-	return days_from_0(year) - days_from_0_to_1970;
+    static const int days_from_0_to_1970 = days_from_0(1970);
+    return days_from_0(year) - days_from_0_to_1970;
 }
 
 int32_t days_from_1jan(int32_t year, int32_t month, int32_t day)
 {
-	static const int32_t days[2][12] =
-	{
-		{ 0,31,59,90,120,151,181,212,243,273,304,334},
-		{ 0,31,60,91,121,152,182,213,244,274,305,335}
-	};
+    static const int32_t days[2][12] =
+    {
+        { 0,31,59,90,120,151,181,212,243,273,304,334},
+        { 0,31,60,91,121,152,182,213,244,274,305,335}
+    };
 
-	return days[is_leap(year)][month-1] + day - 1;
+    return days[is_leap(year)][month-1] + day - 1;
 }
 
 time_t internal_timegm(tm const* t)
 {
-	int year = t->tm_year + 1900;
-	int month = t->tm_mon;
-	
-	if(month > 11)
-	{
-		year += month / 12;
-		month %= 12;
-	}
-	else if(month < 0)
-	{
-		int years_diff = (-month + 11)/12;
-		year -= years_diff;
-		month+=12 * years_diff;
-	}
-	
-	month++;
-	int day = t->tm_mday;
-	int day_of_year = days_from_1jan(year,month,day);
-	int days_since_epoch = days_from_1970(year) + day_of_year ;
+    int year = t->tm_year + 1900;
+    int month = t->tm_mon;
+    
+    if(month > 11)
+    {
+        year += month / 12;
+        month %= 12;
+    }
+    else if(month < 0)
+    {
+        int years_diff = (-month + 11)/12;
+        year -= years_diff;
+        month+=12 * years_diff;
+    }
+    
+    month++;
+    int day = t->tm_mday;
+    int day_of_year = days_from_1jan(year,month,day);
+    int days_since_epoch = days_from_1970(year) + day_of_year ;
 
-	time_t seconds_in_day = 3600 * 24;
-	time_t result = seconds_in_day * days_since_epoch + 3600 * t->tm_hour + 60 * t->tm_min + t->tm_sec;
+    time_t seconds_in_day = 3600 * 24;
+    time_t result = seconds_in_day * days_since_epoch + 3600 * t->tm_hour + 60 * t->tm_min + t->tm_sec;
 
-	return result;
+    return result;
 }
 
 bool TimeUtils::is_same_day(time_t t1, time_t t2)
@@ -102,14 +101,14 @@ uint32_t TimeUtils::time2date(time_t t)
 void TimeUtils::get_current_datetime(char* datetime_buffer, size_t datetime_buffer_size, const char* format)
 {
     struct tm result;
-	// Ãë¼¶Ê±¼äÊ¹ÓÃtime
-	// ºÁÃë¼¶Ê±¼äÊ¹ÓÃgettimeofday
-	// Î¢Ãë¼¶Ê±¼äÊ¹ÓÃclock_gettime
+    // ç§’çº§æ—¶é—´ä½¿ç”¨time
+    // æ¯«ç§’çº§æ—¶é—´ä½¿ç”¨gettimeofday
+    // å¾®ç§’çº§æ—¶é—´ä½¿ç”¨clock_gettime
     time_t now = time(NULL);
 
     localtime_r(&now, &result);
     snprintf(datetime_buffer, datetime_buffer_size, format, result.tm_year + 1900, result.tm_mon + 1, 
-				result.tm_mday, result.tm_hour, result.tm_min, result.tm_sec);
+                result.tm_mday, result.tm_hour, result.tm_min, result.tm_sec);
 }
 
 std::string TimeUtils::get_current_datetime(const char* format)
@@ -160,7 +159,7 @@ void TimeUtils::get_current_datetime_struct(struct tm* current_datetime_struct)
 void TimeUtils::to_current_datetime(struct tm* current_datetime_struct, char* datetime_buffer, size_t datetime_buffer_size, const char* format)
 {
     snprintf(datetime_buffer, datetime_buffer_size, format, current_datetime_struct->tm_year + 1900, current_datetime_struct->tm_mon + 1, 
-			current_datetime_struct->tm_mday, current_datetime_struct->tm_hour, current_datetime_struct->tm_min, current_datetime_struct->tm_sec);
+            current_datetime_struct->tm_mday, current_datetime_struct->tm_hour, current_datetime_struct->tm_min, current_datetime_struct->tm_sec);
 }
 
 std::string TimeUtils::to_current_datetime(struct tm* current_datetime_struct, const char* format)
@@ -276,45 +275,45 @@ bool TimeUtils::datetime_struct_from_string(const char* str, struct tm* datetime
     size_t str_len = strlen(tmp_str);
     if (str_len != sizeof("YYYY-MM-DD HH:MM:SS")-1) return false;
     if ((tmp_str[4] != '-') || (tmp_str[7] != '-') || (tmp_str[10] != ' ')
-		|| (tmp_str[13] != ':') || (tmp_str[16] != ':'))
+        || (tmp_str[13] != ':') || (tmp_str[16] != ':'))
     {
         return false;
     }
 
     using namespace util;
-    if (!StringUtils::string2int32(tmp_str, datetime_struct->tm_year, sizeof("YYYY")-1, false))
-	{
-		return false;
+    if (!StringUtils::string2int(tmp_str, datetime_struct->tm_year, sizeof("YYYY")-1, false))
+    {
+        return false;
     }
-	
+    
     if ((3000 < datetime_struct->tm_year) || (1900 > datetime_struct->tm_year))
-	{
-		return false;
+    {
+        return false;
     }
 
     tmp_str += sizeof("YYYY");
-    if (!StringUtils::string2int32(tmp_str, datetime_struct->tm_mon, sizeof("MM")-1, true))
-	{
-		return false;
+    if (!StringUtils::string2int(tmp_str, datetime_struct->tm_mon, sizeof("MM")-1, true))
+    {
+        return false;
     }
-	
+    
     if ((12 < datetime_struct->tm_mon) || (1 > datetime_struct->tm_mon))
-	{
-		return false;
+    {
+        return false;
     }
 
     tmp_str += sizeof("MM");
-    if (!StringUtils::string2int32(tmp_str, datetime_struct->tm_mday, sizeof("DD")-1, true))
-	{
-		return false;
+    if (!StringUtils::string2int(tmp_str, datetime_struct->tm_mday, sizeof("DD")-1, true))
+    {
+        return false;
     }
-	
+    
     if (1 > datetime_struct->tm_mday)
-	{
-		return false;
+    {
+        return false;
     }
 
-    // ÈòÄê¶þÔÂ¿ÉÒÔÓÐ29Ìì
+    // é—°å¹´äºŒæœˆå¯ä»¥æœ‰29å¤©
     if ((TimeUtils::is_leap_year(datetime_struct->tm_year)) && (2 == datetime_struct->tm_mon) && (29 < datetime_struct->tm_mday))
     {
         return false;
@@ -322,51 +321,51 @@ bool TimeUtils::datetime_struct_from_string(const char* str, struct tm* datetime
     else if (28 < datetime_struct->tm_mday)
     {
         return false;
-   	}
+       }
 
     tmp_str += sizeof("DD");
-    if (!StringUtils::string2int32(tmp_str, datetime_struct->tm_hour, sizeof("HH")-1, true))
-	{
-		return false;
+    if (!StringUtils::string2int(tmp_str, datetime_struct->tm_hour, sizeof("HH")-1, true))
+    {
+        return false;
     }
-	
+    
     if ((24 < datetime_struct->tm_hour) || (0 > datetime_struct->tm_hour))
-	{
-		return false;
+    {
+        return false;
     }
 
     tmp_str += sizeof("HH");
-    if (!StringUtils::string2int32(tmp_str, datetime_struct->tm_min, sizeof("MM")-1, true))
-	{
-		return false;
+    if (!StringUtils::string2int(tmp_str, datetime_struct->tm_min, sizeof("MM")-1, true))
+    {
+        return false;
     }
-	
+    
     if ((60 < datetime_struct->tm_min) || (0 > datetime_struct->tm_min))
-	{
-		return false;
+    {
+        return false;
     }
 
     tmp_str += sizeof("MM");
-    if (!StringUtils::string2int32(tmp_str, datetime_struct->tm_sec, sizeof("SS")-1, true))
-	{
-		return false;
+    if (!StringUtils::string2int(tmp_str, datetime_struct->tm_sec, sizeof("SS")-1, true))
+    {
+        return false;
     }
-	
+    
     if ((60 < datetime_struct->tm_sec) || ( 0 > datetime_struct->tm_sec))
-	{
-		return false;
+    {
+        return false;
     }
 
     datetime_struct->tm_isdst = 0;
     datetime_struct->tm_wday  = 0;
     datetime_struct->tm_yday  = 0;
 
-    // ¼ÆËãµ½ÁËÒ»ÄêÖÐµÄµÚ¼¸Ìì
+    // è®¡ç®—åˆ°äº†ä¸€å¹´ä¸­çš„ç¬¬å‡ å¤©
     for (int i = 1; i <= datetime_struct->tm_mon; ++i)
     {
         if (i == datetime_struct->tm_mon)
         {
-            // ¸ÕºÃÊÇÕâ¸öÔÂ
+            // åˆšå¥½æ˜¯è¿™ä¸ªæœˆ
             datetime_struct->tm_yday += datetime_struct->tm_mday;
         }
         else
@@ -394,7 +393,7 @@ bool TimeUtils::datetime_struct_from_string(const char* str, struct tm* datetime
         }
     }
 
-    // ÔÂ»ùÊý
+    // æœˆåŸºæ•°
     static int leap_month_base[] = { -1, 0, 3, 4, 0, 2, 5, 0, 3, 6, 1, 4, 6 };
     static int common_month_base[] = { -1, 0, 3, 3, 6, 1, 4, 0, 3, 5, 0, 3, 5 };
 
@@ -411,11 +410,11 @@ bool TimeUtils::datetime_struct_from_string(const char* str, struct tm* datetime
          month_base = common_month_base;
     }
 
-    // ¼ÆËãÐÇÆÚ¼¸
+    // è®¡ç®—æ˜ŸæœŸå‡ 
     datetime_struct->tm_wday = (datetime_struct->tm_year +  datetime_struct->tm_year / 4 +  datetime_struct->tm_year / 400 - 
-    							datetime_struct->tm_year / 100 -  year_base +  month_base[datetime_struct->tm_mon] +  datetime_struct->tm_mday) / 7;
+                                datetime_struct->tm_year / 100 -  year_base +  month_base[datetime_struct->tm_mon] +  datetime_struct->tm_mday) / 7;
 
-    // ÄêÔÂ´¦Àí
+    // å¹´æœˆå¤„ç†
     datetime_struct->tm_mon -= 1;
     datetime_struct->tm_year -= 1900;
     return true;
@@ -426,8 +425,8 @@ bool TimeUtils::datetime_struct_from_string(const char* str, time_t* datetime)
 {
     struct tm datetime_struct;
     if (!datetime_struct_from_string(str, &datetime_struct))
-	{
-		return false;
+    {
+        return false;
     }
 
     *datetime = mktime(&datetime_struct);
@@ -441,7 +440,7 @@ std::string TimeUtils::to_string(time_t datetime, const char* format)
 
     char datetime_buffer[sizeof("YYYY-MM-DD HH:SS:MM") + 100];
     (void)snprintf(datetime_buffer, sizeof(datetime_buffer), format, result.tm_year+1900, 
-					result.tm_mon+1, result.tm_mday, result.tm_hour, result.tm_min, result.tm_sec);
+                    result.tm_mon+1, result.tm_mday, result.tm_hour, result.tm_min, result.tm_sec);
 
     return datetime_buffer;
 }
@@ -509,12 +508,12 @@ void get_formatted_current_datetime(char* datetime_buffer, size_t datetime_buffe
     if (with_milliseconds)
     {
         snprintf(datetime_buffer, datetime_buffer_size, "%04d-%02d-%02d %02d:%02d:%02d/%u", result.tm_year + 1900, result.tm_mon + 1, 
-				result.tm_mday, result.tm_hour, result.tm_min, result.tm_sec, (unsigned int)(current.tv_usec / 1000));
+                result.tm_mday, result.tm_hour, result.tm_min, result.tm_sec, (unsigned int)(current.tv_usec / 1000));
     }
     else
     {
         snprintf(datetime_buffer, datetime_buffer_size, "%04d-%02d-%02d %02d:%02d:%02d", result.tm_year + 1900, result.tm_mon + 1, 
-				result.tm_mday, result.tm_hour, result.tm_min, result.tm_sec);
+                result.tm_mday, result.tm_hour, result.tm_min, result.tm_sec);
     }
 }
 
@@ -530,17 +529,17 @@ std::string get_formatted_current_datetime(bool with_milliseconds)
 utime_t clock_now(uint32_t offset)
 {
 #if defined(__linux__)
-	struct timespec tp;
-	clock_gettime(CLOCK_REALTIME, &tp);
-	utime_t n(tp);
+    struct timespec tp;
+    clock_gettime(CLOCK_REALTIME, &tp);
+    utime_t n(tp);
 #else
-	struct timeval tv;
-	gettimeofday(&tv, NULL);
-	utime_t n(&tv);
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    utime_t n(&tv);
 #endif
-	if (!offset)
-		n += offset;
-	return n;
+    if (!offset)
+        n += offset;
+    return n;
 }
 
 // UTILS_NS_END

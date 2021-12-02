@@ -6,59 +6,59 @@
 
 class Logger;
 
-// ÈÕÖ¾Àà
+// æ—¥å¿—ç±»
 class Log
 {
 public:
-	Log();
-	virtual ~Log();
+    Log();
+    virtual ~Log();
 
-	bool init();
+    bool init();
 
-	void do_log(log_level_t level, const char* format, ...);
-	
-	void set_log_level(uint32_t level);
+    void do_log(log_level_t level, const char* format, ...);
+    
+    void set_log_level(uint32_t level);
 
 private:
-	
-	// ÔËĞĞÊ±ÈÕÖ¾
-	Logger* _run;
+    
+    // è¿è¡Œæ—¶æ—¥å¿—
+    Logger* _run;
 };
 
 
-// ÈÕÖ¾¼ÇÂ¼Æ÷
+// æ—¥å¿—è®°å½•å™¨
 class Logger
 {
 public:
-	Logger();
-	virtual ~Logger();
+    Logger();
+    virtual ~Logger();
 
-	void set_appender(Appender* appender)
-	{	
-		_appenders->push_back(&appender->item);
-	}
+    void set_appender(Appender* appender)
+    {    
+        _appenders->push_back(&appender->item);
+    }
 
-	void call_appender(LogEvent* event);
+    void call_appender(LogEvent* event);
 
-	void set_log_level(log_level_t level)
-	{
-		_level = level;
-	}
+    void set_log_level(log_level_t level)
+    {
+        _level = level;
+    }
 
-	log_level_t get_log_level()
-	{
-		return _level;
-	}
+    log_level_t get_log_level()
+    {
+        return _level;
+    }
 
 private:
-	// ÈÕÖ¾¼¶±ğ
-	log_level_t _level;
+    // æ—¥å¿—çº§åˆ«
+    log_level_t _level;
 
-	// ÈÕÖ¾Ä¿µÄµØÁĞ±í
+    // æ—¥å¿—ç›®çš„åœ°åˆ—è¡¨
     ArrayList<Appender*>* _appenders;
 
-	// »¥³âËø
-	Mutex _lock;
+    // äº’æ–¥é”
+    Mutex _lock;
 };
 
 #endif

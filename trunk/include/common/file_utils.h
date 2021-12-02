@@ -7,33 +7,33 @@
 class FileUtils
 {
 public:
-	// ÎÄ¼ş¸´ÖÆº¯Êı,·µ»ØÎÄ¼ş´óĞ¡
-	// src_fd: ´ò¿ªµÄÔ´ÎÄ¼ş¾ä±ú
-	// dst_fd: ´ò¿ªµÄÄ¿µÄÎÄ¼ş¾ä±ú
+    // æ–‡ä»¶å¤åˆ¶å‡½æ•°,è¿”å›æ–‡ä»¶å¤§å°
+    // src_fd: æ‰“å¼€çš„æºæ–‡ä»¶å¥æŸ„
+    // dst_fd: æ‰“å¼€çš„ç›®çš„æ–‡ä»¶å¥æŸ„
     static size_t file_copy(int src_fd, int dst_fd) throw (SysCallException);
     static size_t file_copy(int src_fd, const char* dst_filename) throw (SysCallException);
     static size_t file_copy(const char* src_filename, int dst_fd) throw (SysCallException);
     static size_t file_copy(const char* src_filename, const char* dst_filename) throw (SysCallException);
 
-	// »ñÈ¡ÎÄ¼ş×Ö½ÚÊı
+    // è·å–æ–‡ä»¶å­—èŠ‚æ•°
     static off_t get_file_size(int fd) throw (SysCallException);
     static off_t get_file_size(const char* filepath) throw (SysCallException);
     
-	// »ñÈ¡ÎÄ¼ş32Î»crcÖµ
-	// ×¢Òâ£ºcrc32_file»áĞŞ¸Ä¶ÁĞ´ÎÄ¼şµÄÆ«ÒÆÖµ
+    // è·å–æ–‡ä»¶32ä½crcå€¼
+    // æ³¨æ„ï¼šcrc32_fileä¼šä¿®æ”¹è¯»å†™æ–‡ä»¶çš„åç§»å€¼
     static uint32_t crc32_file(int fd) throw (SysCallException);
     static uint32_t crc32_file(const char* filepath) throw (SysCallException);
     
-	// »ñÈ¡ÎÄ¼şÈ¨ÏŞÄ£Ê½
+    // è·å–æ–‡ä»¶æƒé™æ¨¡å¼
     static uint32_t get_file_mode(int fd) throw (SysCallException);
 
-	// É¾³ıÎÄ¼ş
+    // åˆ é™¤æ–‡ä»¶
     static void remove(const char* filepath) throw (SysCallException);
 
-	// ÖØÃüÃûÎÄ¼ş
+    // é‡å‘½åæ–‡ä»¶
     static void rename(const char* from_filepath, const char* to_filepath) throw (SysCallException);
 
-	static bool exist(const char* filepath);
+    static bool exist(const char* filepath);
 };
 
 // UTILS_NS_END

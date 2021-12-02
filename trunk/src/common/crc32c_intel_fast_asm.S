@@ -47,82 +47,82 @@
 %define %%td1     %3    ; table offset for crc1 (1/3 of buffer)
 
 %IF %%bSize=640
-	sub     len, %%bSize*3
-	js      %%crcB3_end           ;; jump to next level if 3*blockSize > len
+    sub     len, %%bSize*3
+    js      %%crcB3_end           ;; jump to next level if 3*blockSize > len
 %ELSE
-	cmp     len, %%bSize*3
-	jnae    %%crcB3_end           ;; jump to next level if 3*blockSize > len
+    cmp     len, %%bSize*3
+    jnae    %%crcB3_end           ;; jump to next level if 3*blockSize > len
 %ENDIF
-	;;;;;; Calculate CRC of 3 blocks of the buffer ;;;;;;
+    ;;;;;; Calculate CRC of 3 blocks of the buffer ;;;;;;
 %%crcB3_loop:
-					;; rax = crc0 = initial crc
-	xor     rbx, rbx                ;; rbx = crc1 = 0;
-	xor     r10, r10                ;; r10 = crc2 = 0;
+                    ;; rax = crc0 = initial crc
+    xor     rbx, rbx                ;; rbx = crc1 = 0;
+    xor     r10, r10                ;; r10 = crc2 = 0;
 
  %assign i 0
  %rep %%bSize/8 - 1
-	crc32   rax, [bufptmp+i + 0*%%bSize]  ;; update crc0
-	crc32   rbx, [bufptmp+i + 1*%%bSize]  ;; update crc1
-	crc32   r10, [bufptmp+i + 2*%%bSize]  ;; update crc2
-	%assign i (i+8)
+    crc32   rax, [bufptmp+i + 0*%%bSize]  ;; update crc0
+    crc32   rbx, [bufptmp+i + 1*%%bSize]  ;; update crc1
+    crc32   r10, [bufptmp+i + 2*%%bSize]  ;; update crc2
+    %assign i (i+8)
  %endrep
-	crc32   rax, [bufptmp+i + 0*%%bSize]  ;; update crc0
-	crc32   rbx, [bufptmp+i + 1*%%bSize]  ;; update crc1
+    crc32   rax, [bufptmp+i + 0*%%bSize]  ;; update crc0
+    crc32   rbx, [bufptmp+i + 1*%%bSize]  ;; update crc1
 ; SKIP  ;crc32  r10, [bufptmp+i + 2*%%bSize]  ;; update crc2
 
-	; merge in crc0
-	movzx   bufp_dw, al
-	mov     r9d, [crc_init + bufp*4 + %%td2]
-	movzx   bufp_dw, ah
-	shr     eax, 16
-	mov     r11d, [crc_init + bufp*4 + %%td2]
-	shl     r11, 8
-	xor     r9, r11
+    ; merge in crc0
+    movzx   bufp_dw, al
+    mov     r9d, [crc_init + bufp*4 + %%td2]
+    movzx   bufp_dw, ah
+    shr     eax, 16
+    mov     r11d, [crc_init + bufp*4 + %%td2]
+    shl     r11, 8
+    xor     r9, r11
 
-	movzx   bufp_dw, al
-	mov     r11d, [crc_init + bufp*4 + %%td2]
-	movzx   bufp_dw, ah
-	shl     r11, 16
-	xor     r9, r11
-	mov     r11d, [crc_init + bufp*4 + %%td2]
-	shl     r11, 24
-	xor     r9, r11
+    movzx   bufp_dw, al
+    mov     r11d, [crc_init + bufp*4 + %%td2]
+    movzx   bufp_dw, ah
+    shl     r11, 16
+    xor     r9, r11
+    mov     r11d, [crc_init + bufp*4 + %%td2]
+    shl     r11, 24
+    xor     r9, r11
 
-	; merge in crc1
+    ; merge in crc1
 
-	movzx   bufp_dw, bl
-	mov     r11d, [crc_init + bufp*4 + %%td1]
-	movzx   bufp_dw, bh
-	shr     ebx, 16
-	xor     r9, r11
-	mov     r11d, [crc_init + bufp*4 + %%td1]
-	shl     r11, 8
-	xor     r9, r11
+    movzx   bufp_dw, bl
+    mov     r11d, [crc_init + bufp*4 + %%td1]
+    movzx   bufp_dw, bh
+    shr     ebx, 16
+    xor     r9, r11
+    mov     r11d, [crc_init + bufp*4 + %%td1]
+    shl     r11, 8
+    xor     r9, r11
 
-	movzx   bufp_dw, bl
-	mov     r11d, [crc_init + bufp*4 + %%td1]
-	movzx   bufp_dw, bh
-	shl     r11, 16
-	xor     r9, r11
-	mov     r11d, [crc_init + bufp*4 + %%td1]
-	shl     r11, 24
-	xor     r9, r11
+    movzx   bufp_dw, bl
+    mov     r11d, [crc_init + bufp*4 + %%td1]
+    movzx   bufp_dw, bh
+    shl     r11, 16
+    xor     r9, r11
+    mov     r11d, [crc_init + bufp*4 + %%td1]
+    shl     r11, 24
+    xor     r9, r11
 
-	xor     r9, [bufptmp+i + 2*%%bSize]
-	crc32   r10, r9
-	mov     rax, r10
+    xor     r9, [bufptmp+i + 2*%%bSize]
+    crc32   r10, r9
+    mov     rax, r10
 
-	add     bufptmp, %%bSize*3      ;; move to next block
-	sub     len, %%bSize*3
+    add     bufptmp, %%bSize*3      ;; move to next block
+    sub     len, %%bSize*3
 %IF %%bSize=640
-	jns     %%crcB3_loop
+    jns     %%crcB3_loop
 %ENDIF
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 %%crcB3_end:
 %IF %%bSize=640
-	add     len, %%bSize*3
+    add     len, %%bSize*3
 %ENDIF
-	je      do_return               ;; return if remaining data is zero
+    je      do_return               ;; return if remaining data is zero
 %endmacro
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -175,143 +175,143 @@ crc32_iscsi_00:
 %endif
 
 
-	push    rdi
-	push    rbx
+    push    rdi
+    push    rbx
 
-	mov     rax, crc_init           ;; rax = crc_init;
+    mov     rax, crc_init           ;; rax = crc_init;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 1) ALIGN: ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	mov     bufptmp, bufp           ;; rdi = *buf
-	neg     bufp
-	and     bufp, 7                 ;; calculate the unalignment
-					;; amount of the address
-	je      proc_block              ;; Skip if aligned
+    mov     bufptmp, bufp           ;; rdi = *buf
+    neg     bufp
+    and     bufp, 7                 ;; calculate the unalignment
+                    ;; amount of the address
+    je      proc_block              ;; Skip if aligned
 
-	cmp     len, 8
-	jb      less_than_8
+    cmp     len, 8
+    jb      less_than_8
 
-	;;;; Calculate CRC of unaligned bytes of the buffer (if any) ;;;;
-	mov     rbx, [bufptmp]          ;; load a quadword from the buffer
-	add     bufptmp, bufp           ;; align buffer pointer for
-					;; quadword processing
-	sub     len, bufp               ;; update buffer length
+    ;;;; Calculate CRC of unaligned bytes of the buffer (if any) ;;;;
+    mov     rbx, [bufptmp]          ;; load a quadword from the buffer
+    add     bufptmp, bufp           ;; align buffer pointer for
+                    ;; quadword processing
+    sub     len, bufp               ;; update buffer length
 align_loop:
-	crc32   eax, bl                 ;;    compute crc32 of 1-byte
-	shr     rbx, 8                  ;;    get next byte
-	dec     bufp
-	jne     align_loop
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    crc32   eax, bl                 ;;    compute crc32 of 1-byte
+    shr     rbx, 8                  ;;    get next byte
+    dec     bufp
+    jne     align_loop
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; 2) BLOCK LEVEL: ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 proc_block:
-	cmp     len, 240
-	jb      bit8
+    cmp     len, 240
+    jb      bit8
 
-	lea     crc_init, [mul_table_72 wrt rip]  ;; load table base address
+    lea     crc_init, [mul_table_72 wrt rip]  ;; load table base address
 
-	crcB3   640, 0x1000, 0x0c00     ; 640*3 = 1920 (Tables 1280, 640)
-	crcB3   320, 0x0c00, 0x0800     ; 320*3 =  960 (Tables  640, 320)
-	crcB3   160, 0x0800, 0x0400     ; 160*3 =  480 (Tables  320, 160)
-	crcB3    80, 0x0400, 0x0000     ;  80*3 =  240 (Tables  160,  80)
+    crcB3   640, 0x1000, 0x0c00     ; 640*3 = 1920 (Tables 1280, 640)
+    crcB3   320, 0x0c00, 0x0800     ; 320*3 =  960 (Tables  640, 320)
+    crcB3   160, 0x0800, 0x0400     ; 160*3 =  480 (Tables  320, 160)
+    crcB3    80, 0x0400, 0x0000     ;  80*3 =  240 (Tables  160,  80)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;4) LESS THAN 256-bytes REMAIN AT THIS POINT (8-bits of rdx are full)
 
 bit8:
-	shl     len_b, 1                ;; shift-out MSB (bit-7)
-	jnc     bit7                    ;; jump to bit-6 if bit-7 == 0
+    shl     len_b, 1                ;; shift-out MSB (bit-7)
+    jnc     bit7                    ;; jump to bit-6 if bit-7 == 0
  %assign i 0
  %rep 16
-	crc32   rax, [bufptmp+i]        ;; compute crc32 of 8-byte data
-	%assign i (i+8)
+    crc32   rax, [bufptmp+i]        ;; compute crc32 of 8-byte data
+    %assign i (i+8)
  %endrep
-	je      do_return               ;; return if remaining data is zero
-	add     bufptmp, 128            ;; buf +=64; (next 64 bytes)
+    je      do_return               ;; return if remaining data is zero
+    add     bufptmp, 128            ;; buf +=64; (next 64 bytes)
 
 bit7:
-	shl     len_b, 1                ;; shift-out MSB (bit-7)
-	jnc     bit6                    ;; jump to bit-6 if bit-7 == 0
+    shl     len_b, 1                ;; shift-out MSB (bit-7)
+    jnc     bit6                    ;; jump to bit-6 if bit-7 == 0
  %assign i 0
  %rep 8
-	crc32   rax, [bufptmp+i]        ;; compute crc32 of 8-byte data
-	%assign i (i+8)
+    crc32   rax, [bufptmp+i]        ;; compute crc32 of 8-byte data
+    %assign i (i+8)
  %endrep
-	je      do_return               ;; return if remaining data is zero
-	add     bufptmp, 64             ;; buf +=64; (next 64 bytes)
+    je      do_return               ;; return if remaining data is zero
+    add     bufptmp, 64             ;; buf +=64; (next 64 bytes)
 bit6:
-	shl     len_b, 1                ;; shift-out MSB (bit-6)
-	jnc     bit5                    ;; jump to bit-5 if bit-6 == 0
+    shl     len_b, 1                ;; shift-out MSB (bit-6)
+    jnc     bit5                    ;; jump to bit-5 if bit-6 == 0
  %assign i 0
  %rep 4
-	crc32   rax, [bufptmp+i]        ;;    compute crc32 of 8-byte data
-	%assign i (i+8)
+    crc32   rax, [bufptmp+i]        ;;    compute crc32 of 8-byte data
+    %assign i (i+8)
  %endrep
-	je      do_return               ;; return if remaining data is zero
-	add     bufptmp, 32             ;; buf +=32; (next 32 bytes)
+    je      do_return               ;; return if remaining data is zero
+    add     bufptmp, 32             ;; buf +=32; (next 32 bytes)
 bit5:
-	shl     len_b, 1                ;; shift-out MSB (bit-5)
-	jnc     bit4                    ;; jump to bit-4 if bit-5 == 0
+    shl     len_b, 1                ;; shift-out MSB (bit-5)
+    jnc     bit4                    ;; jump to bit-4 if bit-5 == 0
  %assign i 0
  %rep 2
-	crc32   rax, [bufptmp+i]        ;;    compute crc32 of 8-byte data
-	%assign i (i+8)
+    crc32   rax, [bufptmp+i]        ;;    compute crc32 of 8-byte data
+    %assign i (i+8)
  %endrep
-	je      do_return               ;; return if remaining data is zero
-	add     bufptmp, 16             ;; buf +=16; (next 16 bytes)
+    je      do_return               ;; return if remaining data is zero
+    add     bufptmp, 16             ;; buf +=16; (next 16 bytes)
 bit4:
-	shl     len_b, 1                ;; shift-out MSB (bit-4)
-	jnc     bit3                    ;; jump to bit-3 if bit-4 == 0
-	crc32   rax, [bufptmp]          ;; compute crc32 of 8-byte data
-	je      do_return               ;; return if remaining data is zero
-	add     bufptmp, 8              ;; buf +=8; (next 8 bytes)
+    shl     len_b, 1                ;; shift-out MSB (bit-4)
+    jnc     bit3                    ;; jump to bit-3 if bit-4 == 0
+    crc32   rax, [bufptmp]          ;; compute crc32 of 8-byte data
+    je      do_return               ;; return if remaining data is zero
+    add     bufptmp, 8              ;; buf +=8; (next 8 bytes)
 bit3:
-	mov     rbx, [bufptmp]          ;; load a 8-bytes from the buffer:
-	shl     len_b, 1                ;; shift-out MSB (bit-3)
-	jnc     bit2                    ;; jump to bit-2 if bit-3 == 0
-	crc32   eax, ebx                ;; compute crc32 of 4-byte data
-	je      do_return               ;; return if remaining data is zero
-	shr     rbx, 32                 ;; get next 3 bytes
+    mov     rbx, [bufptmp]          ;; load a 8-bytes from the buffer:
+    shl     len_b, 1                ;; shift-out MSB (bit-3)
+    jnc     bit2                    ;; jump to bit-2 if bit-3 == 0
+    crc32   eax, ebx                ;; compute crc32 of 4-byte data
+    je      do_return               ;; return if remaining data is zero
+    shr     rbx, 32                 ;; get next 3 bytes
 bit2:
-	shl     len_b, 1                ;; shift-out MSB (bit-2)
-	jnc     bit1                    ;; jump to bit-1 if bit-2 == 0
-	crc32   eax, bx                 ;; compute crc32 of 2-byte data
-	je      do_return               ;; return if remaining data is zero
-	shr     rbx, 16                 ;; next byte
+    shl     len_b, 1                ;; shift-out MSB (bit-2)
+    jnc     bit1                    ;; jump to bit-1 if bit-2 == 0
+    crc32   eax, bx                 ;; compute crc32 of 2-byte data
+    je      do_return               ;; return if remaining data is zero
+    shr     rbx, 16                 ;; next byte
 bit1:
-	test    len_b,len_b
-	je      do_return
-	crc32   eax, bl                 ;; compute crc32 of 1-byte data
+    test    len_b,len_b
+    je      do_return
+    crc32   eax, bl                 ;; compute crc32 of 1-byte data
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 do_return:
 
-	pop     rbx
-	pop     rdi
-	ret
+    pop     rbx
+    pop     rdi
+    ret
 
 less_than_8:
-	test    len,4
-	jz      less_than_4
-	crc32   eax, dword[bufptmp]
-	add     bufptmp,4
+    test    len,4
+    jz      less_than_4
+    crc32   eax, dword[bufptmp]
+    add     bufptmp,4
 less_than_4:
-	test    len,2
-	jz      less_than_2
-	crc32   eax, word[bufptmp]
-	add     bufptmp,2
+    test    len,2
+    jz      less_than_2
+    crc32   eax, word[bufptmp]
+    add     bufptmp,2
 less_than_2:
-	test    len,1
-	jz      do_return
-	crc32   rax, byte[bufptmp]
-	pop     rbx
-	pop     bufptmp
-	ret
+    test    len,1
+    jz      do_return
+    crc32   rax, byte[bufptmp]
+    pop     rbx
+    pop     bufptmp
+    ret
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -657,8 +657,8 @@ global %1_slver_%2%3%4
 global %1_slver
 %1_slver:
 %1_slver_%2%3%4:
-	dw 0x%4
-	db 0x%3, 0x%2
+    dw 0x%4
+    db 0x%3, 0x%2
 %endmacro
 ;;;       func            core, ver, snum
 slversion crc32_iscsi_00, 00,   02,  0014

@@ -13,11 +13,11 @@
 class Tokener
 {
 public:
-	// ÒÔÖ¸¶¨µÄ×Ö·û´®×÷Îª·Ö¸ô·û£¬½«Õû¸ö×Ö·ûÖĞ¸÷Token½âÎöµ½Ò»¸öÈİÆ÷ÖĞ
-	// tokens:´æ´¢TokenµÄÈİÆ÷£¬¿ÉÎªlist»òvectorµÈ£¬Ö»ÒªËüÖ§³Öpush_back()
-	// source:±»½âÎöµÄ×Ö·û´®
-	// sep:Token·Ö¸ô·û
-	// skip_sep:ÊÇ·ñÌø¹ıÁ¬ĞøµÄsep£¬¼´Èç¹ûÁ¬½ÓÏàÍ¬µÄsep´æÔÚ£¬ÔòÖ»Ëã×÷Ò»¸ösep
+    // ä»¥æŒ‡å®šçš„å­—ç¬¦ä¸²ä½œä¸ºåˆ†éš”ç¬¦ï¼Œå°†æ•´ä¸ªå­—ç¬¦ä¸­å„Tokenè§£æåˆ°ä¸€ä¸ªå®¹å™¨ä¸­
+    // tokens:å­˜å‚¨Tokençš„å®¹å™¨ï¼Œå¯ä¸ºlistæˆ–vectorç­‰ï¼Œåªè¦å®ƒæ”¯æŒpush_back()
+    // source:è¢«è§£æçš„å­—ç¬¦ä¸²
+    // sep:Tokenåˆ†éš”ç¬¦
+    // skip_sep:æ˜¯å¦è·³è¿‡è¿ç»­çš„sepï¼Œå³å¦‚æœè¿æ¥ç›¸åŒçš„sepå­˜åœ¨ï¼Œåˆ™åªç®—ä½œä¸€ä¸ªsep
     template <class ContainerType>
     static int split(ContainerType* tokens, const std::string& source, const std::string& sep, bool skip_sep = false)
     {
@@ -39,7 +39,7 @@ public:
                 {
                     break;
                 }
-				
+                
                 if (skip_sep)
                 {
                     bool end = false;

@@ -2,15 +2,15 @@
 
 int _get_bits_of(int v)
 {
-	int n = 0;
-	
-	while (v)
-	{
-		n++;
-		v = v >> 1;
-	}
-	
-	return n;
+    int n = 0;
+    
+    while (v)
+    {
+        n++;
+        v = v >> 1;
+    }
+    
+    return n;
 }
 
 // uint32_t _page_size = sysconf(_SC_PAGESIZE);

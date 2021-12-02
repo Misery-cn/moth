@@ -9,43 +9,43 @@
 class RWLock
 {
 public:
-	RWLock() throw (SysCallException);
-	virtual ~RWLock() throw ();
+    RWLock() throw (SysCallException);
+    virtual ~RWLock() throw ();
 
-	// ½âËø
-	void unlock() throw (SysCallException);
-	// ¶ÁËø
-	void lock_read() throw (SysCallException);
-	// Ğ´Ëø
-	void lock_write() throw (SysCallException);
-	// ³¢ÊÔ¶ÁËø
-	bool try_lock_read() throw (SysCallException);
-	// ³¢ÊÔĞ´Ëø
-	bool try_lock_write() throw (SysCallException);
+    // è§£é”
+    void unlock() throw (SysCallException);
+    // è¯»é”
+    void lock_read() throw (SysCallException);
+    // å†™é”
+    void lock_write() throw (SysCallException);
+    // å°è¯•è¯»é”
+    bool try_lock_read() throw (SysCallException);
+    // å°è¯•å†™é”
+    bool try_lock_write() throw (SysCallException);
 
-	bool timed_lock_read(uint32_t millisecond) throw (SysCallException);
+    bool timed_lock_read(uint32_t millisecond) throw (SysCallException);
 
-	bool timed_lock_write(uint32_t millisecond) throw (SysCallException);
-	
+    bool timed_lock_write(uint32_t millisecond) throw (SysCallException);
+    
 private:
-	pthread_rwlockattr_t _attr;
-	pthread_rwlock_t _rwlock;
+    pthread_rwlockattr_t _attr;
+    pthread_rwlock_t _rwlock;
 };
 
 class RWLockGuard
 {
 public:
-	// Ä¬ÈÏ¼Ó¶ÁËø
+    // é»˜è®¤åŠ è¯»é”
     RWLockGuard(RWLock& lock, bool is_read = true) : _lock(lock)
     {
-    	if (is_read)
-		{
-        	_lock.lock_read();
-    	}
-		else
-		{
-			_lock.lock_write();
-		}
+        if (is_read)
+        {
+            _lock.lock_read();
+        }
+        else
+        {
+            _lock.lock_write();
+        }
     }    
     
     ~RWLockGuard()

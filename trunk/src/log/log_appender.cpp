@@ -10,7 +10,7 @@ log_level_t get_log_level(const char* level_name)
     if (0 == strcasecmp(level_name, "Error")) return Log_Error;
     if (0 == strcasecmp(level_name, "Info")) return Log_Info;
     if (0 == strcasecmp(level_name, "Debug")) return Log_Debug;
-	
+    
     return Log_Off;
 }
 
@@ -23,106 +23,106 @@ const char* get_log_level_name(log_level_t log_level)
 
 LogEvent::LogEvent()
 {
-	memset(_content, 0, LOG_LINE_SIZE);
+    memset(_content, 0, LOG_LINE_SIZE);
 }
 
 LogEvent::~LogEvent()
 {
-	// TODO
+    // TODO
 }
 
 RunLogEvent::RunLogEvent(log_level_t level)
 {
-	// TODO
-	_level = level;
+    // TODO
+    _level = level;
 }
 
 RunLogEvent::~RunLogEvent()
 {
-	// TODO
+    // TODO
 }
 
 std::string RunLogEvent::format()
 {
-	std::ostringstream message;
+    std::ostringstream message;
 
-	message << "[" << get_formatted_current_datetime() << "]";
-	message << "[" << Thread::get_current_thread_id() << "]";
-	message << "[" << get_log_level_name(_level) << "]:";
-	message << _content;
-	if('\n' != _content[strlen(_content) - 1])
+    message << "[" << get_formatted_current_datetime() << "]";
+    message << "[" << Thread::get_current_thread_id() << "]";
+    message << "[" << get_log_level_name(_level) << "]:";
+    message << _content;
+    if('\n' != _content[strlen(_content) - 1])
     {
         message << "\n";
     }
 
-	return message.str();
+    return message.str();
 }
 
 FileAppender::FileAppender(const char* filename)
 {
-	_log_fd = -1;
-	_log_file_seq = 0;
-	memset(_log_file_name, 0, FILENAME_MAX);
-	memset(_current_file_name, 0, FILENAME_MAX);
-	memset(_log_path, 0, PATH_MAX);
+    _log_fd = -1;
+    _log_file_seq = 0;
+    memset(_log_file_name, 0, FILENAME_MAX);
+    memset(_current_file_name, 0, FILENAME_MAX);
+    memset(_log_path, 0, PATH_MAX);
 
-	snprintf(_log_file_name, sizeof(_log_file_name), "%s", filename);
-	
-	init();
+    snprintf(_log_file_name, sizeof(_log_file_name), "%s", filename);
+    
+    init();
 }
 
 FileAppender::~FileAppender()
 {
-	// TODO
-	if (_log_fd)
-	{
-		close(_log_fd);
-		_log_fd = -1;
-	}
+    // TODO
+    if (_log_fd)
+    {
+        close(_log_fd);
+        _log_fd = -1;
+    }
 }
 
 void FileAppender::init()
 {
-	// »ñÈ¡½ø³ÌÖ´ÐÐÂ·¾¶
-	std::string work_path = Utils::get_program_path();
-	
-	int pos = work_path.rfind('/');
-	if (0 < pos)
-	{
-		work_path = work_path.substr(0, pos);
-	}
+    // èŽ·å–è¿›ç¨‹æ‰§è¡Œè·¯å¾„
+    std::string work_path = Utils::get_program_path();
+    
+    int pos = work_path.rfind('/');
+    if (0 < pos)
+    {
+        work_path = work_path.substr(0, pos);
+    }
 
-	snprintf(_log_path, PATH_MAX, "%s/log/", work_path.c_str());
+    snprintf(_log_path, PATH_MAX, "%s/log/", work_path.c_str());
 
-	// ÈÕÖ¾Â·¾¶²»´æÔÚÔò´´½¨
-	if (!DirUtils::exist(_log_path))
-	{
-		DirUtils::create_directory(_log_path);
-	}
+    // æ—¥å¿—è·¯å¾„ä¸å­˜åœ¨åˆ™åˆ›å»º
+    if (!DirUtils::exist(_log_path))
+    {
+        DirUtils::create_directory(_log_path);
+    }
 
-	for (int i = 0; i < MAX_LOG_FILE_SEQ; i++)
-	{
-		memset(_current_file_name, 0, FILENAME_MAX);
-		snprintf(_current_file_name, FILENAME_MAX, "%s/%s.%d.log", _log_path, _log_file_name, i);
-		// ÎÄ¼þ²»´æÔÚ
-		if (!FileUtils::exist(_current_file_name))
-		{
-			_log_file_seq = i;
-			break;
-		}
+    for (int i = 0; i < MAX_LOG_FILE_SEQ; i++)
+    {
+        memset(_current_file_name, 0, FILENAME_MAX);
+        snprintf(_current_file_name, FILENAME_MAX, "%s/%s.%d.log", _log_path, _log_file_name, i);
+        // æ–‡ä»¶ä¸å­˜åœ¨
+        if (!FileUtils::exist(_current_file_name))
+        {
+            _log_file_seq = i;
+            break;
+        }
 
-		// ×îºóÒ»¸öÎÄ¼þ»¹ÓÐ
-		if (MAX_LOG_FILE_SEQ - 1 == i)
-		{
-			_log_file_seq = 0;
-			snprintf(_current_file_name, FILENAME_MAX, "%s/%s.%d.log", _log_path, _log_file_name, _log_file_seq);
-			// É¾³ýµÚÒ»¸öÎÄ¼þ,ÖØÐÂÐ´
-			FileUtils::remove(_current_file_name);
-		}
-	}
+        // æœ€åŽä¸€ä¸ªæ–‡ä»¶è¿˜æœ‰
+        if (MAX_LOG_FILE_SEQ - 1 == i)
+        {
+            _log_file_seq = 0;
+            snprintf(_current_file_name, FILENAME_MAX, "%s/%s.%d.log", _log_path, _log_file_name, _log_file_seq);
+            // åˆ é™¤ç¬¬ä¸€ä¸ªæ–‡ä»¶,é‡æ–°å†™
+            FileUtils::remove(_current_file_name);
+        }
+    }
 
-	create_log_file();
-	
+    create_log_file();
+    
     // if (-1 == fstat(_log_fd, &st))
     // {
     //     THROW_SYSCALL_EXCEPTION(NULL, errno, "fstat");
@@ -133,54 +133,54 @@ void FileAppender::init()
 
 void FileAppender::create_log_file()
 {
-	// ´ò¿ªÎÄ¼þ
-	_log_fd = open(_current_file_name, O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
+    // æ‰“å¼€æ–‡ä»¶
+    _log_fd = open(_current_file_name, O_WRONLY|O_CREAT|O_APPEND, FILE_DEFAULT_PERM);
 
     if (-1 == _log_fd)
     {
-    	// THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
+        // THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
     }
 }
 
 
 void FileAppender::check_log_file()
 {
-	off_t logsize = FileUtils::get_file_size(_current_file_name);
+    off_t logsize = FileUtils::get_file_size(_current_file_name);
 
-	// ´óÓÚÈÕÖ¾ÎÄ¼þ×î´óÖµ
-	if (MAX_LOG_FILE_SIZE <= logsize)
-	{
-		// ¹Ø±ÕÈÕÖ¾ÎÄ¼þ
-		close(_log_fd);
-		_log_fd = -1;
+    // å¤§äºŽæ—¥å¿—æ–‡ä»¶æœ€å¤§å€¼
+    if (MAX_LOG_FILE_SIZE <= logsize)
+    {
+        // å…³é—­æ—¥å¿—æ–‡ä»¶
+        close(_log_fd);
+        _log_fd = -1;
 
-		if (MAX_LOG_FILE_SEQ <= ++_log_file_seq)
+        if (MAX_LOG_FILE_SEQ <= ++_log_file_seq)
         {
             _log_file_seq = 0;
         }
 
-		snprintf(_current_file_name, FILENAME_MAX, "%s/%s.%d.log", _log_path, _log_file_name, _log_file_seq);
-		// Èç¹ûÎÄ¼þ´æÔÚ,É¾³ý²¢ÖØÐÂ´ò¿ª
-		if (FileUtils::exist(_current_file_name))
-		{
-			FileUtils::remove(_current_file_name);
-		}
-		
-		create_log_file();
-	}
+        snprintf(_current_file_name, FILENAME_MAX, "%s/%s.%d.log", _log_path, _log_file_name, _log_file_seq);
+        // å¦‚æžœæ–‡ä»¶å­˜åœ¨,åˆ é™¤å¹¶é‡æ–°æ‰“å¼€
+        if (FileUtils::exist(_current_file_name))
+        {
+            FileUtils::remove(_current_file_name);
+        }
+        
+        create_log_file();
+    }
 }
 
 void FileAppender::do_appender(LogEvent* event)
 {
-	// ÈÕÖ¾Â·¾¶²»´æÔÚÔò´´½¨
-	if (!DirUtils::exist(_log_path))
-	{
-		DirUtils::create_directory(_log_path);
-	}
+    // æ—¥å¿—è·¯å¾„ä¸å­˜åœ¨åˆ™åˆ›å»º
+    if (!DirUtils::exist(_log_path))
+    {
+        DirUtils::create_directory(_log_path);
+    }
 
-	check_log_file();
+    check_log_file();
 
-	std::string message(event->format());
-	write(_log_fd, message.c_str(), message.length());
+    std::string message(event->format());
+    write(_log_fd, message.c_str(), message.length());
 }
 

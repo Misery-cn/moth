@@ -18,7 +18,7 @@ const int MAX_READ_SIZE = 1 * M;
 
 const int MAX_FILENAME = 256;
 
-// µ•Œª√Î
+// Âçï‰ΩçÁßí
 const int SOCKET_TIMEOUT = 900;
 
 #endif

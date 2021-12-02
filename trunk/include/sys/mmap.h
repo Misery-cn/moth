@@ -2,39 +2,39 @@
 
 typedef struct
 {
-	int32_t _fd;	// ´ò¿ªµÄÎÄ¼şÃèÊö·û,Èç¹ûÊÇµ÷ÓÃÕß´ò¿ªÔòÓ¦ÓĞµ÷ÓÃÕß×Ô¼º¹Ø±Õ
-	void* _addr;	// ÎÄ¼şÓ³Éäµ½ÄÚ´æµÄµØÖ·
-	size_t _len;	// Ó³Éäµ½ÄÚ´æµÄ´óĞ¡
+    int32_t _fd;    // æ‰“å¼€çš„æ–‡ä»¶æè¿°ç¬¦,å¦‚æœæ˜¯è°ƒç”¨è€…æ‰“å¼€åˆ™åº”æœ‰è°ƒç”¨è€…è‡ªå·±å…³é—­
+    void* _addr;    // æ–‡ä»¶æ˜ å°„åˆ°å†…å­˜çš„åœ°å€
+    size_t _len;    // æ˜ å°„åˆ°å†…å­˜çš„å¤§å°
 } mmap_t;
 
 class MMap
 {
 public:
-		// Ö»¶Á·½Ê½Ó³Éä
-		// size:ĞèÒªÓ³Éäµ½ÄÚ´æµÄ´óĞ¡.Èç¹ûÎª0Ä¬ÈÏÓ³ÉäÕû¸öÎÄ¼ş
-		// offet:Ó³ÉäÆ«ÒÆÁ¿
-		// size_max:×î´óÓ³Éä×Ö½Ú
-		static mmap_t* mmap_read_only(int fd, size_t size = 0, size_t offset = 0, size_t size_max = 0) throw (SysCallException);
+        // åªè¯»æ–¹å¼æ˜ å°„
+        // size:éœ€è¦æ˜ å°„åˆ°å†…å­˜çš„å¤§å°.å¦‚æœä¸º0é»˜è®¤æ˜ å°„æ•´ä¸ªæ–‡ä»¶
+        // offet:æ˜ å°„åç§»é‡
+        // size_max:æœ€å¤§æ˜ å°„å­—èŠ‚
+        static mmap_t* mmap_read_only(int fd, size_t size = 0, size_t offset = 0, size_t size_max = 0) throw (SysCallException);
 
-		static mmap_t* mmap_read_only(const char* filename, size_t size_max = 0) throw (SysCallException);
+        static mmap_t* mmap_read_only(const char* filename, size_t size_max = 0) throw (SysCallException);
 
-		// Ö»Ğ´·½Ê½Ó³Éä
-		static mmap_t* mmap_write_only(int fd, size_t size = 0, size_t offset = 0, size_t size_max = 0) throw (SysCallException);
+        // åªå†™æ–¹å¼æ˜ å°„
+        static mmap_t* mmap_write_only(int fd, size_t size = 0, size_t offset = 0, size_t size_max = 0) throw (SysCallException);
 
-		static mmap_t* mmap_write_only(const char* filename, size_t size_max = 0) throw (SysCallException);
+        static mmap_t* mmap_write_only(const char* filename, size_t size_max = 0) throw (SysCallException);
 
-		// ¿É¶ÁĞ´·½Ê½Ó³Éä
-		static mmap_t* mmap(int fd, size_t size = 0, size_t offset = 0, size_t size_max = 0) throw (SysCallException);
+        // å¯è¯»å†™æ–¹å¼æ˜ å°„
+        static mmap_t* mmap(int fd, size_t size = 0, size_t offset = 0, size_t size_max = 0) throw (SysCallException);
 
-		static mmap_t* mmap(const char* filename, size_t size_max = 0) throw (SysCallException);
-		// Ğ¶ÔØÄÚ´æÓ³Éä
-		static void unmap(mmap_t* ptr) throw (SysCallException);
+        static mmap_t* mmap(const char* filename, size_t size_max = 0) throw (SysCallException);
+        // å¸è½½å†…å­˜æ˜ å°„
+        static void unmap(mmap_t* ptr) throw (SysCallException);
 
-		// Í¬²½·½Ê½Ë¢»Ø´ÅÅÌ
-		static void flush_sync(mmap_t* ptr, size_t offset = 0, size_t length = 0, bool invalid = false) throw (SysCallException);
-		// Òì²½·½Ê½Ë¢»Ø´ÅÅÌ
-		static void flush_async(mmap_t* ptr, size_t offset = 0, size_t length = 0, bool invalid = false) throw (SysCallException);
+        // åŒæ­¥æ–¹å¼åˆ·å›ç£ç›˜
+        static void flush_sync(mmap_t* ptr, size_t offset = 0, size_t length = 0, bool invalid = false) throw (SysCallException);
+        // å¼‚æ­¥æ–¹å¼åˆ·å›ç£ç›˜
+        static void flush_async(mmap_t* ptr, size_t offset = 0, size_t length = 0, bool invalid = false) throw (SysCallException);
 
 private:
-		static mmap_t* do_map(int prot, int fd, size_t size, size_t offset, size_t size_max, bool byfd) throw (SysCallException);
+        static mmap_t* do_map(int prot, int fd, size_t size, size_t offset, size_t size_max, bool byfd) throw (SysCallException);
 };

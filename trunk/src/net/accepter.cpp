@@ -3,365 +3,368 @@
 #include "socket.h"
 #include "simple_messenger.h"
 
-// ÉèÖÃÎÄ¼şÃèÊö·ûÆì±ê·ÀÖ¹Òì³£¹Ø±Õ
+// è®¾ç½®æ–‡ä»¶æè¿°ç¬¦æ——æ ‡é˜²æ­¢å¼‚å¸¸å…³é—­
 static int set_close_on_exec(int fd)
 {
-	int flags = fcntl(fd, F_GETFD, 0);
-	if (flags < 0)
-	{
-		return errno;
-	}
-	
-	if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC))
-	{
-		return errno;
-	}
-	
-	return 0;
+    int flags = fcntl(fd, F_GETFD, 0);
+    if (flags < 0)
+    {
+        return errno;
+    }
+    
+    if (fcntl(fd, F_SETFD, flags | FD_CLOEXEC))
+    {
+        return errno;
+    }
+    
+    return 0;
 }
 
 
 int Accepter::create_socket(int* rd, int* wr)
 {
-	int selfpipe[2];
-	int ret = ::pipe2(selfpipe, (O_CLOEXEC|O_NONBLOCK));
-	if (0 > ret)
-	{
-		return -errno;
-	}
-	
-	// pipefd[0] Îª¶Á¶Ë
-	// pipefd[1] ÎªĞ´¶Ë
-	*rd = selfpipe[0];
-	*wr = selfpipe[1];
-	
-	return 0;
+    int selfpipe[2];
+    int ret = ::pipe2(selfpipe, (O_CLOEXEC|O_NONBLOCK));
+    if (0 > ret)
+    {
+        return -errno;
+    }
+    
+    // pipefd[0] ä¸ºè¯»ç«¯
+    // pipefd[1] ä¸ºå†™ç«¯
+    *rd = selfpipe[0];
+    *wr = selfpipe[1];
+    
+    return 0;
 }
 
 int Accepter::bind(const entity_addr_t& bind_addr, const std::set<int>& avoid_ports)
 {
-	int family;
-	switch (bind_addr.get_family())
-	{
-		case AF_INET:
-		case AF_INET6:
-		{
-			family = bind_addr.get_family();
-			break;
-		}
-		default:
-		{
-			family = AF_INET;
-			// family = AF_INET6;
-		}
-	}
+    int family;
+    switch (bind_addr.get_family())
+    {
+        case AF_INET:
+        case AF_INET6:
+        {
+            family = bind_addr.get_family();
+            break;
+        }
+        default:
+        {
+            family = AF_INET;
+            // family = AF_INET6;
+        }
+    }
 
-	// ´´½¨Ò»¸ösocketÓÃÓÚ¼àÌı
-	_listen_fd = ::socket(family, SOCK_STREAM, 0);
-	
-	if (0 > _listen_fd)
-	{
-		return -errno;
-	}
+    // åˆ›å»ºä¸€ä¸ªsocketç”¨äºç›‘å¬
+    _listen_fd = ::socket(family, SOCK_STREAM, 0);
+    
+    if (0 > _listen_fd)
+    {
+        return -errno;
+    }
 
-	if (set_close_on_exec(_listen_fd))
-	{
-		ERROR_LOG("set close on exec flag failed!");
-	}
+    if (set_close_on_exec(_listen_fd))
+    {
+        ERROR_LOG("set close on exec flag failed!");
+    }
   
-	entity_addr_t listen_addr = bind_addr;
-	listen_addr.set_family(family);
+    entity_addr_t listen_addr = bind_addr;
+    listen_addr.set_family(family);
 
-	int rc = -1;
-	int r = -1;
+    int rc = -1;
+    int r = -1;
 
-	// ³¢ÊÔ°ó¶¨3´Î
-	for (int i = 0; i < 3; ++i)
-	{
-		if (0 < i)
-		{
-			sleep(5);
-		}
+    // å°è¯•ç»‘å®š3æ¬¡
+    for (int i = 0; i < 3; ++i)
+    {
+        if (0 < i)
+        {
+            sleep(5);
+        }
 
-		if (listen_addr.get_port())
-		{
-			int on = 1;
-			rc = ::setsockopt(_listen_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-			if (0 > rc)
-			{
-				r = -errno;
-				continue;
-			}
+        if (listen_addr.get_port())
+        {
+            int on = 1;
+            rc = ::setsockopt(_listen_fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+            if (0 > rc)
+            {
+                r = -errno;
+                continue;
+            }
 
-			rc = ::bind(_listen_fd, listen_addr.get_sockaddr(), listen_addr.get_sockaddr_len());
-			if (0 > rc)
-			{
-				r = -errno;
-				continue;
-			}
-		}
-		// Èç¹ûÃ»ÓĞÅäÖÃ¼àÌı¶Ë¿Ú
-		else
-		{
-			for (int port = 9000; port <= 9999; port++)
-			{
-				if (avoid_ports.count(port))
-				{
-				    continue;
-				}
+            rc = ::bind(_listen_fd, listen_addr.get_sockaddr(), listen_addr.get_sockaddr_len());
+            if (0 > rc)
+            {
+                r = -errno;
+                continue;
+            }
+        }
+        // å¦‚æœæ²¡æœ‰é…ç½®ç›‘å¬ç«¯å£
+        else
+        {
+            for (int port = 9000; port <= 9999; port++)
+            {
+                if (avoid_ports.count(port))
+                {
+                    continue;
+                }
 
-				listen_addr.set_port(port);
-				rc = ::bind(_listen_fd, listen_addr.get_sockaddr(),
-				listen_addr.get_sockaddr_len());
-				if (0 == rc)
-				{
-					break;
-				}
-			}
-			
-			if (0 > rc)
-			{
-				r = -errno;
-				listen_addr.set_port(0); 
-				continue;
-			}
-		}
+                listen_addr.set_port(port);
+                rc = ::bind(_listen_fd, listen_addr.get_sockaddr(),
+                listen_addr.get_sockaddr_len());
+                if (0 == rc)
+                {
+                    break;
+                }
+            }
+            
+            if (0 > rc)
+            {
+                r = -errno;
+                listen_addr.set_port(0); 
+                continue;
+            }
+        }
 
-		if (0 == rc)
-		{
-			break;
-		}
-	}
+        if (0 == rc)
+        {
+            break;
+        }
+    }
 
-	// °ó¶¨¶Ë¿ÚÊ§°Ü
-	if (0 > rc)
-	{
-		::close(_listen_fd);
-		_listen_fd = -1;
-		return r;
-	}
-	
-	sockaddr_storage ss;
-	socklen_t llen = sizeof(ss);
-	rc = getsockname(_listen_fd, (sockaddr*)&ss, &llen);
-	if (0 > rc)
-	{
-		rc = -errno;
-		::close(_listen_fd);
-		_listen_fd = -1;
-		return rc;
-	}
-	
-	listen_addr.set_sockaddr((sockaddr*)&ss);
+    // ç»‘å®šç«¯å£å¤±è´¥
+    if (0 > rc)
+    {
+        ::close(_listen_fd);
+        _listen_fd = -1;
+        return r;
+    }
+    
+    sockaddr_storage ss;
+    socklen_t llen = sizeof(ss);
+    rc = getsockname(_listen_fd, (sockaddr*)&ss, &llen);
+    if (0 > rc)
+    {
+        rc = -errno;
+        ::close(_listen_fd);
+        _listen_fd = -1;
+        return rc;
+    }
+    
+    listen_addr.set_sockaddr((sockaddr*)&ss);
 
-	// ÉèÖÃ½ÓÊÕ»º³å´óĞ¡
-	int size = 4096;
-	rc = ::setsockopt(_listen_fd, SOL_SOCKET, SO_RCVBUF, (void*)&size, sizeof(size));
-	if (0 > rc)
-	{
-		rc = -errno;
-		::close(_listen_fd);
-		_listen_fd = -1;
-		return rc;
-	}
-	
-	// ÉèÖÃ·¢ËÍ»º³å´óĞ¡
-	rc = ::setsockopt(_listen_fd, SOL_SOCKET, SO_SNDBUF , (void*)&size, sizeof(size));
-	if (0 > rc)
-	{
-		rc = -errno;
-		::close(_listen_fd);
-		_listen_fd = -1;
-		return rc;
-	}
+    // è®¾ç½®æ¥æ”¶ç¼“å†²å¤§å°
+    int size = 4096;
+    rc = ::setsockopt(_listen_fd, SOL_SOCKET, SO_RCVBUF, (void*)&size, sizeof(size));
+    if (0 > rc)
+    {
+        rc = -errno;
+        ::close(_listen_fd);
+        _listen_fd = -1;
+        return rc;
+    }
+    
+    // è®¾ç½®å‘é€ç¼“å†²å¤§å°
+    rc = ::setsockopt(_listen_fd, SOL_SOCKET, SO_SNDBUF , (void*)&size, sizeof(size));
+    if (0 > rc)
+    {
+        rc = -errno;
+        ::close(_listen_fd);
+        _listen_fd = -1;
+        return rc;
+    }
 
-	// ¿ªÊ¼¼àÌı
-	rc = ::listen(_listen_fd, 128);
-	if (0 > rc)
-	{
-		rc = -errno;
-		::close(_listen_fd);
-		_listen_fd = -1;
-		return rc;
-	}
+    // å¼€å§‹ç›‘å¬
+    rc = ::listen(_listen_fd, 128);
+    if (0 > rc)
+    {
+        rc = -errno;
+        ::close(_listen_fd);
+        _listen_fd = -1;
+        return rc;
+    }
   
-	_msgr->set_entity_addr(listen_addr);
-	_msgr->init_local_connection();
+    _msgr->set_entity_addr(listen_addr);
+    _msgr->init_local_connection();
 
-	rc = create_socket(&_shutdown_rd_fd, &_shutdown_wr_fd);
-	if (0 > rc)
-	{
-		return rc;
-	}
+    rc = create_socket(&_shutdown_rd_fd, &_shutdown_wr_fd);
+    if (0 > rc)
+    {
+        return rc;
+    }
 
-	return 0;
+    return 0;
 }
 
 int Accepter::rebind(const std::set<int>& avoid_ports)
 {
-	entity_addr_t addr = _msgr->get_entity_addr();
-	std::set<int> new_avoid = avoid_ports;
-	new_avoid.insert(addr.get_port());
-	addr.set_port(0);
+    entity_addr_t addr = _msgr->get_entity_addr();
+    std::set<int> new_avoid = avoid_ports;
+    // ä¸ç»§ç»­ç»‘å®šä¹‹å‰çš„ç«¯å£
+    new_avoid.insert(addr.get_port());
+    addr.set_port(0);
 
-	int r = bind(addr, new_avoid);
-	if (0 == r)
-	{
-		start();
-	}
-	
-	return r;
+    int r = bind(addr, new_avoid);
+    if (0 == r)
+    {
+        start();
+    }
+    
+    return r;
 }
 
 int Accepter::start()
 {
-	DEBUG_LOG("Accepter start");
-	
-	create();
+    DEBUG_LOG("Accepter start");
 
-	return 0;
+    create();
+
+    return 0;
 }
 
 void Accepter::entry()
 {
-	DEBUG_LOG("Accepter entry");
-	
-	int errors = 0;
-	int ch;
+    DEBUG_LOG("Accepter entry");
+    
+    int errors = 0;
+    int ch;
 
-	struct pollfd pfd[2];
-	memset(pfd, 0, sizeof(pfd));
-	
-	// POLLIN ÆÕÍ¨»òÓÅÏÈ¼¶´øÊı¾İ¿É¶Á
-	// POLLRDNORM ÆÕÍ¨Êı¾İ¿É¶Á
-	// POLLRDBAND ÓÅÏÈ¼¶´øÊı¾İ¿É¶Á
-	// POLLPRI ¸ßÓÅÏÈ¼¶Êı¾İ¿É¶Á
-	// POLLOUT ÆÕÍ¨Êı¾İ¿ÉĞ´
-	// POLLWRNORM ÆÕÍ¨Êı¾İ¿ÉĞ´
-	// POLLWRBAND ÓÅÏÈ¼¶´øÊı¾İ¿ÉĞ´
-	// POLLERR ·¢Éú´íÎó
-	// POLLHUP ¶Ô·½ÎÄ¼şÃèÊö·û¹ÒÆğ
-	// POLLNVAL ÎÄ¼şÃèÊö·û²»ÊÇÒ»¸ö´ò¿ªµÄÎÄ¼ş
+    struct pollfd pfd[2];
+    memset(pfd, 0, sizeof(pfd));
+    
+    // POLLIN æ™®é€šæˆ–ä¼˜å…ˆçº§å¸¦æ•°æ®å¯è¯»
+    // POLLRDNORM æ™®é€šæ•°æ®å¯è¯»
+    // POLLRDBAND ä¼˜å…ˆçº§å¸¦æ•°æ®å¯è¯»
+    // POLLPRI é«˜ä¼˜å…ˆçº§æ•°æ®å¯è¯»
+    // POLLOUT æ™®é€šæ•°æ®å¯å†™
+    // POLLWRNORM æ™®é€šæ•°æ®å¯å†™
+    // POLLWRBAND ä¼˜å…ˆçº§å¸¦æ•°æ®å¯å†™
+    // POLLERR å‘ç”Ÿé”™è¯¯
+    // POLLHUP å¯¹æ–¹æ–‡ä»¶æè¿°ç¬¦æŒ‚èµ·
+    // POLLNVAL æ–‡ä»¶æè¿°ç¬¦ä¸æ˜¯ä¸€ä¸ªæ‰“å¼€çš„æ–‡ä»¶
 
-	pfd[0].fd = _listen_fd;
-	pfd[0].events = POLLIN | POLLERR | POLLNVAL | POLLHUP;
-	pfd[1].fd = _shutdown_rd_fd;
-	pfd[1].events = POLLIN | POLLERR | POLLNVAL | POLLHUP;
-	
-	while (!_done)
-	{
-		int r = poll(pfd, 2, -1);
-		if (0 > r)
-		{
-			if (errno == EINTR)
-			{
-				continue;
-			}
-			break;
-		}
-		
-		// ·¢Éú´íÎó
-		if (pfd[0].revents & (POLLERR | POLLNVAL | POLLHUP))
-		{
-			break;
-		}
-		
-		// ÍË³ö
-		if (pfd[1].revents & (POLLIN | POLLERR | POLLNVAL | POLLHUP))
-		{
-			if (-1 == ::read(_shutdown_rd_fd, &ch, 1))
-			{
-				if (errno != EAGAIN)
-				{
-					
-				}
-			}
-			
-			break;
-		}
-		
-		// ½áÊø
-		if (_done)
-		{
-			break;
-		}
+    pfd[0].fd = _listen_fd;
+    pfd[0].events = POLLIN | POLLERR | POLLNVAL | POLLHUP;
+    pfd[1].fd = _shutdown_rd_fd;
+    pfd[1].events = POLLIN | POLLERR | POLLNVAL | POLLHUP;
+    
+    while (!_done)
+    {
+        int r = poll(pfd, 2, -1);
+        if (0 > r)
+        {
+            if (errno == EINTR)
+            {
+                continue;
+            }
+            break;
+        }
+        
+        // å‘ç”Ÿé”™è¯¯
+        if (pfd[0].revents & (POLLERR | POLLNVAL | POLLHUP))
+        {
+            break;
+        }
+        
+        // é€€å‡ºaccepter
+        if (pfd[1].revents & (POLLIN | POLLERR | POLLNVAL | POLLHUP))
+        {
+            if (-1 == ::read(_shutdown_rd_fd, &ch, 1))
+            {
+                if (errno != EAGAIN)
+                {
+                    
+                }
+            }
+            
+            break;
+        }
+        
+        // ç»“æŸ
+        if (_done)
+        {
+            break;
+        }
 
-		sockaddr_storage ss;
-		socklen_t len = sizeof(ss);
-		int fd = ::accept(_listen_fd, (sockaddr*)&ss, &len);
-		if (0 <= fd)
-		{
-			sockaddr_in* addr_in = (sockaddr_in*)&ss;
-			INFO_LOG("accept %s:%d connect", inet_ntoa(addr_in->sin_addr), ntohs(addr_in->sin_port));
-			
-			if (set_close_on_exec(fd))
-			{
-				ERROR_LOG("set close on exec flag failed while accept");
-			}
-			
-			errors = 0;
-      
-			_msgr->add_accept_socket(fd);
-		}
-		else
-		{
-			if (++errors > 4)
-			{
-				break;
-			}
-		}
-	}
+        sockaddr_storage ss;
+        socklen_t len = sizeof(ss);
+        int fd = ::accept(_listen_fd, (sockaddr*)&ss, &len);
+        if (0 <= fd)
+        {
+            sockaddr_in* addr_in = (sockaddr_in*)&ss;
+            INFO_LOG("accept %s:%d connect", inet_ntoa(addr_in->sin_addr), ntohs(addr_in->sin_port));
 
-	if (0 <= _shutdown_rd_fd)
-	{
-		::close(_shutdown_rd_fd);
-		_shutdown_rd_fd = -1;
-	}
+            // é˜²æ­¢å¼‚å¸¸å…³é—­
+            if (set_close_on_exec(fd))
+            {
+                ERROR_LOG("set close on exec flag failed while accept");
+            }
+            
+            errors = 0;
+
+            // æ·»åŠ è¿æ¥åˆ°msgr,æ­¤æ—¶socketçŠ¶æ€ä¸ºaccepting
+            _msgr->add_accept_socket(fd);
+        }
+        else
+        {
+            if (++errors > 4)
+            {
+                break;
+            }
+        }
+    }
+
+    if (0 <= _shutdown_rd_fd)
+    {
+        ::close(_shutdown_rd_fd);
+        _shutdown_rd_fd = -1;
+    }
 }
 
 void Accepter::stop()
 {
-	_done = true;
+    _done = true;
 
-	if (0 > _shutdown_wr_fd)
-	{
-		return;
-	}
+    if (0 > _shutdown_wr_fd)
+    {
+        return;
+    }
 
-	char buf[1] = {0};
-	int ret = safe_write(_shutdown_wr_fd, buf, 1);
-	if (0 > ret)
-	{
-		// 
-	}
-	
-	VOID_TEMP_FAILURE_RETRY(::close(_shutdown_wr_fd));
-	_shutdown_wr_fd = -1;
+    char buf[1] = {0};
+    int ret = safe_write(_shutdown_wr_fd, buf, 1);
+    if (0 > ret)
+    {
+        // 
+    }
+    
+    VOID_TEMP_FAILURE_RETRY(::close(_shutdown_wr_fd));
+    _shutdown_wr_fd = -1;
 
-	if (is_started())
-	{
-		join();
-	}
+    if (is_started())
+    {
+        join();
+    }
 
-	if (0 <= _listen_fd)
-	{
-		if (0 > ::close(_listen_fd))
-		{
-			// 
-		}
-		_listen_fd = -1;
-	}
-	
-	if (0 <= _shutdown_rd_fd)
-	{
-		if (0 > ::close(_shutdown_rd_fd))
-		{
-			// 
-		}
-		_shutdown_rd_fd = -1;
-	}
-	
-	_done = false;
+    if (0 <= _listen_fd)
+    {
+        if (0 > ::close(_listen_fd))
+        {
+            // 
+        }
+        _listen_fd = -1;
+    }
+    
+    if (0 <= _shutdown_rd_fd)
+    {
+        if (0 > ::close(_shutdown_rd_fd))
+        {
+            // 
+        }
+        _shutdown_rd_fd = -1;
+    }
+    
+    _done = false;
 }
 
 

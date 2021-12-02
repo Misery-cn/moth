@@ -4,17 +4,17 @@
 
 int arch_probe(void)
 {
-	if (arch_probed)
-	{
-		return 1;
-	}
+    if (arch_probed)
+    {
+        return 1;
+    }
 
-	arch_intel_probe();
-	arch_arm_probe();
+    arch_intel_probe();
+    arch_arm_probe();
 
-	arch_probed = 1;
-	
-	return 1;
+    arch_probed = 1;
+    
+    return 1;
 }
 
 

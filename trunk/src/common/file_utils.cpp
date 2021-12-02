@@ -21,8 +21,8 @@ size_t FileUtils::file_copy(int src_fd, int dst_fd) throw (SysCallException)
                 if (write(dst_fd, buf, ret) != ret)
                 {
                     if (EINTR == errno)
-					{
-						continue;
+                    {
+                        continue;
                     }
                     THROW_SYSCALL_EXCEPTION(NULL, errno, "write");
                 }
@@ -39,8 +39,8 @@ size_t FileUtils::file_copy(int src_fd, int dst_fd) throw (SysCallException)
         else
         {
             if (EINTR == errno)
-			{
-				continue;
+            {
+                continue;
             }
             THROW_SYSCALL_EXCEPTION(NULL, errno, "read");
         }
@@ -201,7 +201,7 @@ void FileUtils::rename(const char* from_filepath, const char* to_filepath) throw
 
 bool FileUtils::exist(const char * filepath)
 {
-	return !access(filepath, F_OK);
+    return !access(filepath, F_OK);
 }
 
 // UTILS_NS_END

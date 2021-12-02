@@ -11,99 +11,99 @@
 class MasterMap
 {
 public:
-	MasterMap();
-	virtual ~MasterMap();
+    MasterMap();
+    virtual ~MasterMap();
 
-	// ¹¹Ôìmastermap
-	int build_initial();
+    // æ„é€ mastermap
+    int build_initial();
 
-	void add(const std::string& name, const entity_addr_t& addr)
-	{
-		_name_addr[name] = addr;
+    void add(const std::string& name, const entity_addr_t& addr)
+    {
+        _name_addr[name] = addr;
 
-		std::string strrank = name.substr(PREFIX_MASTE_LEN, name.length());
+        std::string strrank = name.substr(PREFIX_MASTE_LEN, name.length());
 
 
-		// ¼ì²éÊÇ·ñÊÇÊı×Ö
-		if (StringUtils::is_numeric_string(strrank.c_str()))
-		{
-			uint32_t rank = 0;
-			// ÊÇ·ñ×ª»»³É¹¦
-			if (StringUtils::string2int(strrank.c_str(), rank))
-			{
-				_rank_addr[rank] = addr;
-			}
-			else
-			{
-				// ERROR
-			}
-		}
-		else
-		{
-			// ERROR
-		}
-	}
+        // æ£€æŸ¥æ˜¯å¦æ˜¯æ•°å­—
+        if (StringUtils::is_digit_string(strrank.c_str()))
+        {
+            uint32_t rank = 0;
+            // æ˜¯å¦è½¬æ¢æˆåŠŸ
+            if (StringUtils::string2int(strrank.c_str(), rank))
+            {
+                _rank_addr[rank] = addr;
+            }
+            else
+            {
+                // ERROR
+            }
+        }
+        else
+        {
+            // ERROR
+        }
+    }
 
-	uint32_t size()
-	{
-		return _name_addr.size();
-	}
+    uint32_t size()
+    {
+        return _name_addr.size();
+    }
 
-	bool contains(const std::string& name)
-	{
-		return _name_addr.count(name);
-	}
+    bool contains(const std::string& name)
+    {
+        return _name_addr.count(name);
+    }
 
-	bool contains(const uint32_t i)
-	{
-		return _rank_addr.count(i);
-	}
+    bool contains(const uint32_t i)
+    {
+        return _rank_addr.count(i);
+    }
 
-	bool contains(const entity_addr_t& addr)
-	{
-		std::map<std::string, entity_addr_t>::iterator it = _name_addr.begin();
-		for (; it != _name_addr.end(); it++)
-		{
-			if (addr == it->second)
-			{
-				return true;
-			}
-		}
-		
-		return false;
-	}
+    bool contains(const entity_addr_t& addr)
+    {
+        std::map<std::string, entity_addr_t>::iterator it = _name_addr.begin();
+        for (; it != _name_addr.end(); it++)
+        {
+            if (addr == it->second)
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
 
-	const entity_addr_t& get_addr_by_rank(const uint32_t i)
-	{
-		return _rank_addr[i];
-	}
+    const entity_addr_t& get_addr_by_rank(const uint32_t i)
+    {
+        return _rank_addr[i];
+    }
 
-	entity_inst_t get_entity(const uint32_t m)
-	{
-		entity_inst_t i;
-		i._addr = _rank_addr[m];
-		i._name = entity_name_t::MASTER(m);
-		return i;
-	}
+    entity_inst_t get_entity(const uint32_t m)
+    {
+        entity_inst_t i;
+        i._addr = _rank_addr[m];
+        i._name = entity_name_t::MASTER(m);
+        return i;
+    }
 
-	void encode(buffer& buf) const;
-	
-	void decode(buffer& buf)
-	{
-		buffer::iterator it = buf.begin();
-		decode(it);
-	}
-	
-	void decode(buffer::iterator& it);
+    void encode(buffer& buf) const;
+    
+    void decode(buffer& buf)
+    {
+        buffer::iterator it = buf.begin();
+        decode(it);
+    }
+    
+    void decode(buffer::iterator& it);
 
 private:
-	// °æ±¾ºÅ
-	uint64_t _epoch;
+    // ç‰ˆæœ¬å·
+    uint64_t _epoch;
 
-	// masterĞÅÏ¢
-	std::map<std::string, entity_addr_t> _name_addr;
+    // masterä¿¡æ¯
+    std::map<std::string, entity_addr_t> _name_addr;
 
-	std::map<uint32_t, entity_addr_t> _rank_addr;
+    std::map<uint32_t, entity_addr_t> _rank_addr;
 };
 WRITE_CLASS_ENCODER(MasterMap);
 

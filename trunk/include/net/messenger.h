@@ -7,333 +7,333 @@
 #include "message.h"
 #include "dispatcher.h"
 
-// Í¨ĞÅ»ùÀà
+// é€šä¿¡åŸºç±»
 class Messenger
 {
 public:
-	Messenger();
+    Messenger();
 
-	Messenger(entity_name_t entityname) : _entity(), _started(false), _magic(0)
-	{
-		_entity._name = entityname;
-	}
-	
-	virtual ~Messenger() {};
+    Messenger(entity_name_t entityname) : _entity(), _started(false), _magic(0)
+    {
+        _entity._name = entityname;
+    }
+    
+    virtual ~Messenger() {};
 
-	struct Policy
-	{
-		// µ±¸ÃÁ¬½Ó³öÏÖ´íÎóÊ±¾ÍÉ¾³ı
-		bool _lossy;
-		// ·şÎñÆ÷Ä£Ê½,±»¶¯Á¬½Ó
-		bool _server;
-		// ¸ÃÁ¬½Ó´¦ÓÚµÈ´ı×´Ì¬
-		bool _standby;
-		// Á¬½Ó³ö´íºóÖØÁ¬
-		bool _resetcheck;
+    struct Policy
+    {
+        // å½“è¯¥è¿æ¥å‡ºç°é”™è¯¯æ—¶å°±åˆ é™¤
+        bool _lossy;
+        // æœåŠ¡å™¨æ¨¡å¼,è¢«åŠ¨è¿æ¥
+        bool _server;
+        // è¯¥è¿æ¥å¤„äºç­‰å¾…çŠ¶æ€
+        bool _standby;
+        // è¿æ¥å‡ºé”™åé‡è¿
+        bool _resetcheck;
 
 
-		// °´×Ö½Ú½ÚÁ÷
-		Throttle* _throttler_bytes;
-		// °´ÏûÏ¢Êı½ÚÁ÷
-		Throttle* _throttler_messages;
+        // æŒ‰å­—èŠ‚èŠ‚æµ
+        Throttle* _throttler_bytes;
+        // æŒ‰æ¶ˆæ¯æ•°èŠ‚æµ
+        Throttle* _throttler_messages;
 
-		Policy() : _lossy(false), _server(false), _standby(false), _resetcheck(true),
-				   _throttler_bytes(NULL), _throttler_messages(NULL)
-		{
-			
-		}
-		
-		Policy(bool l, bool s, bool st, bool r) : _lossy(l), _server(s), _standby(st), 
-					_resetcheck(r), _throttler_bytes(NULL), _throttler_messages(NULL)
-		{
-			
-		}
+        Policy() : _lossy(false), _server(false), _standby(false), _resetcheck(true),
+                   _throttler_bytes(NULL), _throttler_messages(NULL)
+        {
+            
+        }
+        
+        Policy(bool l, bool s, bool st, bool r) : _lossy(l), _server(s), _standby(st), 
+                    _resetcheck(r), _throttler_bytes(NULL), _throttler_messages(NULL)
+        {
+            
+        }
 
-		static Policy stateful_server()
-		{
-			return Policy(false, true, true, true);
-		}
-		
-		static Policy stateless_server()
-		{
-			return Policy(true, true, false, false);
-		}
-		
-		static Policy lossless_peer()
-		{
-			return Policy(false, false, true, false);
-		}
-		
-		static Policy lossless_peer_reuse()
-		{
-			return Policy(false, false, true, true);
-		}
-		
-		static Policy lossy_client()
-		{
-			return Policy(true, false, false, false);
-		}
-		
-		static Policy lossless_client()
-		{
-			return Policy(false, false, false, true);
-		}
-		
-	};
+        static Policy stateful_server()
+        {
+            return Policy(false, true, true, true);
+        }
+        
+        static Policy stateless_server()
+        {
+            return Policy(true, true, false, false);
+        }
+        
+        static Policy lossless_peer()
+        {
+            return Policy(false, false, true, false);
+        }
+        
+        static Policy lossless_peer_reuse()
+        {
+            return Policy(false, false, true, true);
+        }
+        
+        static Policy lossy_client()
+        {
+            return Policy(true, false, false, false);
+        }
+        
+        static Policy lossless_client()
+        {
+            return Policy(false, false, false, true);
+        }
+        
+    };
 
-	static Messenger* create(std::string type, entity_name_t name, std::string lname);
+    static Messenger* create(std::string type, entity_name_t name, std::string lname);
 
-	static int get_default_crc_flags();
+    static int get_default_crc_flags();
 
-	// °ó¶¨µØÖ·,ÓÉÅÉÉúÀàÊµÏÖ
-	virtual int bind(const entity_addr_t& bind_addr) = 0;
+    // ç»‘å®šåœ°å€,ç”±æ´¾ç”Ÿç±»å®ç°
+    virtual int bind(const entity_addr_t& bind_addr) = 0;
 
-	// ÖØĞÂ°ó¶¨¶Ë¿Ú,²¢ÇÒ²»ÄÜÓëÖ®Ç°°ó¶¨µÄ¶Ë¿Ú³åÍ»
-	virtual int rebind(const std::set<int>& avoid_ports) { return -EOPNOTSUPP; }
-	// Æô¶¯
-	virtual int start() { _started = true; return 0; }
-	// Í£Ö¹
-	virtual int shutdown() { _started = false; return 0; }
-	// ×èÈûµÈ´ı¹Ø±Õ
-	virtual void wait() = 0;
-	// ·¢ËÍÏûÏ¢
-	virtual int send_message(Message* msg, const entity_inst_t& dest) = 0;
-	// ¹Ø±ÕsocketÁ¬½Ó
-	virtual void mark_down(const entity_addr_t& addr) = 0;
-	// ¹Ø±ÕËùÓĞsocketÁ¬½Ó
-	virtual void mark_down_all() = 0;
-	// »ñÈ¡ÏûÏ¢×ª·¢¶ÓÁĞ´óĞ¡
-	virtual int get_dispatch_queue_len() = 0;
-	// »ñÈ¡ÏûÏ¢×ª·¢¶ÓÁĞÖĞ×î´óÊ±¼ä
-	virtual double get_dispatch_queue_max_age(utime_t now) = 0;
-	// ÉèÖÃmessengerÄ¬ÈÏ²ßÂÔ
-	virtual void set_default_policy(Policy p) = 0;
-	// »ñÈ¡messengerÄ¬ÈÏ²ßÂÔ
-	virtual Policy get_default_policy() = 0;
-	// ÉèÖÃmessenger²ßÂÔ
-	virtual void set_policy(int type, Policy p) = 0;
-	// »ñÈ¡messenger²ßÂÔ
-	virtual Policy get_policy(int t) = 0;
-	// ÉèÖÃmessenger½ÚÁ÷·§Öµ
-	virtual void set_policy_throttlers(int type, Throttle* bytes, Throttle* msgs = NULL) = 0;
-	// »ñÈ¡socketÁ¬½Ó£¬Èç¹ûÃ»ÓĞÔò¿ªÊ¼Á¬½Ó
-	virtual Connection* get_connection(const entity_inst_t& dest) = 0;
-	// »ñÈ¡±¾µØÁ¬½Ó
-	virtual Connection* get_loopback_connection() = 0;
-	// messenger×¼±¸¾ÍĞ÷
-	virtual void ready() {}
-	// ÉèÖÃmessenger·¢ËÍÓÅÏÈ¼¶
-	void set_default_send_priority(int p) { _default_send_priority = p; }
-	// »ñÈ¡·¢ËÍÓÅÏÈ¼¶
-	int get_default_send_priority() { return _default_send_priority; }
-	// ÉèÖÃsocketÓÅÏÈ¼¶IP_TOS
-	void set_socket_priority(int prio) { _socket_priority = prio; }
-	// »ñÈ¡socketÓÅÏÈ¼¶
-	int get_socket_priority() { return _socket_priority; }
-	// »ñÈ¡±¾µØÍ¨ĞÅÊµÌåĞÅÏ¢
-	const entity_inst_t& get_entity() { return _entity; }
-	// ÉèÖÃ±¾µØÍ¨ĞÅÊµÌåĞÅÏ¢
-	void set_entity(entity_inst_t e) { _entity = e; }
-	// Ä§Êı×Ö
-	uint32_t get_magic() { return _magic; }
-	// ÉèÖÃÄ§Êı×Ö
-	void set_magic(uint32_t magic) { _magic = magic; }
-	// »ñÈ¡±¾µØÍ¨ĞÅµØÖ·ĞÅÏ¢
-	const entity_addr_t& get_entity_addr() { return _entity._addr; }
-	// »ñÈ¡±¾µØÍ¨ĞÅÊµÌåÃû
-	const entity_name_t& get_entity_name() { return _entity._name; }
-	// ÉèÖÃ±¾µØÍ¨ĞÅÊµÌåÃû
-	void set_entity_name(const entity_name_t m) { _entity._name = m; }
+    // é‡æ–°ç»‘å®šç«¯å£,å¹¶ä¸”ä¸èƒ½ä¸ä¹‹å‰ç»‘å®šçš„ç«¯å£å†²çª
+    virtual int rebind(const std::set<int>& avoid_ports) { return -EOPNOTSUPP; }
+    // å¯åŠ¨
+    virtual int start() { _started = true; return 0; }
+    // åœæ­¢
+    virtual int shutdown() { _started = false; return 0; }
+    // é˜»å¡ç­‰å¾…å…³é—­
+    virtual void wait() = 0;
+    // å‘é€æ¶ˆæ¯
+    virtual int send_message(Message* msg, const entity_inst_t& dest) = 0;
+    // å…³é—­socketè¿æ¥
+    virtual void mark_down(const entity_addr_t& addr) = 0;
+    // å…³é—­æ‰€æœ‰socketè¿æ¥
+    virtual void mark_down_all() = 0;
+    // è·å–æ¶ˆæ¯è½¬å‘é˜Ÿåˆ—å¤§å°
+    virtual int get_dispatch_queue_len() = 0;
+    // è·å–æ¶ˆæ¯è½¬å‘é˜Ÿåˆ—ä¸­æœ€å¤§æ—¶é—´
+    virtual double get_dispatch_queue_max_age(utime_t now) = 0;
+    // è®¾ç½®messengeré»˜è®¤ç­–ç•¥
+    virtual void set_default_policy(Policy p) = 0;
+    // è·å–messengeré»˜è®¤ç­–ç•¥
+    virtual Policy get_default_policy() = 0;
+    // è®¾ç½®messengerç­–ç•¥
+    virtual void set_policy(int type, Policy p) = 0;
+    // è·å–messengerç­–ç•¥
+    virtual Policy get_policy(int t) = 0;
+    // è®¾ç½®messengerèŠ‚æµé˜€å€¼
+    virtual void set_policy_throttlers(int type, Throttle* bytes, Throttle* msgs = NULL) = 0;
+    // è·å–socketè¿æ¥ï¼Œå¦‚æœæ²¡æœ‰åˆ™å¼€å§‹è¿æ¥
+    virtual Connection* get_connection(const entity_inst_t& dest) = 0;
+    // è·å–æœ¬åœ°è¿æ¥
+    virtual Connection* get_loopback_connection() = 0;
+    // messengerå‡†å¤‡å°±ç»ª
+    virtual void ready() {}
+    // è®¾ç½®messengerå‘é€ä¼˜å…ˆçº§
+    void set_default_send_priority(int p) { _default_send_priority = p; }
+    // è·å–å‘é€ä¼˜å…ˆçº§
+    int get_default_send_priority() { return _default_send_priority; }
+    // è®¾ç½®socketä¼˜å…ˆçº§IP_TOS
+    void set_socket_priority(int prio) { _socket_priority = prio; }
+    // è·å–socketä¼˜å…ˆçº§
+    int get_socket_priority() { return _socket_priority; }
+    // è·å–æœ¬åœ°é€šä¿¡å®ä½“ä¿¡æ¯
+    const entity_inst_t& get_entity() { return _entity; }
+    // è®¾ç½®æœ¬åœ°é€šä¿¡å®ä½“ä¿¡æ¯
+    void set_entity(entity_inst_t e) { _entity = e; }
+    // é­”æ•°å­—
+    uint32_t get_magic() { return _magic; }
+    // è®¾ç½®é­”æ•°å­—
+    void set_magic(uint32_t magic) { _magic = magic; }
+    // è·å–æœ¬åœ°é€šä¿¡åœ°å€ä¿¡æ¯
+    const entity_addr_t& get_entity_addr() { return _entity._addr; }
+    // è·å–æœ¬åœ°é€šä¿¡å®ä½“å
+    const entity_name_t& get_entity_name() { return _entity._name; }
+    // è®¾ç½®æœ¬åœ°é€šä¿¡å®ä½“å
+    void set_entity_name(const entity_name_t m) { _entity._name = m; }
 
-	// Ìí¼Ódispatcherµ½dispatchers¶ÓÁĞÍ·²¿
-	void add_dispatcher_head(Dispatcher* d)
-	{ 
-		bool first = _dispatchers.empty();
-		_dispatchers.push_front(d);
-		if (d->ms_can_fast_dispatch_any())
-		{
-			_fast_dispatchers.push_front(d);
-		}
-		
-		// ²»Îª¿ÕÔòÆô¶¯messenger
-		if (first)
-		{
-			ready();
-		}
-	}
-	
-	// Ìí¼Ódispatcherµ½dispatchers¶ÓÁĞÎ²²¿
-	void add_dispatcher_tail(Dispatcher* d)
-	{ 
-		bool first = _dispatchers.empty();
-		_dispatchers.push_back(d);
-		if (d->ms_can_fast_dispatch_any())
-		{
-			_fast_dispatchers.push_back(d);
-		}
-		
-		// ²»Îª¿ÕÔòÆô¶¯messenger
-		if (first)
-		{
-			ready();
-		}
-	}
-	
-	// ¼ì²éfast_dispatchers¶ÓÁĞÊÇ·ñ¿ÉÒÔ´¦Àí¸ÃÏûÏ¢
-	bool ms_can_fast_dispatch(Message* m)
-	{
-		for (std::list<Dispatcher*>::iterator iter = _fast_dispatchers.begin();
-			iter != _fast_dispatchers.end(); ++iter)
-		{
-			if ((*iter)->ms_can_fast_dispatch(m))
-			{
-				return true;
-			}
-		}
-			
-		return false;
-	}
-	
-	// ´¦ÀíÊÕµ½µÄÏûÏ¢
-	void ms_fast_dispatch(Message* m)
-	{
-		m->set_dispatch_stamp(clock_now());
-		for (std::list<Dispatcher*>::iterator iter = _fast_dispatchers.begin();
-			iter != _fast_dispatchers.end(); ++iter)
-		{
-			if ((*iter)->ms_can_fast_dispatch(m))
-			{
-				(*iter)->ms_fast_dispatch(m);
-				return;
-			}
-		}
-	}
-	
-	// ÏûÏ¢Ô¤´¦Àí
-	void ms_fast_preprocess(Message* m)
-	{
-		for (std::list<Dispatcher*>::iterator iter = _fast_dispatchers.begin();
-			iter != _fast_dispatchers.end(); ++iter)
-		{
-			(*iter)->ms_fast_preprocess(m);
-		}
-	}
-	
-	// ÏÂ·¢ÏûÏ¢¸ødispatcher´¦Àí
-	void ms_deliver_dispatch(Message* m)
-	{
-		m->set_dispatch_stamp(clock_now());
-		for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin(); 
-			iter != _dispatchers.end(); ++iter)
-		{
-			if ((*iter)->ms_dispatch(m))
-			{
-				return;
-			}
-		}
-		
-		m->dec();
-	}
+    // æ·»åŠ dispatcheråˆ°dispatchersé˜Ÿåˆ—å¤´éƒ¨
+    void add_dispatcher_head(Dispatcher* d)
+    { 
+        bool first = _dispatchers.empty();
+        _dispatchers.push_front(d);
+        if (d->ms_can_fast_dispatch_any())
+        {
+            _fast_dispatchers.push_front(d);
+        }
+        
+        // ä¸ä¸ºç©ºåˆ™å¯åŠ¨messenger
+        if (first)
+        {
+            ready();
+        }
+    }
+    
+    // æ·»åŠ dispatcheråˆ°dispatchersé˜Ÿåˆ—å°¾éƒ¨
+    void add_dispatcher_tail(Dispatcher* d)
+    { 
+        bool first = _dispatchers.empty();
+        _dispatchers.push_back(d);
+        if (d->ms_can_fast_dispatch_any())
+        {
+            _fast_dispatchers.push_back(d);
+        }
+        
+        // ä¸ä¸ºç©ºåˆ™å¯åŠ¨messenger
+        if (first)
+        {
+            ready();
+        }
+    }
+    
+    // æ£€æŸ¥fast_dispatchersé˜Ÿåˆ—æ˜¯å¦å¯ä»¥å¤„ç†è¯¥æ¶ˆæ¯
+    bool ms_can_fast_dispatch(Message* m)
+    {
+        for (std::list<Dispatcher*>::iterator iter = _fast_dispatchers.begin();
+            iter != _fast_dispatchers.end(); ++iter)
+        {
+            if ((*iter)->ms_can_fast_dispatch(m))
+            {
+                return true;
+            }
+        }
+            
+        return false;
+    }
+    
+    // å¤„ç†æ”¶åˆ°çš„æ¶ˆæ¯
+    void ms_fast_dispatch(Message* m)
+    {
+        m->set_dispatch_stamp(clock_now());
+        for (std::list<Dispatcher*>::iterator iter = _fast_dispatchers.begin();
+            iter != _fast_dispatchers.end(); ++iter)
+        {
+            if ((*iter)->ms_can_fast_dispatch(m))
+            {
+                (*iter)->ms_fast_dispatch(m);
+                return;
+            }
+        }
+    }
+    
+    // æ¶ˆæ¯é¢„å¤„ç†
+    void ms_fast_preprocess(Message* m)
+    {
+        for (std::list<Dispatcher*>::iterator iter = _fast_dispatchers.begin();
+            iter != _fast_dispatchers.end(); ++iter)
+        {
+            (*iter)->ms_fast_preprocess(m);
+        }
+    }
+    
+    // ä¸‹å‘æ¶ˆæ¯ç»™dispatcherå¤„ç†
+    void ms_deliver_dispatch(Message* m)
+    {
+        m->set_dispatch_stamp(clock_now());
+        for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin(); 
+            iter != _dispatchers.end(); ++iter)
+        {
+            if ((*iter)->ms_dispatch(m))
+            {
+                return;
+            }
+        }
+        
+        m->dec();
+    }
 
-	// ÏÂ·¢connectÇëÇó¸ødispatcher´¦Àí
-	void ms_deliver_handle_connect(Connection* con)
-	{
-		for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin();
-			iter != _dispatchers.end(); ++iter)
-		{
-			(*iter)->ms_handle_connect(con);
-		}
-	}
-	
-	// ÏÂ·¢connectÇëÇó¸ødispatcher´¦Àí
-	void ms_deliver_handle_fast_connect(Connection* con)
-	{
-		for (std::list<Dispatcher*>::iterator iter = _fast_dispatchers.begin();
-			iter != _fast_dispatchers.end(); ++iter)
-		{
-			(*iter)->ms_handle_fast_connect(con);
-		}
-	}
-	
-	// ÏÂ·¢acceptÇëÇó¸ødispatcher´¦Àí
-	void ms_deliver_handle_accept(Connection* con)
-	{
-		for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin();
-			iter != _dispatchers.end(); ++iter)
-		{
-			(*iter)->ms_handle_accept(con);
-		}
-	}
-	
-	// ÏÂ·¢acceptÇëÇó¸ødispatcher´¦Àí
-	void ms_deliver_handle_fast_accept(Connection* con)
-	{
-		for (std::list<Dispatcher*>::iterator iter = _fast_dispatchers.begin();
-			iter != _fast_dispatchers.end(); ++iter)
-		{
-			(*iter)->ms_handle_fast_accept(con);
-		}
-	}
+    // ä¸‹å‘connectè¯·æ±‚ç»™dispatcherå¤„ç†
+    void ms_deliver_handle_connect(Connection* con)
+    {
+        for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin();
+            iter != _dispatchers.end(); ++iter)
+        {
+            (*iter)->ms_handle_connect(con);
+        }
+    }
+    
+    // ä¸‹å‘connectè¯·æ±‚ç»™dispatcherå¤„ç†
+    void ms_deliver_handle_fast_connect(Connection* con)
+    {
+        for (std::list<Dispatcher*>::iterator iter = _fast_dispatchers.begin();
+            iter != _fast_dispatchers.end(); ++iter)
+        {
+            (*iter)->ms_handle_fast_connect(con);
+        }
+    }
+    
+    // ä¸‹å‘acceptè¯·æ±‚ç»™dispatcherå¤„ç†
+    void ms_deliver_handle_accept(Connection* con)
+    {
+        for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin();
+            iter != _dispatchers.end(); ++iter)
+        {
+            (*iter)->ms_handle_accept(con);
+        }
+    }
+    
+    // ä¸‹å‘acceptè¯·æ±‚ç»™dispatcherå¤„ç†
+    void ms_deliver_handle_fast_accept(Connection* con)
+    {
+        for (std::list<Dispatcher*>::iterator iter = _fast_dispatchers.begin();
+            iter != _fast_dispatchers.end(); ++iter)
+        {
+            (*iter)->ms_handle_fast_accept(con);
+        }
+    }
 
-	// ÏÂ·¢ÖØÖÃÁ¬½ÓÇëÇó¸ødispatcher´¦Àí
-	void ms_deliver_handle_reset(Connection* con)
-	{
-		for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin();
-			iter != _dispatchers.end(); ++iter)
-		{
-			if ((*iter)->ms_handle_reset(con))
-			{
-				return;
-			}
-		}
-	}
+    // ä¸‹å‘é‡ç½®è¿æ¥è¯·æ±‚ç»™dispatcherå¤„ç†
+    void ms_deliver_handle_reset(Connection* con)
+    {
+        for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin();
+            iter != _dispatchers.end(); ++iter)
+        {
+            if ((*iter)->ms_handle_reset(con))
+            {
+                return;
+            }
+        }
+    }
 
-	void ms_deliver_handle_remote_reset(Connection* con)
-	{
-		for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin();
-			iter != _dispatchers.end(); ++iter)
-		{
-			(*iter)->ms_handle_remote_reset(con);
-		}
-	}
-	
-	// ÏÂ·¢connect refusedÏûÏ¢¸ødispatcher´¦Àí
-	void ms_deliver_handle_refused(Connection* con)
-	{
-		for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin();
-			iter != _dispatchers.end(); ++iter)
-		{
-			if ((*iter)->ms_handle_refused(con))
-			{
-				return;
-			}
-		}
-	}
+    void ms_deliver_handle_remote_reset(Connection* con)
+    {
+        for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin();
+            iter != _dispatchers.end(); ++iter)
+        {
+            (*iter)->ms_handle_remote_reset(con);
+        }
+    }
+    
+    // ä¸‹å‘connect refusedæ¶ˆæ¯ç»™dispatcherå¤„ç†
+    void ms_deliver_handle_refused(Connection* con)
+    {
+        for (std::list<Dispatcher*>::iterator iter = _dispatchers.begin();
+            iter != _dispatchers.end(); ++iter)
+        {
+            if ((*iter)->ms_handle_refused(con))
+            {
+                return;
+            }
+        }
+    }
 
 protected:
-	// ÉèÖÃ±¾µØÍ¨ĞÅÊµÌåµØÖ·
-	virtual void set_entity_addr(const entity_addr_t& a) { _entity._addr = a; }
+    // è®¾ç½®æœ¬åœ°é€šä¿¡å®ä½“åœ°å€
+    virtual void set_entity_addr(const entity_addr_t& a) { _entity._addr = a; }
 
 public:
-	int _crc_flag;
+    int _crc_flag;
 
 protected:
-	// µ±Ç°Í¨ĞÅÊµÌå
-	entity_inst_t _entity;
-	// ÊÇ·ñÒÑÆô¶¯
-	bool _started;
-	// Ä§Êı×Ö
-	uint32_t _magic;
-	// ·¢ËÍÓÅÏÈ¼¶
-	int _default_send_priority;
-	// socketÓÅÏÈ¼¶
-	int _socket_priority;
+    // å½“å‰é€šä¿¡å®ä½“
+    entity_inst_t _entity;
+    // æ˜¯å¦å·²å¯åŠ¨
+    bool _started;
+    
+    uint32_t _magic;
+    // å‘é€ä¼˜å…ˆçº§
+    int _default_send_priority;
+    // socketä¼˜å…ˆçº§
+    int _socket_priority;
 
 private:
-	// ÏûÏ¢·Ö·¢Æ÷
-	std::list<Dispatcher*> _dispatchers;
-	// ¿ìËÙÏûÏ¢·Ö·¢Æ÷
-	std::list<Dispatcher*> _fast_dispatchers;
+    // æ¶ˆæ¯åˆ†å‘å™¨
+    std::list<Dispatcher*> _dispatchers;
+    // å¿«é€Ÿæ¶ˆæ¯åˆ†å‘å™¨
+    std::list<Dispatcher*> _fast_dispatchers;
 };
 
 
@@ -341,69 +341,69 @@ private:
 class PolicyMessenger : public Messenger
 {
 private:
-	Mutex _lock;
-	// messengerÄ¬ÈÏ²ßÂÔ
-	Policy _default_policy;
-	std::map<int, Policy> _policy_map;
+    Mutex _lock;
+    // messengeré»˜è®¤ç­–ç•¥
+    Policy _default_policy;
+    std::map<int, Policy> _policy_map;
 
 public:
-	PolicyMessenger(entity_name_t name, std::string mname) : Messenger(name)
-	{
-	}
+    PolicyMessenger(entity_name_t name, std::string mname) : Messenger(name)
+    {
+    }
 
-	~PolicyMessenger()
-	{
-	}
+    ~PolicyMessenger()
+    {
+    }
 
-	Policy get_policy(int t)
-	{
-		Mutex::Locker locker(_lock);
-		std::map<int, Policy>::iterator iter = _policy_map.find(t);
-		
-		if (iter != _policy_map.end())
-		{
-			return iter->second;
-		}
-		else
-		{
-			return _default_policy;
-		}
-	}
+    Policy get_policy(int t)
+    {
+        Mutex::Locker locker(_lock);
+        std::map<int, Policy>::iterator iter = _policy_map.find(t);
+        
+        if (iter != _policy_map.end())
+        {
+            return iter->second;
+        }
+        else
+        {
+            return _default_policy;
+        }
+    }
 
-	Policy get_default_policy()
-	{
-		Mutex::Locker locker(_lock);
-		return _default_policy;
-	}
-	
-	void set_default_policy(Policy p)
-	{
-		Mutex::Locker locker(_lock);
-		_default_policy = p;
-	}
+    Policy get_default_policy()
+    {
+        Mutex::Locker locker(_lock);
+        return _default_policy;
+    }
+    
+    void set_default_policy(Policy p)
+    {
+        Mutex::Locker locker(_lock);
+        _default_policy = p;
+    }
 
-	void set_policy(int type, Policy p)
-	{
-		Mutex::Locker locker(_lock);
-		_policy_map[type] = p;
-	}
+    void set_policy(int type, Policy p)
+    {
+        Mutex::Locker locker(_lock);
+        _policy_map[type] = p;
+    }
 
-	void set_policy_throttlers(int type, Throttle* byte_throttle, Throttle* msg_throttle)
-	{
-    	Mutex::Locker locker(_lock);
-		std::map<int, Policy>::iterator iter = _policy_map.find(type);
-		
-		if (iter != _policy_map.end())
-		{
-			iter->second._throttler_bytes = byte_throttle;
-			iter->second._throttler_messages = msg_throttle;
-		}
-		else
-		{
-			_default_policy._throttler_bytes = byte_throttle;
-			_default_policy._throttler_messages = msg_throttle;
-		}
-	}
+    void set_policy_throttlers(int type, Throttle* byte_throttle, Throttle* msg_throttle)
+    {
+        Mutex::Locker locker(_lock);
+        std::map<int, Policy>::iterator iter = _policy_map.find(type);
+        
+        if (iter != _policy_map.end())
+        {
+            iter->second._throttler_bytes = byte_throttle;
+            iter->second._throttler_messages = msg_throttle;
+        }
+        else
+        {
+            _default_policy._throttler_bytes = byte_throttle;
+            _default_policy._throttler_messages = msg_throttle;
+        }
+    }
 
 };
 

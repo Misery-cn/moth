@@ -2,7 +2,7 @@
 
 Log::Log()
 {
-	init();
+    init();
 }
 
 Log::~Log()
@@ -11,54 +11,54 @@ Log::~Log()
 
 bool Log::init()
 {
-	// ³õÊ¼»¯ÎÄ¼ş¸½¼ÓÆ÷
-	Appender* appender = new FileAppender("moth");
-	
-	_run = new Logger();
-	
-	_run->set_appender(appender);
+    // åˆå§‹åŒ–æ–‡ä»¶é™„åŠ å™¨
+    Appender* appender = new FileAppender("moth");
+    
+    _run = new Logger();
+    
+    _run->set_appender(appender);
 
-	return true;
+    return true;
 }
 
 void Log::set_log_level(uint32_t level)
 {
-	if (Log_Off <= level && Log_Debug >= level)
-	{
-		_run->set_log_level((log_level_t)level);
-	}
-	else
-	{
-		// Ä¬ÈÏinfo¼¶±ğµÄÈÕÖ¾
-		_run->set_log_level(Log_Info);
-	}
+    if (Log_Off <= level && Log_Debug >= level)
+    {
+        _run->set_log_level((log_level_t)level);
+    }
+    else
+    {
+        // é»˜è®¤infoçº§åˆ«çš„æ—¥å¿—
+        _run->set_log_level(Log_Info);
+    }
 }
 
 void Log::do_log(log_level_t level, const char* format, ...)
 {
-	if (NULL == _run)
-	{
-		return;
-	}
+    if (NULL == _run)
+    {
+        return;
+    }
 
-	if (level <= _run->get_log_level())
-	{
-		RunLogEvent event(level);
-	
-		va_list args;
-		va_start(args, format);
-		StringUtils::fix_vsnprintf(event._content, LOG_LINE_SIZE, format, args);
-		va_end(args);
+    if (level <= _run->get_log_level())
+    {
+        RunLogEvent event(level);
+    
+        va_list args;
+        va_start(args, format);
+        StringUtils::fix_vsnprintf(event._content, LOG_LINE_SIZE, format, args);
+        va_end(args);
 
-		_run->call_appender(&event);
-	}
+        _run->call_appender(&event);
+    }
 }
 
 Logger::Logger()
 {
-	_level = Log_Info;
-	// ¸½¼ÓÆ÷ÁĞ±í,Ä¿Ç°Ö»ÓĞÒ»¸öÎÄ¼ş¸½¼ÓÆ÷
-	_appenders = new ArrayList<Appender*>();
+    _level = Log_Info;
+    // é™„åŠ å™¨åˆ—è¡¨,ç›®å‰åªæœ‰ä¸€ä¸ªæ–‡ä»¶é™„åŠ å™¨
+    _appenders = new ArrayList<Appender*>();
 }
 
 Logger::~Logger()
@@ -67,18 +67,18 @@ Logger::~Logger()
 
 void Logger::call_appender(LogEvent* event)
 {
-	if (NULL == event)
-	{
-		return;
-	}
+    if (NULL == event)
+    {
+        return;
+    }
 
-	// ÍĞ¹Ü
-	MutexGuard guard(_lock);
+    // æ‰˜ç®¡
+    Mutex::Locker locker(_lock);
 
-	for (ArrayList<Appender*>::iterator it = _appenders->begin(); !it.end(); ++it)
-	{
-		(*it)->do_appender(event);
-	}
+    for (ArrayList<Appender*>::iterator it = _appenders->begin(); !it.end(); ++it)
+    {
+        (*it)->do_appender(event);
+    }
 }
 
 

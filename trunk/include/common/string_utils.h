@@ -13,83 +13,167 @@
 class StringUtils
 {
 public:
-	// É¾³ı×Ö·û´®Î²²¿´ÓÖ¸¶¨×Ö·û¿ªÊ¼µÄÄÚÈİ
+    /**
+     * åˆ é™¤æºå­—ç¬¦ä¸²å°¾éƒ¨ä»æŒ‡å®šå­—ç¬¦å¼€å§‹åçš„å†…å®¹
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     * @param c: åˆ†éš”ç¬¦
+     */
     static void remove_last(std::string& source, char c);
-	// É¾³ı×Ö·û´®Î²²¿´ÓÖ¸¶¨×Ö·û´®¿ªÊ¼µÄÄÚÈİ
+
+    /**
+     * åˆ é™¤æºå­—ç¬¦ä¸²å°¾éƒ¨ä»æŒ‡å®šå­—ç¬¦ä¸²å¼€å§‹åçš„å†…å®¹
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     * @param sep: åˆ†éš”å­—ç¬¦ä¸²
+     */
     static void remove_last(std::string& source, const std::string& sep);
-	
-	// ½«×Ö·û´®ÖĞµÄËùÓĞĞ¡Ğ´×Ö·û×ª»»³É´óĞ´
+    
+    /**
+     * å°†æºå­—ç¬¦ä¸²ä¸­å°å†™å­—æ¯è½¬æ¢æˆå¤§å†™
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     */
     static void to_upper(char* source);
     static void to_upper(std::string& source);
-	
-	// ½«×Ö·û´®ÖĞµÄËùÓĞ´óĞ´×Ö·û×ª»»³ÉĞ¡Ğ´
+    
+    /**
+     * å°†æºå­—ç¬¦ä¸²ä¸­å¤§å†™å­—æ¯è½¬æ¢æˆå°å†™
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     */
     static void to_lower(char* source);    
     static void to_lower(std::string& source);
 
-	// ÅĞ¶ÏÖ¸¶¨×Ö·ûÊÇ·ñÎª¿Õ¸ñ»òTAB·û(\t)»ò»Ø³µ·û(\r)»ò»»ĞĞ·û(\n)
+    /**
+     * åˆ¤æ–­æŒ‡å®šå­—ç¬¦æ˜¯å¦ä¸ºç©ºæ ¼æˆ–TABç¬¦(\t)æˆ–å›è½¦ç¬¦(\r)æˆ–æ¢è¡Œç¬¦(\n)
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     */
     static bool is_space(char c);
 
-	// É¾³ı×Ö·û´®Ê×Î²¿Õ¸ñ»òTAB·û(\t)»ò»Ø³µ·û(\r)»ò»»ĞĞ·û(\n)
+    /**
+     * åˆ é™¤å­—ç¬¦ä¸²é¦–å°¾(ä¸åŒ…æ‹¬ä¸­é—´)ç©ºæ ¼æˆ–TABç¬¦(\t)æˆ–å›è½¦ç¬¦(\r)æˆ–æ¢è¡Œç¬¦(\n)
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     */
     static void trim(char* source);
     static void trim(std::string& source);
 
-	// É¾³ı×Ö·û´®Í·²¿¿Õ¸ñ»òTAB·û(\t)»ò»Ø³µ·û(\r)»ò»»ĞĞ·û(\n)
+    static void trim_all(char* source);
+    static void trim_all(std::string& source);
+
+    /**
+     * åˆ é™¤å­—ç¬¦ä¸²å¤´éƒ¨ç©ºæ ¼æˆ–TABç¬¦(\t)æˆ–å›è½¦ç¬¦(\r)æˆ–æ¢è¡Œç¬¦(\n)
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     */
     static void trim_left(char* source);
     static void trim_left(std::string& source);
 
-	// É¾³ı×Ö·û´®Î²²¿¿Õ¸ñ»òTAB·û(\t)»ò»Ø³µ·û(\r)»ò»»ĞĞ·û(\n)
+    /**
+     * åˆ é™¤å­—ç¬¦ä¸²å°¾éƒ¨ç©ºæ ¼æˆ–TABç¬¦(\t)æˆ–å›è½¦ç¬¦(\r)æˆ–æ¢è¡Œç¬¦(\n)
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     */
     static void trim_right(char* source);        
     static void trim_right(std::string& source);
 
-	// ½«×Ö·û´®×ª»»³É8Î»µÄÓĞ·ûºÅÕûÊı
-	// converted_length:ĞèÒª½øĞĞÊı×Ö×ª»»µÄ×Ö·û¸öÊı£¬³¬¹ı²¿·Ö²»×ö½âÎö£¬Èç¹ûÈ¡ÖµÎª0Ôò´¦ÀíÕû¸ö×Ö·û´®
-	// ignored_zero:ÊÇ·ñÔÊĞíÔÊĞí×Ö·û´®ÒÔ0´òÍ·£¬²¢×Ô¶¯ºöÂÔ
+    /**
+     * å°†å­—ç¬¦ä¸²è½¬æ¢æˆ8ä½æœ‰ç¬¦å·æ•´æ•°
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     * @param result: è½¬æ¢åçš„ç»“æœ
+     * @param converted_length: éœ€è¦è¿›è¡Œæ•°å­—è½¬æ¢çš„å­—ç¬¦ä¸ªæ•°ï¼Œè¶…è¿‡éƒ¨åˆ†ä¸åšè§£æï¼Œå¦‚æœå–å€¼ä¸º0åˆ™å¤„ç†æ•´ä¸ªå­—ç¬¦ä¸²
+     * @param ignored_zero: æ˜¯å¦å…è®¸å…è®¸å­—ç¬¦ä¸²ä»¥0æ‰“å¤´ï¼Œå¹¶è‡ªåŠ¨å¿½ç•¥
+     * @return: å¦‚æœè½¬æ¢æˆåŠŸè¿”å›trueï¼Œå¦åˆ™è¿”å›false
+     */
     static bool string2int(const char* source, int8_t& result, uint8_t converted_length = 0, bool ignored_zero = false);
-    static bool string2int8(const char* source, int8_t& result, uint8_t converted_length = 0, bool ignored_zero = false);    
 
-	// ½«×Ö·û´®×ª»»³É16Î»µÄÓĞ·ûºÅÕûÊı
-	// converted_length:ĞèÒª½øĞĞÊı×Ö×ª»»µÄ×Ö·û¸öÊı£¬³¬¹ı²¿·Ö²»×ö½âÎö£¬Èç¹ûÈ¡ÖµÎª0Ôò´¦ÀíÕû¸ö×Ö·û´®
-	// ignored_zero:ÊÇ·ñÔÊĞíÔÊĞí×Ö·û´®ÒÔ0´òÍ·£¬²¢×Ô¶¯ºöÂÔ
+    /**
+     * å°†å­—ç¬¦ä¸²è½¬æ¢æˆ16ä½æœ‰ç¬¦å·æ•´æ•°
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     * @param result: è½¬æ¢åçš„ç»“æœ
+     * @param converted_length: éœ€è¦è¿›è¡Œæ•°å­—è½¬æ¢çš„å­—ç¬¦ä¸ªæ•°ï¼Œè¶…è¿‡éƒ¨åˆ†ä¸åšè§£æï¼Œå¦‚æœå–å€¼ä¸º0åˆ™å¤„ç†æ•´ä¸ªå­—ç¬¦ä¸²
+     * @param ignored_zero: æ˜¯å¦å…è®¸å…è®¸å­—ç¬¦ä¸²ä»¥0æ‰“å¤´ï¼Œå¹¶è‡ªåŠ¨å¿½ç•¥
+     * @return: å¦‚æœè½¬æ¢æˆåŠŸè¿”å›trueï¼Œå¦åˆ™è¿”å›false
+     */
     static bool string2int(const char* source, int16_t& result, uint8_t converted_length = 0, bool ignored_zero = false);
-	static bool string2int16(const char* source, int16_t& result, uint8_t converted_length = 0, bool ignored_zero = false);    
 
-	// ½«×Ö·û´®×ª»»³É32Î»µÄÓĞ·ûºÅÕûÊı
-	// converted_length:ĞèÒª½øĞĞÊı×Ö×ª»»µÄ×Ö·û¸öÊı£¬³¬¹ı²¿·Ö²»×ö½âÎö£¬Èç¹ûÈ¡ÖµÎª0Ôò´¦ÀíÕû¸ö×Ö·û´®
-	// ignored_zero:ÊÇ·ñÔÊĞíÔÊĞí×Ö·û´®ÒÔ0´òÍ·£¬²¢×Ô¶¯ºöÂÔ
+    /**
+     * å°†å­—ç¬¦ä¸²è½¬æ¢æˆ32ä½æœ‰ç¬¦å·æ•´æ•°
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     * @param result: è½¬æ¢åçš„ç»“æœ
+     * @param converted_length: éœ€è¦è¿›è¡Œæ•°å­—è½¬æ¢çš„å­—ç¬¦ä¸ªæ•°ï¼Œè¶…è¿‡éƒ¨åˆ†ä¸åšè§£æï¼Œå¦‚æœå–å€¼ä¸º0åˆ™å¤„ç†æ•´ä¸ªå­—ç¬¦ä¸²
+     * @param ignored_zero: æ˜¯å¦å…è®¸å…è®¸å­—ç¬¦ä¸²ä»¥0æ‰“å¤´ï¼Œå¹¶è‡ªåŠ¨å¿½ç•¥
+     * @return: å¦‚æœè½¬æ¢æˆåŠŸè¿”å›trueï¼Œå¦åˆ™è¿”å›false
+     */
     static bool string2int(const char* source, int32_t& result, uint8_t converted_length = 0, bool ignored_zero = false);
-    static bool string2int32(const char* source, int32_t& result, uint8_t converted_length = 0, bool ignored_zero = false);    
 
-	// ½«×Ö·û´®×ª»»³É64Î»µÄÓĞ·ûºÅÕûÊı
-	// converted_length:ĞèÒª½øĞĞÊı×Ö×ª»»µÄ×Ö·û¸öÊı£¬³¬¹ı²¿·Ö²»×ö½âÎö£¬Èç¹ûÈ¡ÖµÎª0Ôò´¦ÀíÕû¸ö×Ö·û´®
-	// ignored_zero:ÊÇ·ñÔÊĞíÔÊĞí×Ö·û´®ÒÔ0´òÍ·£¬²¢×Ô¶¯ºöÂÔ
+    /**
+     * å°†å­—ç¬¦ä¸²è½¬æ¢æˆ64ä½æœ‰ç¬¦å·æ•´æ•°
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     * @param result: è½¬æ¢åçš„ç»“æœ
+     * @param converted_length: éœ€è¦è¿›è¡Œæ•°å­—è½¬æ¢çš„å­—ç¬¦ä¸ªæ•°ï¼Œè¶…è¿‡éƒ¨åˆ†ä¸åšè§£æï¼Œå¦‚æœå–å€¼ä¸º0åˆ™å¤„ç†æ•´ä¸ªå­—ç¬¦ä¸²
+     * @param ignored_zero: æ˜¯å¦å…è®¸å…è®¸å­—ç¬¦ä¸²ä»¥0æ‰“å¤´ï¼Œå¹¶è‡ªåŠ¨å¿½ç•¥
+     * @return: å¦‚æœè½¬æ¢æˆåŠŸè¿”å›trueï¼Œå¦åˆ™è¿”å›false
+     */
     static bool string2int(const char* source, int64_t& result, uint8_t converted_length = 0, bool ignored_zero = false);
-    static bool string2int64(const char* source, int64_t& result, uint8_t converted_length=0, bool ignored_zero = false);    
 
-	// ½«×Ö·û´®×ª»»³É8Î»µÄÎŞ·ûºÅÕûÊı
-	// converted_length:ĞèÒª½øĞĞÊı×Ö×ª»»µÄ×Ö·û¸öÊı£¬³¬¹ı²¿·Ö²»×ö½âÎö£¬Èç¹ûÈ¡ÖµÎª0Ôò´¦ÀíÕû¸ö×Ö·û´®
-	// ignored_zero:ÊÇ·ñÔÊĞíÔÊĞí×Ö·û´®ÒÔ0´òÍ·£¬²¢×Ô¶¯ºöÂÔ
+    /**
+     * å°†å­—ç¬¦ä¸²è½¬æ¢æˆ8ä½æ— ç¬¦å·æ•´æ•°
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     * @param result: è½¬æ¢åçš„ç»“æœ
+     * @param converted_length: éœ€è¦è¿›è¡Œæ•°å­—è½¬æ¢çš„å­—ç¬¦ä¸ªæ•°ï¼Œè¶…è¿‡éƒ¨åˆ†ä¸åšè§£æï¼Œå¦‚æœå–å€¼ä¸º0åˆ™å¤„ç†æ•´ä¸ªå­—ç¬¦ä¸²
+     * @param ignored_zero: æ˜¯å¦å…è®¸å…è®¸å­—ç¬¦ä¸²ä»¥0æ‰“å¤´ï¼Œå¹¶è‡ªåŠ¨å¿½ç•¥
+     * @return: å¦‚æœè½¬æ¢æˆåŠŸè¿”å›trueï¼Œå¦åˆ™è¿”å›false
+     */
     static bool string2int(const char* source, uint8_t& result, uint8_t converted_length = 0, bool ignored_zero = false);
-    static bool string2uint8(const char* source, uint8_t& result, uint8_t converted_length = 0, bool ignored_zero = false);    
 
-	// ½«×Ö·û´®×ª»»³É16Î»µÄÎŞ·ûºÅÕûÊı
-	// converted_length:ĞèÒª½øĞĞÊı×Ö×ª»»µÄ×Ö·û¸öÊı£¬³¬¹ı²¿·Ö²»×ö½âÎö£¬Èç¹ûÈ¡ÖµÎª0Ôò´¦ÀíÕû¸ö×Ö·û´®
-	// ignored_zero:ÊÇ·ñÔÊĞíÔÊĞí×Ö·û´®ÒÔ0´òÍ·£¬²¢×Ô¶¯ºöÂÔ
+    /**
+     * å°†å­—ç¬¦ä¸²è½¬æ¢æˆ16ä½æ— ç¬¦å·æ•´æ•°
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     * @param result: è½¬æ¢åçš„ç»“æœ
+     * @param converted_length: éœ€è¦è¿›è¡Œæ•°å­—è½¬æ¢çš„å­—ç¬¦ä¸ªæ•°ï¼Œè¶…è¿‡éƒ¨åˆ†ä¸åšè§£æï¼Œå¦‚æœå–å€¼ä¸º0åˆ™å¤„ç†æ•´ä¸ªå­—ç¬¦ä¸²
+     * @param ignored_zero: æ˜¯å¦å…è®¸å…è®¸å­—ç¬¦ä¸²ä»¥0æ‰“å¤´ï¼Œå¹¶è‡ªåŠ¨å¿½ç•¥
+     * @return: å¦‚æœè½¬æ¢æˆåŠŸè¿”å›trueï¼Œå¦åˆ™è¿”å›false
+     */
     static bool string2int(const char* source, uint16_t& result, uint8_t converted_length = 0, bool ignored_zero = false);
-    static bool string2uint16(const char* source, uint16_t& result, uint8_t converted_length = 0, bool ignored_zero = false);    
 
-	// ½«×Ö·û´®×ª»»³É32Î»µÄÎŞ·ûºÅÕûÊı
-	// converted_length:ĞèÒª½øĞĞÊı×Ö×ª»»µÄ×Ö·û¸öÊı£¬³¬¹ı²¿·Ö²»×ö½âÎö£¬Èç¹ûÈ¡ÖµÎª0Ôò´¦ÀíÕû¸ö×Ö·û´®
-	// ignored_zero:ÊÇ·ñÔÊĞíÔÊĞí×Ö·û´®ÒÔ0´òÍ·£¬²¢×Ô¶¯ºöÂÔ
+    /**
+     * å°†å­—ç¬¦ä¸²è½¬æ¢æˆ32ä½æ— ç¬¦å·æ•´æ•°
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     * @param result: è½¬æ¢åçš„ç»“æœ
+     * @param converted_length: éœ€è¦è¿›è¡Œæ•°å­—è½¬æ¢çš„å­—ç¬¦ä¸ªæ•°ï¼Œè¶…è¿‡éƒ¨åˆ†ä¸åšè§£æï¼Œå¦‚æœå–å€¼ä¸º0åˆ™å¤„ç†æ•´ä¸ªå­—ç¬¦ä¸²
+     * @param ignored_zero: æ˜¯å¦å…è®¸å…è®¸å­—ç¬¦ä¸²ä»¥0æ‰“å¤´ï¼Œå¹¶è‡ªåŠ¨å¿½ç•¥
+     * @return: å¦‚æœè½¬æ¢æˆåŠŸè¿”å›trueï¼Œå¦åˆ™è¿”å›false
+     */
     static bool string2int(const char* source, uint32_t& result, uint8_t converted_length = 0, bool ignored_zero = false);
-    static bool string2uint32(const char* source, uint32_t& result, uint8_t converted_length = 0, bool ignored_zero = false);    
 
-	// ½«×Ö·û´®×ª»»³É64Î»µÄÎŞ·ûºÅÕûÊı
-	// converted_length:ĞèÒª½øĞĞÊı×Ö×ª»»µÄ×Ö·û¸öÊı£¬³¬¹ı²¿·Ö²»×ö½âÎö£¬Èç¹ûÈ¡ÖµÎª0Ôò´¦ÀíÕû¸ö×Ö·û´®
-	// ignored_zero:ÊÇ·ñÔÊĞíÔÊĞí×Ö·û´®ÒÔ0´òÍ·£¬²¢×Ô¶¯ºöÂÔ
+    /**
+     * å°†å­—ç¬¦ä¸²è½¬æ¢æˆ64ä½æ— ç¬¦å·æ•´æ•°
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     * @param result: è½¬æ¢åçš„ç»“æœ
+     * @param converted_length: éœ€è¦è¿›è¡Œæ•°å­—è½¬æ¢çš„å­—ç¬¦ä¸ªæ•°ï¼Œè¶…è¿‡éƒ¨åˆ†ä¸åšè§£æï¼Œå¦‚æœå–å€¼ä¸º0åˆ™å¤„ç†æ•´ä¸ªå­—ç¬¦ä¸²
+     * @param ignored_zero: æ˜¯å¦å…è®¸å…è®¸å­—ç¬¦ä¸²ä»¥0æ‰“å¤´ï¼Œå¹¶è‡ªåŠ¨å¿½ç•¥
+     * @return: å¦‚æœè½¬æ¢æˆåŠŸè¿”å›trueï¼Œå¦åˆ™è¿”å›false
+     */
     static bool string2int(const char* source, uint64_t& result, uint8_t converted_length = 0, bool ignored_zero = false);
-    static bool string2uint64(const char* source, uint64_t& result, uint8_t converted_length = 0, bool ignored_zero = false);    
 
-	// µ±strÎª·ÇÓĞĞ§µÄIntTypeÀàĞÍÕûÊıÖµÊ±£¬·µ»Øerror_valueÖ¸¶¨µÄÖµ
+    /**
+     * å°†å­—ç¬¦ä¸²è½¬æ¢æˆæ•´æ•°é€šç”¨æ¨¡æ¿
+     *
+     * @param str: æºå­—ç¬¦ä¸²
+     * @param error_value: å¦‚æœè½¬æ¢é”™è¯¯è¿”å›é»˜è®¤å€¼
+     * @return: è¿”å›è½¬æ¢åçš„ç»“æœ
+     */
     template <typename IntType>
     static IntType string2int(const char* str, IntType error_value = 0)
     {
@@ -114,126 +198,273 @@ public:
         return m;
     }
 
-    static std::string int_tostring(int16_t source);
-    static std::string int16_tostring(int16_t source);    
+    /**
+     * å°†å­—ç¬¦ä¸²è½¬æ¢æˆlong longç±»å‹
+     *
+     * @param str: æºå­—ç¬¦ä¸²
+     * @param base: é‡‡ç”¨çš„è¿›åˆ¶æ–¹å¼ï¼Œå¦‚baseå€¼ä¸º10åˆ™é‡‡ç”¨10è¿›åˆ¶ï¼Œè‹¥baseå€¼ä¸º16åˆ™é‡‡ç”¨16è¿›åˆ¶
+     * @param result: è½¬æ¢ç»“æœ
+     * @return: å¦‚æœè½¬æ¢æˆåŠŸè¿”å›trueï¼Œå¦åˆ™è¿”å›false
+     */
+    static bool string2ll(const char* str, int base, long long& result);
 
-    static std::string int32_tostring(int32_t source);
+    /**
+     * å°†å­—ç¬¦ä¸²è½¬æ¢æˆlongç±»å‹
+     *
+     * @param str: æºå­—ç¬¦ä¸²
+     * @param base: é‡‡ç”¨çš„è¿›åˆ¶æ–¹å¼ï¼Œå¦‚baseå€¼ä¸º10åˆ™é‡‡ç”¨10è¿›åˆ¶ï¼Œè‹¥baseå€¼ä¸º16åˆ™é‡‡ç”¨16è¿›åˆ¶
+     * @param result: è½¬æ¢ç»“æœ
+     * @return: å¦‚æœè½¬æ¢æˆåŠŸè¿”å›trueï¼Œå¦åˆ™è¿”å›false
+     */
+    static bool string2l(const char* str, int base, long& result);
+
+    /**
+     * å°†å­—ç¬¦ä¸²è½¬æ¢æˆdoubleç±»å‹
+     *
+     * @param str: æºå­—ç¬¦ä¸²
+     * @param result: è½¬æ¢ç»“æœ
+     * @return: å¦‚æœè½¬æ¢æˆåŠŸè¿”å›trueï¼Œå¦åˆ™è¿”å›false
+     */
+    static bool string2double(const char* str, double& result);
+
+    /**
+     * å°†å­—ç¬¦ä¸²è½¬æ¢æˆfloatç±»å‹
+     *
+     * @param str: æºå­—ç¬¦ä¸²
+     * @param result: è½¬æ¢ç»“æœ
+     * @return: å¦‚æœè½¬æ¢æˆåŠŸè¿”å›trueï¼Œå¦åˆ™è¿”å›false
+     */
+    static bool string2float(const char* str, float& result);
+
+
+    /**
+     * å°†æ•´å½¢è½¬æ¢æˆå­—ç¬¦ä¸²
+     *
+     * @param T: ç±»å‹
+     * @param base: è¿›åˆ¶æ–¹å¼ï¼Œé»˜è®¤æŒ‰10è¿›åˆ¶è½¬æ¢
+     * @param width: è½¬æ¢åå­—ç¬¦ä¸²æœ€å°é•¿åº¦ä¸è¶³è¡¥0
+     * @param u: éœ€è¦è½¬æ¢çš„æ•°å­—
+     * @param buf: è½¬æ¢ç»“æœ
+     * @return: è¿”å›è½¬æ¢åçš„å­—ç¬¦ä¸²
+     */
+    template<typename T, const unsigned base = 10, const unsigned width = 1>
+    static inline char* ritoa(T u, char* buf)
+    {
+        unsigned digits = 0;
+        while (u)
+        {
+            *--buf = "0123456789abcdef"[u % base];
+            u /= base;
+            digits++;
+        }
+        
+        while (digits++ < width)
+        {
+            *--buf = '0';
+        }
+        
+        return buf;
+    }
+
+    /**
+     * å°†16ä½æœ‰ç¬¦å·æ•´æ•°è½¬æ¢æˆå­—ç¬¦ä¸²
+     *
+     * @param source: 16ä½æœ‰ç¬¦å·æ•´æ•°
+     * @return: è¿”å›è½¬æ¢åçš„å­—ç¬¦ä¸²
+     */
+    static std::string int_tostring(int16_t source);
+
+    /**
+     * å°†32ä½æœ‰ç¬¦å·æ•´æ•°è½¬æ¢æˆå­—ç¬¦ä¸²
+     *
+     * @param source: 32ä½æœ‰ç¬¦å·æ•´æ•°
+     * @return: è¿”å›è½¬æ¢åçš„å­—ç¬¦ä¸²
+     */
     static std::string int_tostring(int32_t source);
 
+    /**
+     * å°†64ä½æœ‰ç¬¦å·æ•´æ•°è½¬æ¢æˆå­—ç¬¦ä¸²
+     *
+     * @param source: 64ä½æœ‰ç¬¦å·æ•´æ•°
+     * @return: è¿”å›è½¬æ¢åçš„å­—ç¬¦ä¸²
+     */
     static std::string int_tostring(int64_t source);
-    static std::string int64_tostring(int64_t source);
 
+    /**
+     * å°†16ä½æ— ç¬¦å·æ•´æ•°è½¬æ¢æˆå­—ç¬¦ä¸²
+     *
+     * @param source: 16ä½æ— ç¬¦å·æ•´æ•°
+     * @return: è¿”å›è½¬æ¢åçš„å­—ç¬¦ä¸²
+     */
     static std::string int_tostring(uint16_t source);
-    static std::string uint16_tostring(uint16_t source);    
 
+    /**
+     * å°†32ä½æ— ç¬¦å·æ•´æ•°è½¬æ¢æˆå­—ç¬¦ä¸²
+     *
+     * @param source: 32ä½æ— ç¬¦å·æ•´æ•°
+     * @return: è¿”å›è½¬æ¢åçš„å­—ç¬¦ä¸²
+     */
     static std::string int_tostring(uint32_t source);
-    static std::string uint32_tostring(uint32_t source);    
 
+    /**
+     * å°†64ä½æ— ç¬¦å·æ•´æ•°è½¬æ¢æˆå­—ç¬¦ä¸²
+     *
+     * @param source: 64ä½æ— ç¬¦å·æ•´æ•°
+     * @return: è¿”å›è½¬æ¢åçš„å­—ç¬¦ä¸²
+     */
     static std::string int_tostring(uint64_t source);
-    static std::string uint64_tostring(uint64_t source);    
 
-	// Ìø¹ı¿Õ¸ñ
-    static char* skip_spaces(char* buffer);
-    static const char* skip_spaces(const char* buffer);
+    /**
+     * è·³è¿‡å¤´éƒ¨ç©ºæ ¼çš„å­—ç¬¦ä¸²
+     *
+     * @param source: æºå­—ç¬¦ä¸²
+     * @return: è·³è¿‡å¤´éƒ¨ç©ºæ ¼çš„å­—ç¬¦ä¸²
+     */
+    static char* skip_spaces(char* source);
+    static const char* skip_spaces(const char* source);
 
-    static uint32_t hash(const char *str, int len);
 
-	// ×ÜÊÇ±£Ö¤·µ»ØÊµ¼ÊÏòstrĞ´ÈëµÄ×Ö½ÚÊı,°üÀ¨½áÎ²·û,¶ø²»¹ÜsizeÊÇ·ñ×ã¹»ÈİÄÉ
-    static int fix_snprintf(char *str, size_t size, const char *format, ...) __attribute__((format(printf, 3, 4)));
-    static int fix_vsnprintf(char *str, size_t size, const char *format, va_list ap);
+    /**
+     * å‘å­—ç¬¦ä¸²ä¸­æ‰“å°æ•°æ®ï¼Œæ•°æ®æ ¼å¼ç”¨æˆ·è‡ªå®šä¹‰
+     *
+     * @param str: ç›®çš„å­—ç¬¦ä¸²
+     * @param size:æ‰“å°é•¿åº¦
+     * @param format:æ ¼å¼åŒ–å­—ç¬¦ä¸²
+     * @return: å®é™…æ‰“å°çš„é•¿åº¦
+     */
+    static int fix_snprintf(char* str, size_t size, const char* format, ...) __attribute__((format(printf, 3, 4)));
+    static int fix_vsnprintf(char* str, size_t size, const char* format, va_list ap);
 
-	// Â·¾¶×ª»»³ÉÎÄ¼şÃû
-    static std::string path2filename(const std::string& path, const std::string& join_string);
-
-	// ÍòÓÃÀàĞÍ×ª»»º¯Êı
+    /**
+     * é€šç”¨ç±»å‹è½¬æ¢æˆå­—ç¬¦ä¸²
+     *
+     * @param any: æºå­—ç¬¦ä¸²
+     * @return: è½¬æ¢åçš„å­—ç¬¦ä¸²
+     */
     template <typename Any>
     static std::string any2string(Any any)
     {
         std::stringstream s;
+        
         s << any;
+        
         return s.str();
     }
 
-	// ½«STLÈİÆ÷×ª»»³É×Ö·û´®
-    template <class ContainerClass>
-    static std::string container2string(const ContainerClass& container, const std::string& join_string)
-    {
-        std::string str;
-        typename ContainerClass::const_iterator iter = container.begin();
-
-        for (; iter != container.end(); ++iter)
-        {
-            if (str.empty())
-            {
-                str = any2string(*iter);
-            }
-            else
-            {
-                str += join_string + any2string(*iter);
-            }
-        }
-
-        return str;
-    }
-
-	// ½«mapÈİÆ÷×ª»»³É×Ö·û´®
-    template <class MapClass>
-    static std::string map2string(const MapClass& map, const std::string& join_string)
-    {
-        std::string str;
-        typename MapClass::const_iterator iter = map.begin();
-
-        for (; iter!=map.end(); ++iter)
-        {
-            if (str.empty())
-            {
-                str = any2string(iter->second);
-            }
-            else
-            {
-                str += join_string + any2string(iter->second);
-            }
-        }
-
-        return str;
-    }
-
-	// ·µ»ØÒ»¸ö×Ö·ûÔÚ×Ö·û´®ÖĞµÄÎ»ÖÃ
+    /**
+     * è·å–å­—ç¬¦åœ¨å­—ç¬¦ä¸²ä¸­çš„ä½ç½®
+     *
+     * @param str: æºå­—ç¬¦ä¸²
+     * @param c: å­—ç¬¦
+     * @return: è½¬æ¢åçš„å­—ç¬¦ä¸²
+     */
     static int chr_index(const char* str, char c);
     static int chr_rindex(const char* str, char c);
-    
-    static std::string extract_dirpath(const char* filepath);
-    
-    static std::string extract_filename(const std::string& filepath);
 
+    /***
+     * ä»æ–‡ä»¶è·¯å¾„ä¸­æå–ç›®å½•è·¯å¾„
+     *
+     * @param filepath: æ–‡ä»¶å…¨è·¯å¾„
+     * @return è¿”å›æå–åˆ°çš„ç›®å½•è·¯å¾„
+     */
+    static std::string extract_dirpath(const char* filepath);
+
+    /***
+     * ä»æ–‡ä»¶è·¯å¾„ä¸­æå–æ–‡ä»¶å
+     *
+     * @param filepath: æ–‡ä»¶å…¨è·¯å¾„
+     * @return è¿”å›æå–åˆ°æ–‡ä»¶å
+     */
+    static std::string extract_filename(const std::string& filepath);
     static const char* extract_filename(const char* filepath);
 
+    /**
+     * å‘å­—ç¬¦ä¸²ä¸­æ‰“å°æ•°æ®ï¼Œæ ¼å¼ç”±ç”¨æˆ·å®šä¹‰
+     * 
+     * @param format: æ ¼å¼åŒ–å­—ç¬¦ä¸²
+     * @return è¿”å›æ ¼å¼åŒ–åçš„å­—ç¬¦ä¸²
+     */
     static std::string format_string(const char* format, ...) __attribute__((format(printf, 1, 2)));
 
-    static bool is_numeric_string(const char* str);
-
+    /**
+     * åˆ¤æ–­å­—ç¬¦æ˜¯å¦å…¨æ˜¯çº¯å­—ç¬¦a-z
+     * 
+     * @param str: æºå­—ç¬¦ä¸²
+     * @return æ˜¯çº¯å­—ç¬¦è¿”å›trueå¦åˆ™false
+     */
     static bool is_alphabetic_string(const char* str);
 
+    /**
+     * åˆ¤æ–­å­—ç¬¦æ˜¯å¦å…¨æ˜¯æœ‰æ•ˆå­—ç¬¦
+     * 
+     * @param str: æºå­—ç¬¦ä¸²
+     * @return æ˜¯æœ‰æ•ˆå­—ç¬¦è¿”å›trueå¦åˆ™false
+     */
     static bool is_variable_string(const char* str);
-    
-    static bool is_regex_string(const char* str);
 
+    /**
+     * åˆ¤æ–­å­—ç¬¦æ˜¯å¦æ˜¯æœ‰æ•ˆæ•°å­—0-9
+     * 
+     * @param c: å•ä¸ªå­—ç¬¦
+     * @return æ˜¯æ•°å­è¿”å›trueå¦åˆ™false
+     */
+    static bool is_digit(char c);
+
+    /**
+     * åˆ¤æ–­å­—ç¬¦ä¸²æ˜¯å¦æ˜¯çº¯æ•°å­—
+     * 
+     * @param str: æºå­—ç¬¦ä¸²
+     * @return æ˜¯æ•°å­è¿”å›trueå¦åˆ™false
+     */
+    static bool is_digit_string(const char* str);
+
+    /**
+     * åˆ é™¤æ–‡ä»¶åç¼€å
+     * 
+     * @param filename: æ–‡ä»¶åå­—ç¬¦ä¸²
+     * @return è¿”å›æ ¼å¼åŒ–åçš„å­—ç¬¦ä¸²
+     */
     static std::string remove_suffix(const std::string& filename);
-    
+
+    /**
+     * æ›¿æ¢æˆ–è€…åˆ é™¤æ–‡ä»¶åç¼€å
+     * 
+     * @param filename: æ–‡ä»¶åå­—ç¬¦ä¸²
+     * @return è¿”å›æ ¼å¼åŒ–åçš„å­—ç¬¦ä¸²
+     */
     static std::string replace_suffix(const std::string& filepath, const std::string& new_suffix);
 
+    /**
+     * å°†å­—ç¬¦ä¸²è½¬æ¢ä¸º16è¿›åˆ¶å­—ç¬¦ä¸²
+     * 
+     * @param source: æºå­—ç¬¦ä¸²
+     * @param lowercase: é»˜è®¤å°å†™
+     * @return è¿”å›æ ¼å¼åŒ–åçš„å­—ç¬¦ä¸²
+     */
     static std::string to_hex(const std::string& source, bool lowercase = true);
 
-    static std::string encode_url(const std::string& url, bool space2plus = false);
-    static std::string encode_url(const char* url, size_t url_length, bool space2plus = false);
-
-    static std::string decode_url(const std::string& encoded_url);
-    static std::string decode_url(const char* encoded_url, size_t encoded_url_length);
-
+    /**
+     * åˆ é™¤å›è½¦ç¬¦
+     * 
+     * @param line: æºå­—ç¬¦ä¸²
+     */
     static void trim_CR(char* line);
     static void trim_CR(std::string& line);
 
+    /**
+     * å•ä¸ªå­—ç¬¦è½¬æ¢æˆ16è¿›åˆ¶
+     * 
+     * @param line: æºå­—ç¬¦
+     * @return: è½¬æ¢åçš„16è¿›åˆ¶å­—ç¬¦ä¸²
+     */
     static std::string char2hex(unsigned char c);
+
+    /**
+     * 16è¿›åˆ¶å­—ç¬¦ä¸²è½¬æ¢æˆå­—ç¬¦
+     * 
+     * @param hex: æºå­—ç¬¦ä¸²
+     * @return: è½¬æ¢åçš„å­—ç¬¦
+     */
     static unsigned char hex2char(const std::string& hex);
 };
 

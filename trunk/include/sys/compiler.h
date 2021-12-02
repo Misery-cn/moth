@@ -10,20 +10,20 @@
 #endif
 
 #if __x86_64__
-#define INT2PTR(x)	((void *)(long)(x))
-#define PTR2INT(x)	((int)(long)(x))
-#define PTR2UINT(x)	((unsigned int)(long)(x))
+#define INT2PTR(x)    ((void *)(long)(x))
+#define PTR2INT(x)    ((int)(long)(x))
+#define PTR2UINT(x)    ((unsigned int)(long)(x))
 #else
-#define INT2PTR(x)	((void *)(x))
-#define PTR2INT(x)	((int)(x))
-#define PTR2UINT(x)	((unsigned int)(x))
+#define INT2PTR(x)    ((void *)(x))
+#define PTR2INT(x)    ((int)(x))
+#define PTR2UINT(x)    ((unsigned int)(x))
 #endif // __x86_64__
 
 
 #if __x86_64__
-#define F64	"l"
+#define F64    "l"
 #else
-#define F64	"ll"
+#define F64    "ll"
 #endif // __x86_64__
 
 // #if __GNUC__ < 3
@@ -31,7 +31,7 @@
 // #endif // __GNUC__ < 3
 
 #ifndef __GNUC__
-#define	__attribute__(x)
+#define    __attribute__(x)
 #endif
 
 
@@ -49,13 +49,13 @@
 #define __attr_const__ __attribute__((__const__))
 
 #undef __attr_pure__
-#define __attr_pure__	__attribute__((__pure__))
+#define __attr_pure__    __attribute__((__pure__))
 
 #undef __attr_nonnull__
 #define __attr_nonnull__ __attribute__((__nonnull__))
 
 #undef __attr_malloc__
-#define __attr_malloc__	__attribute__((__malloc__))
+#define __attr_malloc__    __attribute__((__malloc__))
 
 #undef __attr_printf__
 #define __attr_printf__(x,y) __attribute__((__format__(printf,x,y)))
@@ -84,7 +84,7 @@
 #endif
 
 #undef __attr_inline__
-#define __attr_inline__ 	__attribute__((always_inline))
+#define __attr_inline__     __attribute__((always_inline))
 
 #undef __attr_warn_unused_result__
 #define __attr_warn_unused_result__ __attribute__((warn_unused_result))

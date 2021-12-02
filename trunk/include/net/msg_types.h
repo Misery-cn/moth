@@ -8,475 +8,475 @@
 
 extern const char * entity_type_name(int type);
 
-// Õ®–≈ µÃÂ√˚
+// ÈÄö‰ø°ÂÆû‰ΩìÂêç
 struct entity_name_t
 {
 public:
-	uint8_t _type;
-	// Œ™¡À∂‘∆Î
-	char _reserved[7];
-	int64_t _num;
+    uint8_t _type;
+    // ‰∏∫‰∫ÜÂØπÈΩê
+    char _reserved[7];
+    int64_t _num;
 
-	static const int TYPE_CLIENT = ENTITY_TYPE_CLIENT;
-	static const int TYPE_SERVER = ENTITY_TYPE_SERVER;
-	static const int TYPE_MASTER = ENTITY_TYPE_MASTER;
-	static const int TYPE_SLAVE = ENTITY_TYPE_SLAVE;
+    static const int TYPE_CLIENT = ENTITY_TYPE_CLIENT;
+    static const int TYPE_SERVER = ENTITY_TYPE_SERVER;
+    static const int TYPE_MASTER = ENTITY_TYPE_MASTER;
+    static const int TYPE_SLAVE = ENTITY_TYPE_SLAVE;
 
-	entity_name_t() : _type(0), _num(0) {}
-	entity_name_t(uint8_t t, int64_t n) : _type(t), _num(n) {}
-	explicit entity_name_t(const entity_name& e) : _type(e.type), _num(e.num) {}
-	
-	static entity_name_t SVR(int64_t i) { return entity_name_t(TYPE_SERVER, i); }
-	static entity_name_t CLI(int64_t i) { return entity_name_t(TYPE_CLIENT, i); }
-	static entity_name_t MASTER(int64_t i) { return entity_name_t(TYPE_MASTER, i); }
-	static entity_name_t SLAVE(int64_t i) { return entity_name_t(TYPE_SLAVE, i); }
+    entity_name_t() : _type(0), _num(0) {}
+    entity_name_t(uint8_t t, int64_t n) : _type(t), _num(n) {}
+    explicit entity_name_t(const entity_name& e) : _type(e.type), _num(e.num) {}
+    
+    static entity_name_t SVR(int64_t i) { return entity_name_t(TYPE_SERVER, i); }
+    static entity_name_t CLI(int64_t i) { return entity_name_t(TYPE_CLIENT, i); }
+    static entity_name_t MASTER(int64_t i) { return entity_name_t(TYPE_MASTER, i); }
+    static entity_name_t SLAVE(int64_t i) { return entity_name_t(TYPE_SLAVE, i); }
 
-	int64_t num() const { return _num; }
+    int64_t num() const { return _num; }
 
-	int type() const { return _type; }
+    int type() const { return _type; }
 
-	const char* type_str() const
-	{
-		return entity_type_name(type());
-	}
+    const char* type_str() const
+    {
+        return entity_type_name(type());
+    }
 
-	bool is_new() const { return num() < 0; }
+    bool is_new() const { return num() < 0; }
 
-	operator entity_name() const
-	{
-		entity_name n = { _type, init_le64(_num) };
-		return n;
-	}
+    operator entity_name() const
+    {
+        entity_name n = { _type, init_le64(_num) };
+        return n;
+    }
 
-	void encode(buffer& buf) const
-	{
-		::encode(_type, buf);
-		::encode(_reserved, buf);
-		::encode(_num, buf);
-	}
-	
-	void decode(buffer::iterator& it)
-	{
-		::decode(_type, it);
-		::decode(_reserved, it);
-		::decode(_num, it);
-	}
-	
+    void encode(buffer& buf) const
+    {
+        ::encode(_type, buf);
+        ::encode(_reserved, buf);
+        ::encode(_num, buf);
+    }
+    
+    void decode(buffer::iterator& it)
+    {
+        ::decode(_type, it);
+        ::decode(_reserved, it);
+        ::decode(_num, it);
+    }
+    
 };
 WRITE_CLASS_ENCODER(entity_name_t);
 
 inline bool operator== (const entity_name_t& l, const entity_name_t& r)
 { 
-	return (l.type() == r.type()) && (l.num() == r.num());
+    return (l.type() == r.type()) && (l.num() == r.num());
 }
 
 inline bool operator!= (const entity_name_t& l, const entity_name_t& r)
 { 
-	return (l.type() != r.type()) || (l.num() != r.num());
+    return (l.type() != r.type()) || (l.num() != r.num());
 }
 
 inline bool operator< (const entity_name_t& l, const entity_name_t& r)
 { 
-	return (l.type() < r.type()) || (l.type() == r.type() && l.num() < r.num());
+    return (l.type() < r.type()) || (l.type() == r.type() && l.num() < r.num());
 }
 
 
 #if defined(__linux__) || defined(DARWIN) || defined(__FreeBSD__)
 static inline void encode(const sockaddr_storage& a, buffer& buf)
 {
-	struct sockaddr_storage ss = a;
+    struct sockaddr_storage ss = a;
 #if defined(DARWIN) || defined(__FreeBSD__)
-	unsigned short *ss_family = reinterpret_cast<unsigned short*>(&ss);
-	*ss_family = htons(a.ss_family);
+    unsigned short *ss_family = reinterpret_cast<unsigned short*>(&ss);
+    *ss_family = htons(a.ss_family);
 #else
-	ss.ss_family = htons(ss.ss_family);
+    ss.ss_family = htons(ss.ss_family);
 #endif
-	encode_raw(ss, buf);
+    encode_raw(ss, buf);
 }
 
 static inline void decode(sockaddr_storage& a, buffer::iterator& it)
 {
-	decode_raw(a, it);
+    decode_raw(a, it);
 #if defined(DARWIN) || defined(__FreeBSD__)
-	unsigned short *ss_family = reinterpret_cast<unsigned short *>(&a);
-	a.ss_family = ntohs(*ss_family);
-	a.ss_len = 0;
+    unsigned short *ss_family = reinterpret_cast<unsigned short *>(&a);
+    a.ss_family = ntohs(*ss_family);
+    a.ss_len = 0;
 #else
-	a.ss_family = ntohs(a.ss_family);
+    a.ss_family = ntohs(a.ss_family);
 #endif
 }
 #endif
 
 struct socket_addr_storage
 {
-	le16 ss_family;
-	uint8_t __ss_padding[128 - sizeof(le16)];
+    le16 ss_family;
+    uint8_t __ss_padding[128 - sizeof(le16)];
 
-	void encode(buffer& buf) const
-	{
-		struct socket_addr_storage ss = *this;
-		ss.ss_family = htons(ss.ss_family);
-		encode_raw(ss, buf);
-	}
+    void encode(buffer& buf) const
+    {
+        struct socket_addr_storage ss = *this;
+        ss.ss_family = htons(ss.ss_family);
+        encode_raw(ss, buf);
+    }
 
-	void decode(buffer::iterator& it)
-	{
-		struct socket_addr_storage ss;
-		decode_raw(ss, it);
-		ss.ss_family = ntohs(ss.ss_family);
-		*this = ss;
-	}
+    void decode(buffer::iterator& it)
+    {
+        struct socket_addr_storage ss;
+        decode_raw(ss, it);
+        ss.ss_family = ntohs(ss.ss_family);
+        *this = ss;
+    }
 } __attr_packed__;
 
 WRITE_CLASS_ENCODER(socket_addr_storage);
 
-// Õ®–≈ µÃÂµÿ÷∑
+// ÈÄö‰ø°ÂÆû‰ΩìÂú∞ÂùÄ
 struct entity_addr_t
 {
 public:
-	int32_t _type;
-	// 64Œªª˙∆˜…œŒ™8◊÷Ω⁄∂‘∆Î
-	// ’‚¿Ô±£¡Ù4◊÷Ω⁄
-	char _reserved[4];
+    int32_t _type;
+    // 64‰ΩçÊú∫Âô®‰∏ä‰∏∫8Â≠óËäÇÂØπÈΩê
+    // ËøôÈáå‰øùÁïô4Â≠óËäÇ
+    char _reserved[4];
 
-	union
-	{
-		// Õ®”√Ω·ππÃÂ,16◊÷Ω⁄
-		// sockaddr addr;
-		
-		// Õ®”√Ω·ππÃÂ,128◊÷Ω⁄
-	    sockaddr_storage _addr;
-		// size 16
-	    sockaddr_in _addr4;
-		// size 28
-	    sockaddr_in6 _addr6;
-	};
+    union
+    {
+        // ÈÄöÁî®ÁªìÊûÑ‰Ωì,16Â≠óËäÇ
+        // sockaddr addr;
+        
+        // ÈÄöÁî®ÁªìÊûÑ‰Ωì,128Â≠óËäÇ
+        sockaddr_storage _addr;
+        // size 16
+        sockaddr_in _addr4;
+        // size 28
+        sockaddr_in6 _addr6;
+    };
 
-	entity_addr_t() : _type(0)
-	{ 
-		memset(this, 0, sizeof(*this));
-	}
+    entity_addr_t() : _type(0)
+    { 
+        memset(this, 0, sizeof(*this));
+    }
 
-	entity_addr_t(const char* str)
-	{
-		memset(this, 0, sizeof(*this));
-		
-		if (!parse(str))
-		{
-			memset(this, 0, sizeof(*this));
-		}
-	}
-	
-	explicit entity_addr_t(const entity_addr& a)
-	{
-		_type = a.type;
-		_addr = a.in_addr;
+    entity_addr_t(const char* str)
+    {
+        memset(this, 0, sizeof(*this));
+        
+        if (!parse(str))
+        {
+            memset(this, 0, sizeof(*this));
+        }
+    }
+    
+    explicit entity_addr_t(const entity_addr& a)
+    {
+        _type = a.type;
+        _addr = a.in_addr;
 #if !defined(__FreeBSD__)
-		_addr.ss_family = ntohs(_addr.ss_family);
+        _addr.ss_family = ntohs(_addr.ss_family);
 #endif
-	}
+    }
 
-	
-	operator entity_addr() const
-	{
-		entity_addr a;
-		a.type = 0;
-		a.in_addr = _addr;
+    
+    operator entity_addr() const
+    {
+        entity_addr a;
+        a.type = 0;
+        a.in_addr = _addr;
 #if !defined(__FreeBSD__)
-		a.in_addr.ss_family = htons(_addr.ss_family);
+        a.in_addr.ss_family = htons(_addr.ss_family);
 #endif
-		return a;
-	}
+        return a;
+    }
 
-	uint32_t addr_size()
-	{
-		switch (_addr.ss_family)
-		{
-		    case AF_INET:
-			{
-				return sizeof(_addr4);
-		    }
-		    case AF_INET6:
-			{
-				return sizeof(_addr6);
-		    }
-	    }
-		
-	    return sizeof(_addr);
-	}
+    uint32_t addr_size()
+    {
+        switch (_addr.ss_family)
+        {
+            case AF_INET:
+            {
+                return sizeof(_addr4);
+            }
+            case AF_INET6:
+            {
+                return sizeof(_addr6);
+            }
+        }
+        
+        return sizeof(_addr);
+    }
 
-	int get_family() const { return _addr.ss_family; }
-	void set_family(int f) { _addr.ss_family = f; }
+    int get_family() const { return _addr.ss_family; }
+    void set_family(int f) { _addr.ss_family = f; }
 
-	sockaddr_storage& sock_addr() { return _addr; }
-	sockaddr_in& sock_addr4() { return _addr4; }
-	sockaddr_in6& sock_addr6() { return _addr6; }
+    sockaddr_storage& sock_addr() { return _addr; }
+    sockaddr_in& sock_addr4() { return _addr4; }
+    sockaddr_in6& sock_addr6() { return _addr6; }
 
-	const sockaddr* get_sockaddr() const
-	{
-		return (const sockaddr*)&_addr4;
-	}
+    const sockaddr* get_sockaddr() const
+    {
+        return (const sockaddr*)&_addr4;
+    }
 
-	size_t get_sockaddr_len() const
-	{
-		switch (_addr.ss_family)
-		{
-			case AF_INET:
-			{
-				return sizeof(_addr4);
-			}
-			case AF_INET6:
-			{
-				return sizeof(_addr6);
-			}
-		}
-		
-		return sizeof(_addr);
-	}
+    size_t get_sockaddr_len() const
+    {
+        switch (_addr.ss_family)
+        {
+            case AF_INET:
+            {
+                return sizeof(_addr4);
+            }
+            case AF_INET6:
+            {
+                return sizeof(_addr6);
+            }
+        }
+        
+        return sizeof(_addr);
+    }
 
-	bool set_sockaddr(struct sockaddr* sa)
-	{
-		switch (sa->sa_family)
-		{
-			case AF_INET:
-			{
-				memcpy(&_addr4, sa, sizeof(sockaddr_in));
-				break;
-			}
-			case AF_INET6:
-			{
-				memcpy(&_addr6, sa, sizeof(sockaddr_in6));
-				break;
-			}
-			default:
-			{
-				return false;
-			}
-		}
-		
-		return true;
-	}
+    bool set_sockaddr(struct sockaddr* sa)
+    {
+        switch (sa->sa_family)
+        {
+            case AF_INET:
+            {
+                memcpy(&_addr4, sa, sizeof(sockaddr_in));
+                break;
+            }
+            case AF_INET6:
+            {
+                memcpy(&_addr6, sa, sizeof(sockaddr_in6));
+                break;
+            }
+            default:
+            {
+                return false;
+            }
+        }
+        
+        return true;
+    }
 
-	sockaddr_storage get_sockaddr_storage() const
-	{
-		return _addr;
-	}
+    sockaddr_storage get_sockaddr_storage() const
+    {
+        return _addr;
+    }
 
-	void set_port(int port)
-	{
-		switch (_addr.ss_family)
-		{
-			case AF_INET:
-			{
-				_addr4.sin_port = htons(port);
-				break;
-			}
-			case AF_INET6:
-			{
-				_addr6.sin6_port = htons(port);
-				break;
-			}
-			default:
-			{
-				return;
-			}
-		}
-	}
+    void set_port(int port)
+    {
+        switch (_addr.ss_family)
+        {
+            case AF_INET:
+            {
+                _addr4.sin_port = htons(port);
+                break;
+            }
+            case AF_INET6:
+            {
+                _addr6.sin6_port = htons(port);
+                break;
+            }
+            default:
+            {
+                return;
+            }
+        }
+    }
 
-	int get_port() const 
-	{
-		switch (_addr.ss_family)
-		{
-			case AF_INET:
-			{
-				return ntohs(_addr4.sin_port);
-			}
-			case AF_INET6:
-			{
-				return ntohs(_addr6.sin6_port);
-			}
-		}
-		
-		return 0;
-	}
+    int get_port() const 
+    {
+        switch (_addr.ss_family)
+        {
+            case AF_INET:
+            {
+                return ntohs(_addr4.sin_port);
+            }
+            case AF_INET6:
+            {
+                return ntohs(_addr6.sin6_port);
+            }
+        }
+        
+        return 0;
+    }
 
-	bool probably_equals(const entity_addr_t& other) const 
-	{
-		if (get_port() != other.get_port())
-		{
-			return false;
-		}
-		
-		if (is_blank_ip() || other.is_blank_ip())
-		{
-			return true;
-		}
-		
-		if (0 == memcmp(&_addr, &other._addr, sizeof(_addr)))
-		{
-			return true;
-		}
-		
-		return false;
-	}
+    bool probably_equals(const entity_addr_t& other) const 
+    {
+        if (get_port() != other.get_port())
+        {
+            return false;
+        }
+        
+        if (is_blank_ip() || other.is_blank_ip())
+        {
+            return true;
+        }
+        
+        if (0 == memcmp(&_addr, &other._addr, sizeof(_addr)))
+        {
+            return true;
+        }
+        
+        return false;
+    }
 
-	bool is_same_host(const entity_addr_t& other) const 
-	{
-		if (_addr.ss_family != other._addr.ss_family)
-		{
-			return false;
-		}
-		
-		if (AF_INET == _addr.ss_family)
-		{
-			return _addr4.sin_addr.s_addr == other._addr4.sin_addr.s_addr;
-		}
-		
-		if (AF_INET6 == _addr.ss_family)
-		{
-			return (0 == memcmp(_addr6.sin6_addr.s6_addr, other._addr6.sin6_addr.s6_addr, sizeof(_addr6.sin6_addr.s6_addr)));
-		}
-		
-		return false;
-	}
+    bool is_same_host(const entity_addr_t& other) const 
+    {
+        if (_addr.ss_family != other._addr.ss_family)
+        {
+            return false;
+        }
+        
+        if (AF_INET == _addr.ss_family)
+        {
+            return _addr4.sin_addr.s_addr == other._addr4.sin_addr.s_addr;
+        }
+        
+        if (AF_INET6 == _addr.ss_family)
+        {
+            return (0 == memcmp(_addr6.sin6_addr.s6_addr, other._addr6.sin6_addr.s6_addr, sizeof(_addr6.sin6_addr.s6_addr)));
+        }
+        
+        return false;
+    }
 
-	bool is_blank_ip() const
-	{
-		
-		switch (_addr.ss_family)
-		{
-			case AF_INET:
-			{
-				return (INADDR_ANY == _addr4.sin_addr.s_addr);
-			}
-			case AF_INET6:
-			{
-				return (0 == memcmp(&_addr6.sin6_addr, &in6addr_any, sizeof(in6addr_any)));
-			}
-			default:
-			{
-				return true;
-			}
-		}
-	}
-	
-	bool parse(const char* str)
-	{
-		char ipv4[39 + 39] = {0};
-		char* tmp = ipv4;
-		const char* s = str;
-		bool brackets = false;
-		
-		// ipv6µÿ÷∑º‰ π”√:∑÷∏Ù
-		// »Áπ˚≈‰÷√¡À∂Àø⁄∫≈,ø…≈‰÷√Œ™»Áœ¬∏Ò Ω,≤ª»ª≤ª∫√«¯∑÷µÿ÷∑∫Õ∂Àø⁄
-		// [0000:0000:0000:0000:0000:0000:0000:0000]:9999
-		if ('[' == *s)
-		{
-			s++;
-			brackets = true;
-		}
-		
-		while (tmp < ipv4 + sizeof(ipv4))
-		{
-			if ('.' == *s || ('0' <= *s && '9' >= *s))
-			{
-				*tmp++ = *s++;
-			}
-			else
-			{
-				tmp++;
-			}
-		}
-		
-		char ipv6[39 + 39] = {0};
-		tmp = ipv6;
-		s = str;
-		while (tmp < ipv6 + sizeof(ipv6))
-		{
-			if (':' == *s || ('0' <= *s && '9' >= *s)
-				|| ('a' <= *s && 'f' >= *s)
-				|| ('A' <= *s && 'F' >= *s))
-			{
-				*tmp++ = *s++;
-			}
-			else
-			{
-				tmp++;	
-			}
-		}
-		
-		struct in_addr a4;
-		struct in6_addr a6;
-		if (inet_pton(AF_INET, ipv4, &a4))
-		{
-			_addr4.sin_addr.s_addr = a4.s_addr;
-			_addr.ss_family = AF_INET;
-			s = str + strlen(ipv4);
-		}
-		else if (inet_pton(AF_INET6, ipv6, &a6))
-		{
-			_addr.ss_family = AF_INET6;
-			memcpy(&_addr6.sin6_addr, &a6, sizeof(a6));
-			s = str + strlen(ipv6);
-		}
-		else
-		{
-			return false;
-		}
-		
-		if (brackets)
-		{
-			if (*s != ']')
-			{
-				return false;
-			}
-			s++;
-		}
-		
-		if (':' == *s)
-		{
-			s++;
-			int port = atoi(s);
-			set_port(port);
-			while (*s && *s >= '0' && *s <= '9')
-			{
-				s++;
-			}
-		}
-		
-		return true;
-	}
+    bool is_blank_ip() const
+    {
+        
+        switch (_addr.ss_family)
+        {
+            case AF_INET:
+            {
+                return (INADDR_ANY == _addr4.sin_addr.s_addr);
+            }
+            case AF_INET6:
+            {
+                return (0 == memcmp(&_addr6.sin6_addr, &in6addr_any, sizeof(in6addr_any)));
+            }
+            default:
+            {
+                return true;
+            }
+        }
+    }
+    
+    bool parse(const char* str)
+    {
+        char ipv4[39 + 39] = {0};
+        char* tmp = ipv4;
+        const char* s = str;
+        bool brackets = false;
+        
+        // ipv6Âú∞ÂùÄÈó¥‰ΩøÁî®:ÂàÜÈöî
+        // Â¶ÇÊûúÈÖçÁΩÆ‰∫ÜÁ´ØÂè£Âè∑,ÂèØÈÖçÁΩÆ‰∏∫Â¶Ç‰∏ãÊ†ºÂºè,‰∏çÁÑ∂‰∏çÂ•ΩÂå∫ÂàÜÂú∞ÂùÄÂíåÁ´ØÂè£
+        // [0000:0000:0000:0000:0000:0000:0000:0000]:9999
+        if ('[' == *s)
+        {
+            s++;
+            brackets = true;
+        }
+        
+        while (tmp < ipv4 + sizeof(ipv4))
+        {
+            if ('.' == *s || ('0' <= *s && '9' >= *s))
+            {
+                *tmp++ = *s++;
+            }
+            else
+            {
+                tmp++;
+            }
+        }
+        
+        char ipv6[39 + 39] = {0};
+        tmp = ipv6;
+        s = str;
+        while (tmp < ipv6 + sizeof(ipv6))
+        {
+            if (':' == *s || ('0' <= *s && '9' >= *s)
+                || ('a' <= *s && 'f' >= *s)
+                || ('A' <= *s && 'F' >= *s))
+            {
+                *tmp++ = *s++;
+            }
+            else
+            {
+                tmp++;    
+            }
+        }
+        
+        struct in_addr a4;
+        struct in6_addr a6;
+        if (inet_pton(AF_INET, ipv4, &a4))
+        {
+            _addr4.sin_addr.s_addr = a4.s_addr;
+            _addr.ss_family = AF_INET;
+            s = str + strlen(ipv4);
+        }
+        else if (inet_pton(AF_INET6, ipv6, &a6))
+        {
+            _addr.ss_family = AF_INET6;
+            memcpy(&_addr6.sin6_addr, &a6, sizeof(a6));
+            s = str + strlen(ipv6);
+        }
+        else
+        {
+            return false;
+        }
+        
+        if (brackets)
+        {
+            if (*s != ']')
+            {
+                return false;
+            }
+            s++;
+        }
+        
+        if (':' == *s)
+        {
+            s++;
+            int port = atoi(s);
+            set_port(port);
+            while (*s && *s >= '0' && *s <= '9')
+            {
+                s++;
+            }
+        }
+        
+        return true;
+    }
 
-	void encode(buffer& buf) const
-	{
-		::encode(_type, buf);
-		::encode(_reserved, buf);
+    void encode(buffer& buf) const
+    {
+        ::encode(_type, buf);
+        ::encode(_reserved, buf);
 #if defined(__linux__) || defined(DARWIN) || defined(__FreeBSD__)
-		::encode(_addr, buf);
+        ::encode(_addr, buf);
 #else
-		socket_addr_storage wireaddr;
-		memset(&wireaddr, '\0', sizeof(wireaddr));
-		uint32_t copysize = MIN(sizeof(wireaddr), sizeof(_addr));
-		memcpy(&wireaddr, &_addr, copysize);
-		::encode(wireaddr, buf);
+        socket_addr_storage wireaddr;
+        memset(&wireaddr, '\0', sizeof(wireaddr));
+        uint32_t copysize = MIN(sizeof(wireaddr), sizeof(_addr));
+        memcpy(&wireaddr, &_addr, copysize);
+        ::encode(wireaddr, buf);
 #endif
-	}
-	
-	void decode(buffer::iterator& it)
-	{
-		::decode(_type, it);
-		::decode(_reserved, it);
+    }
+    
+    void decode(buffer::iterator& it)
+    {
+        ::decode(_type, it);
+        ::decode(_reserved, it);
 #if defined(__linux__) || defined(DARWIN) || defined(__FreeBSD__)
-		::decode(_addr, it);
+        ::decode(_addr, it);
 #else
-		socket_addr_storage wireaddr;
-		memset(&wireaddr, '\0', sizeof(wireaddr));
-		::decode(wireaddr, it);
-		unsigned copysize = MIN(sizeof(wireaddr), sizeof(_addr));
-		memcpy(&_addr, &wireaddr, copysize);
+        socket_addr_storage wireaddr;
+        memset(&wireaddr, '\0', sizeof(wireaddr));
+        ::decode(wireaddr, it);
+        unsigned copysize = MIN(sizeof(wireaddr), sizeof(_addr));
+        memcpy(&_addr, &wireaddr, copysize);
 #endif
-	}
-	
+    }
+    
 };
 WRITE_CLASS_ENCODER(entity_addr_t);
 
@@ -487,56 +487,56 @@ inline bool operator<= (const entity_addr_t& a, const entity_addr_t& b) { return
 inline bool operator> (const entity_addr_t& a, const entity_addr_t& b) { return memcmp(&a, &b, sizeof(a)) > 0; }
 inline bool operator>= (const entity_addr_t& a, const entity_addr_t& b) { return memcmp(&a, &b, sizeof(a)) >= 0; }
 
-// Õ®–≈ µÃÂ
+// ÈÄö‰ø°ÂÆû‰Ωì
 struct entity_inst_t
 {
 public:
-	
-	entity_name_t _name;
-	entity_addr_t _addr;
-	entity_inst_t() {}
-	entity_inst_t(entity_name_t n, const entity_addr_t& a) : _name(n), _addr(a) {}
+    
+    entity_name_t _name;
+    entity_addr_t _addr;
+    entity_inst_t() {}
+    entity_inst_t(entity_name_t n, const entity_addr_t& a) : _name(n), _addr(a) {}
 
-	entity_inst_t(const entity_inst& i) : _name(i.name), _addr(i.addr) {}
-	entity_inst_t(const entity_name& n, const entity_addr& a) : _name(n), _addr(a) {}
-	operator entity_inst()
-	{
-		entity_inst i = {_name, _addr};
-		return i;
-	}
+    entity_inst_t(const entity_inst& i) : _name(i.name), _addr(i.addr) {}
+    entity_inst_t(const entity_name& n, const entity_addr& a) : _name(n), _addr(a) {}
+    operator entity_inst()
+    {
+        entity_inst i = {_name, _addr};
+        return i;
+    }
 
-	void encode(buffer& buf) const
-	{
-		::encode(_name, buf);
-		::encode(_addr, buf);
-	}
-	
-	void decode(buffer::iterator& it)
-	{
-		::decode(_name, it);
-		::decode(_addr, it);
-	}
+    void encode(buffer& buf) const
+    {
+        ::encode(_name, buf);
+        ::encode(_addr, buf);
+    }
+    
+    void decode(buffer::iterator& it)
+    {
+        ::decode(_name, it);
+        ::decode(_addr, it);
+    }
 };
 WRITE_CLASS_ENCODER(entity_inst_t);
 
 inline bool operator==(const entity_inst_t& a, const entity_inst_t& b)
 { 
-	return a._name == b._name && a._addr == b._addr;
+    return a._name == b._name && a._addr == b._addr;
 }
 
 inline bool operator!=(const entity_inst_t& a, const entity_inst_t& b)
 { 
-	return a._name != b._name || a._addr != b._addr;
+    return a._name != b._name || a._addr != b._addr;
 }
 
 inline bool operator<(const entity_inst_t& a, const entity_inst_t& b)
 { 
-	return a._name < b._name || (a._name == b._name && a._addr < b._addr);
+    return a._name < b._name || (a._name == b._name && a._addr < b._addr);
 }
 
 inline bool operator<=(const entity_inst_t& a, const entity_inst_t& b)
 {
-	return a._name < b._name || (a._name == b._name && a._addr <= b._addr);
+    return a._name < b._name || (a._name == b._name && a._addr <= b._addr);
 }
 
 inline bool operator>(const entity_inst_t& a, const entity_inst_t& b) { return b < a; }

@@ -12,7 +12,7 @@ __BEGIN_DECLS
  
 // typedef volatile int atomic_t;
 
-#define ATOMIC_INIT(i)	{ (i) }
+#define ATOMIC_INIT(i)    { (i) }
 
 /**
  * atomic_read - read atomic variable
@@ -20,7 +20,7 @@ __BEGIN_DECLS
  *
  * Atomically reads the value of @v.
  */
-#define atomic_read(v)		(*(v))
+#define atomic_read(v)        (*(v))
 
 /**
  * atomic_set - set atomic variable
@@ -29,7 +29,7 @@ __BEGIN_DECLS
  *
  * Atomically sets the value of @v to @i.
  */
-#define atomic_set(v,i)		(*(v) = (i))
+#define atomic_set(v,i)        (*(v) = (i))
 
 /**
  * atomic_add - add integer to atomic variable
@@ -40,7 +40,7 @@ __BEGIN_DECLS
  */
 static __inline__ void atomic_add(int i, atomic_t *v)
 {
-	(void)__sync_fetch_and_add(v, i);
+    (void)__sync_fetch_and_add(v, i);
 }
 
 /**
@@ -52,7 +52,7 @@ static __inline__ void atomic_add(int i, atomic_t *v)
  */
 static __inline__ void atomic_sub(int i, atomic_t *v)
 {
-	(void)__sync_fetch_and_sub(v, i);
+    (void)__sync_fetch_and_sub(v, i);
 }
 
 /**
@@ -66,7 +66,7 @@ static __inline__ void atomic_sub(int i, atomic_t *v)
  */
 static __inline__ int atomic_sub_and_test(int i, atomic_t *v)
 {
-	return __sync_sub_and_fetch(v, i) == 0;
+    return __sync_sub_and_fetch(v, i) == 0;
 }
 
 /**
@@ -77,7 +77,7 @@ static __inline__ int atomic_sub_and_test(int i, atomic_t *v)
  */
 static __inline__ void atomic_inc(atomic_t *v)
 {
-	(void)__sync_fetch_and_add(v, 1);
+    (void)__sync_fetch_and_add(v, 1);
 }
 
 /**
@@ -88,7 +88,7 @@ static __inline__ void atomic_inc(atomic_t *v)
  */
 static __inline__ void atomic_dec(atomic_t *v)
 {
-	(void)__sync_fetch_and_sub(v, 1);
+    (void)__sync_fetch_and_sub(v, 1);
 }
 
 /**
@@ -101,7 +101,7 @@ static __inline__ void atomic_dec(atomic_t *v)
  */
 static __inline__ int atomic_dec_and_test(atomic_t *v)
 {
-	return __sync_sub_and_fetch(v, 1) == 0;
+    return __sync_sub_and_fetch(v, 1) == 0;
 }
 
 /**
@@ -114,7 +114,7 @@ static __inline__ int atomic_dec_and_test(atomic_t *v)
  */
 static __inline__ int atomic_inc_and_test(atomic_t *v)
 {
-	return __sync_add_and_fetch(v, 1) == 0;
+    return __sync_add_and_fetch(v, 1) == 0;
 }
 
 /**
@@ -128,7 +128,7 @@ static __inline__ int atomic_inc_and_test(atomic_t *v)
  */
 static __inline__ int atomic_add_negative(int i, atomic_t *v)
 {
-	return __sync_add_and_fetch(v, i) < 0;
+    return __sync_add_and_fetch(v, i) < 0;
 }
 
 /**
@@ -140,12 +140,12 @@ static __inline__ int atomic_add_negative(int i, atomic_t *v)
  */
 static __inline__ int atomic_add_return(int i, atomic_t *v)
 {
-	return __sync_add_and_fetch(v, i);
+    return __sync_add_and_fetch(v, i);
 }
 
 static __inline__ int atomic_sub_return(int i, atomic_t *v)
 {
-	return __sync_sub_and_fetch(v, i);
+    return __sync_sub_and_fetch(v, i);
 }
 
 #define atomic_inc_return(v)  (atomic_add_return(1,v))

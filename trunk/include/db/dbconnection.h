@@ -4,10 +4,10 @@
 class BaseDBConnection
 {
 public:
-	BaseDBConnection() {}
-	virtual ~BaseDBConnection() {}
-	
-	
+    BaseDBConnection() {}
+    virtual ~BaseDBConnection() {}
+    
+    
 };
 
 #endif

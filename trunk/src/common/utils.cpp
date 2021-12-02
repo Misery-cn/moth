@@ -1,10 +1,10 @@
 #include <dirent.h>
-#include <execinfo.h> // backtraceºÍbacktrace_symbolsº¯Êı
-#include <features.h> // feature_test_macros
-#include <ftw.h> // ftw
-#include <libgen.h> // dirname&basename
+#include <execinfo.h>
+#include <features.h>
+#include <ftw.h>
+#include <libgen.h>
 #include <sys/time.h>
-#include <sys/prctl.h> // prctl
+#include <sys/prctl.h>
 #include <sys/resource.h>
 #include <time.h>
 #include "utils.h"
@@ -21,7 +21,6 @@
 
 // UTILS_NS_BEGIN
 
-// ºÍset_program_titleÏà¹Ø
 static char *g_arg_start = NULL;
 static char *g_arg_end   = NULL;
 static char *g_env_start = NULL;
@@ -61,14 +60,14 @@ std::string Utils::get_program_path()
     {
         buf[r] = '\0';
 
-#if 0 // ±£ÁôÕâ¶Î·Ï´úÂë£¬ÒÔÀÎ¼ÇdeletedµÄ´æÔÚ£¬µ«ÓÉÓÚÕâÀïÖ»È¡Â·¾¶²¿·Ö£¬ËùÒÔ²»¹ØĞÄËüµÄ´æÔÚ
+#if 0 // ä¿ç•™è¿™æ®µåºŸä»£ç ï¼Œä»¥ç‰¢è®°deletedçš„å­˜åœ¨ï¼Œä½†ç”±äºè¿™é‡Œåªå–è·¯å¾„éƒ¨åˆ†ï¼Œæ‰€ä»¥ä¸å…³å¿ƒå®ƒçš„å­˜åœ¨
         if (!strcmp(buf + r - 10," (deleted)"))
         {
             buf[r - 10] = '\0';
         }
 #else
 
-        // È¥µôÎÄ¼şÃû²¿·Ö
+        // å»æ‰æ–‡ä»¶åéƒ¨åˆ†
         char* end = strrchr(buf, '/');
         if (NULL == end)
         {
@@ -86,19 +85,19 @@ std::string Utils::get_program_path()
 
 std::string Utils::get_filename(int fd)
 {
-	char path[PATH_MAX] = {0};
-	char filename[FILENAME_MAX] = {0};
-	
-	snprintf(path, sizeof(path), "/proc/%d/fd/%d", getpid(), fd);
-	if (-1 == readlink(path, filename, sizeof(filename)))
-	{
-		filename[0] = '\0';
-	}
+    char path[PATH_MAX] = {0};
+    char filename[FILENAME_MAX] = {0};
     
-	return filename;
+    snprintf(path, sizeof(path), "/proc/%d/fd/%d", getpid(), fd);
+    if (-1 == readlink(path, filename, sizeof(filename)))
+    {
+        filename[0] = '\0';
+    }
+    
+    return filename;
 }
 
-// ¿âº¯Êı£ºchar *realpath(const char *path, char *resolved_path);
+// åº“å‡½æ•°ï¼šchar *realpath(const char *path, char *resolved_path);
 //         char *canonicalize_file_name(const char *path);
 std::string Utils::get_full_directory(const char* directory)
 {
@@ -118,53 +117,53 @@ std::string Utils::get_full_directory(const char* directory)
     return full_directory;
 }
 
-// Ïà¹Øº¯Êı£º
-// get_nprocs()£¬ÉùÃ÷ÔÚsys/sysinfo.h
+// ç›¸å…³å‡½æ•°ï¼š
+// get_nprocs()ï¼Œå£°æ˜åœ¨sys/sysinfo.h
 // sysconf(_SC_NPROCESSORS_CONF)
 // sysconf(_SC_NPROCESSORS_ONLN)
 uint16_t Utils::get_cpu_number()
 {
-	FILE* fp = fopen("/proc/cpuinfo", "r");
-	if (NULL == fp)
-	{
-		return 1;
-	}
-	
-	char line[LINE_MAX] = {0};
-	uint16_t cpu_number = 0;
+    FILE* fp = fopen("/proc/cpuinfo", "r");
+    if (NULL == fp)
+    {
+        return 1;
+    }
+    
+    char line[LINE_MAX] = {0};
+    uint16_t cpu_number = 0;
     CloseHelper<FILE*> ch(fp);
 
-	while (fgets(line, sizeof(line) - 1, fp))
-	{ 
-		char* name = line;
-		char* value = strchr(line, ':');
-		
-		if (NULL == value)
-		{
-			continue;
-		}
+    while (fgets(line, sizeof(line) - 1, fp))
+    { 
+        char* name = line;
+        char* value = strchr(line, ':');
+        
+        if (NULL == value)
+        {
+            continue;
+        }
 
-		*value++ = 0;		
-		if (0 == strncmp("processor", name, sizeof("processor") - 1))
-		{
-			 if (!StringUtils::string2uint16(value, cpu_number))
+        *value++ = 0;        
+        if (0 == strncmp("processor", name, sizeof("processor") - 1))
+        {
+             if (!StringUtils::string2int(value, cpu_number))
              {
                  return 0;
              }
-		}
-	}
+        }
+    }
 
-	return (cpu_number + 1);
+    return (cpu_number + 1);
 }
 
 bool Utils::get_backtrace(std::string& call_stack)
 {
-	// ×î´óÖ¡²ãÊı
+    // æœ€å¤§å¸§å±‚æ•°
     const int frame_number_max = 20;
-	// Ö¡µØÖ·Êı×é
+    // å¸§åœ°å€æ•°ç»„
     void* address_array[frame_number_max];
 
-    // real_frame_numberµÄÖµ²»»á³¬¹ıframe_number_max£¬Èç¹ûËüµÈÓÚframe_number_max£¬Ôò±íÊ¾¶¥²ãÖ¡±»½Ø¶ÏÁË
+    // real_frame_numberçš„å€¼ä¸ä¼šè¶…è¿‡frame_number_maxï¼Œå¦‚æœå®ƒç­‰äºframe_number_maxï¼Œåˆ™è¡¨ç¤ºé¡¶å±‚å¸§è¢«æˆªæ–­äº†
     int real_frame_number = backtrace(address_array, frame_number_max);
 
     char** symbols_strings = backtrace_symbols(address_array, real_frame_number);
@@ -178,7 +177,7 @@ bool Utils::get_backtrace(std::string& call_stack)
         return false;
     }
 
-	// symbols_strings[0]Îªget_backtrace×Ô¼º£¬²»ÏÔÊ¾
+    // symbols_strings[0]ä¸ºget_backtraceè‡ªå·±ï¼Œä¸æ˜¾ç¤º
     call_stack = symbols_strings[1];
     for (int i = 2; i < real_frame_number; ++i)
     {
@@ -189,7 +188,7 @@ bool Utils::get_backtrace(std::string& call_stack)
     return true;
 }
 
-// Ä¿Â¼´óĞ¡
+// ç›®å½•å¤§å°
 static off_t dirsize;
 int _du_fn(const char *fpath, const struct stat *sb, int typeflag)
 {   
@@ -205,8 +204,8 @@ off_t Utils::du(const char* dirpath)
 {
     dirsize = 0;
     if (0 != ftw(dirpath, _du_fn, 0))
-	{
-		return -1;
+    {
+        return -1;
     }
 
     return dirsize;
@@ -318,8 +317,8 @@ std::string Utils::get_program_long_name()
     return program_invocation_name;
 }
 
-// Èç¹ûµ÷ÓÃÁËset_process_title()£¬
-// ÔòÍ¨¹ıprogram_invocation_short_name¿ÉÄÜÈ¡²»µ½Ô¤ÆÚµÄÖµ£¬ÉõÖÁ·µ»ØµÄÊÇ¿Õ
+// å¦‚æœè°ƒç”¨äº†set_process_title()ï¼Œ
+// åˆ™é€šè¿‡program_invocation_short_nameå¯èƒ½å–ä¸åˆ°é¢„æœŸçš„å€¼ï¼Œç”šè‡³è¿”å›çš„æ˜¯ç©º
 std::string Utils::get_program_short_name()
 {
     //#define _GNU_SOURCE
@@ -329,14 +328,14 @@ std::string Utils::get_program_short_name()
 
 std::string Utils::get_filename(const std::string& filepath)
 {
-    // basenameµÄ²ÎÊı¼´ÊÇÊäÈë£¬Ò²ÊÇÊä³ö²ÎÊı£¬ËùÒÔĞèÒªtmp_filepath
+    // basenameçš„å‚æ•°å³æ˜¯è¾“å…¥ï¼Œä¹Ÿæ˜¯è¾“å‡ºå‚æ•°ï¼Œæ‰€ä»¥éœ€è¦tmp_filepath
     std::string tmp_filepath(filepath);
     return basename(const_cast<char*>(tmp_filepath.c_str())); // #include <libgen.h>
 }
 
 std::string Utils::get_dirpath(const std::string& filepath)
 {
-    // basenameµÄ²ÎÊı¼´ÊÇÊäÈë£¬Ò²ÊÇÊä³ö²ÎÊı£¬ËùÒÔĞèÒªtmp_filepath
+    // basenameçš„å‚æ•°å³æ˜¯è¾“å…¥ï¼Œä¹Ÿæ˜¯è¾“å‡ºå‚æ•°ï¼Œæ‰€ä»¥éœ€è¦tmp_filepath
     std::string tmp_filepath(filepath);
     return dirname(const_cast<char*>(tmp_filepath.c_str())); // #include <libgen.h>
 }
@@ -355,12 +354,12 @@ void Utils::set_process_name(const std::string& new_name)
 void Utils::set_process_name(const char* format, ...)
 {
     char name[NAME_MAX] = {0};
-	
+    
     va_list args;
     va_start(args, format);
     vsnprintf(name, sizeof(name), format, args);
-	va_end(args);
-	
+    va_end(args);
+    
     set_process_name(std::string(name));
 }
 
@@ -377,9 +376,9 @@ void Utils::set_process_title(const std::string &new_title)
     {
         size_t new_title_len = new_title.length();
 
-        // ĞÂµÄtitle±ÈÀÏµÄ³¤
+        // æ–°çš„titleæ¯”è€çš„é•¿
         if ((static_cast<size_t>(g_arg_end-g_arg_start) < new_title_len)
-			&& (g_env_start == g_arg_end))
+            && (g_env_start == g_arg_end))
         {
             char* env_end = g_env_start;
             for (int i = 0; environ[i]; ++i)
@@ -407,9 +406,9 @@ void Utils::set_process_title(const std::string &new_title)
             strcpy(g_arg_start, new_title.c_str());
             memset(g_arg_start+new_title_len, 0, len-new_title_len);
 
-#if 0 // ´ÓÊµ¼ÊµÄ²âÊÔÀ´¿´£¬Èç¹û¿ªÆôÒÔÏÂÁ½¾ä£¬»á³öÏÖps uÊä³öµÄCOMMANDÒ»ÁĞÎª¿Õ
-            // µ±ĞÂµÄtitle±ÈÔ­title¶ÌÊ±£¬
-            // Ìî³äargv[0]×Ö¶ÎÊ±£¬¸ÄÎªÌî³äargv[0]ÇøµÄºó¶Î£¬Ç°¶ÎÌî³ä0
+#if 0 // ä»å®é™…çš„æµ‹è¯•æ¥çœ‹ï¼Œå¦‚æœå¼€å¯ä»¥ä¸‹ä¸¤å¥ï¼Œä¼šå‡ºç°ps uè¾“å‡ºçš„COMMANDä¸€åˆ—ä¸ºç©º
+            // å½“æ–°çš„titleæ¯”åŸtitleçŸ­æ—¶ï¼Œ
+            // å¡«å……argv[0]å­—æ®µæ—¶ï¼Œæ”¹ä¸ºå¡«å……argv[0]åŒºçš„åæ®µï¼Œå‰æ®µå¡«å……0
             memset(g_arg_start, 0, len);
             strcpy(g_arg_start+(len - new_title_len), new_title.c_str());
 #endif
@@ -433,107 +432,107 @@ void Utils::set_process_title(const std::string &new_title)
 void Utils::set_process_title(const char* format, ...)
 {
     char title[PATH_MAX] = {0};
-	
+    
     va_list args;
     va_start(args, format);
     vsnprintf(title, sizeof(title), format, args);
-	va_end(args);
-	
+    va_end(args);
+    
     set_process_title(std::string(title));
 }
 
 void Utils::common_pipe_read(int fd, char** buffer, int32_t* buffer_size)
 {
-	int ret = 0;
-	int32_t size = 0;
+    int ret = 0;
+    int32_t size = 0;
 
-	// µÚÒ»¸öwhileÑ­»·¶ÁÈ¡´óĞ¡
-	while (true)
-	{
-		ret = read(fd, &size, sizeof(size));
-		if ((-1 == ret) && (EINTR == errno))
-		{
-			continue;
-		}
-		
-		if (-1 == ret)
-		{
-		    THROW_SYSCALL_EXCEPTION(NULL, errno, "read");
-		}
+    // ç¬¬ä¸€ä¸ªwhileå¾ªç¯è¯»å–å¤§å°
+    while (true)
+    {
+        ret = read(fd, &size, sizeof(size));
+        if ((-1 == ret) && (EINTR == errno))
+        {
+            continue;
+        }
+        
+        if (-1 == ret)
+        {
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "read");
+        }
 
-		break;
-	}
+        break;
+    }
 
-	*buffer_size = size;
-	*buffer = new char[size];
-	char* bufferp = *buffer;
+    *buffer_size = size;
+    *buffer = new char[size];
+    char* bufferp = *buffer;
 
-	// µÚ¶ş¸öwhileÑ­»·¸ù¾İ´óĞ¡¶ÁÈ¡ÄÚÈİ
-	while (0 < size)
-	{
-		ret = read(fd, bufferp, size);
-		if ((0 == ret) || (ret == size))
-		{
-			break;
-		}
-		
-		if ((-1 == ret) && (EINTR == errno))
-		{
-			continue;
-		}
-		
-		if (-1 == ret)
-		{
-			delete *buffer;
-			THROW_SYSCALL_EXCEPTION(NULL, errno, "read");
-		}
+    // ç¬¬äºŒä¸ªwhileå¾ªç¯æ ¹æ®å¤§å°è¯»å–å†…å®¹
+    while (0 < size)
+    {
+        ret = read(fd, bufferp, size);
+        if ((0 == ret) || (ret == size))
+        {
+            break;
+        }
+        
+        if ((-1 == ret) && (EINTR == errno))
+        {
+            continue;
+        }
+        
+        if (-1 == ret)
+        {
+            delete *buffer;
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "read");
+        }
 
-		bufferp += ret;
-		size -= ret;
-	}
+        bufferp += ret;
+        size -= ret;
+    }
 }
 
 void Utils::common_pipe_write(int fd, const char* buffer, int32_t buffer_size)
 {
-	int ret = 0;
-	int32_t size = buffer_size;
+    int ret = 0;
+    int32_t size = buffer_size;
 
-	// µÚÒ»¸öwhileÑ­»·Ğ´Èë´óĞ¡
-	while (true)
-	{
-		ret = write(fd, &size, sizeof(size));
-		if ((-1 == ret) && (EINTR == errno))
-		{
-			continue;
-		}
-		
-		if (-1 == ret)
-		{
-		    THROW_SYSCALL_EXCEPTION(NULL, errno, "write");
-		}
+    // ç¬¬ä¸€ä¸ªwhileå¾ªç¯å†™å…¥å¤§å°
+    while (true)
+    {
+        ret = write(fd, &size, sizeof(size));
+        if ((-1 == ret) && (EINTR == errno))
+        {
+            continue;
+        }
+        
+        if (-1 == ret)
+        {
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "write");
+        }
 
-		break;
-	}
+        break;
+    }
 
-	const char* bufferp = buffer;
+    const char* bufferp = buffer;
 
-	// µÚ¶ş¸öwhileÑ­»·¸ù¾İ´óĞ¡Ğ´ÈëÄÚÈİ
-	while (0 < size)
-	{
-		ret = write(fd, bufferp, size);
-		if ((-1 == ret) && (EINTR == errno))
-		{
-			continue;
-		}
-		
-		if (-1 == ret)
-		{
-		    THROW_SYSCALL_EXCEPTION(NULL, errno, "write");
-		}
+    // ç¬¬äºŒä¸ªwhileå¾ªç¯æ ¹æ®å¤§å°å†™å…¥å†…å®¹
+    while (0 < size)
+    {
+        ret = write(fd, bufferp, size);
+        if ((-1 == ret) && (EINTR == errno))
+        {
+            continue;
+        }
+        
+        if (-1 == ret)
+        {
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "write");
+        }
 
-		size -= ret;
-		bufferp += ret;
-	}
+        size -= ret;
+        bufferp += ret;
+    }
 }
 
 // UTILS_NS_END

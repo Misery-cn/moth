@@ -12,7 +12,7 @@ extern uint32_t crc32c_intel_fast(uint32_t crc, unsigned char const* buffer, uns
 #else
 static inline uint32_t crc32c_intel_fast(uint32_t crc, unsigned char const* buffer, unsigned len)
 {
-	return 0;
+    return 0;
 }
 #endif
 

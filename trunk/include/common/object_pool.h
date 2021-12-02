@@ -1,6 +1,6 @@
 #include "utils.h"
 
-// ÒªÊ¹ÓÃ¶ÔÏó³Ø,¶ÔÏó±ØĞë¼Ì³Ğ×Ô¸ÃÀà
+// è¦ä½¿ç”¨å¯¹è±¡æ± ,å¯¹è±¡å¿…é¡»ç»§æ‰¿è‡ªè¯¥ç±»
 class PoolObject
 {
 public:
@@ -24,21 +24,21 @@ public:
         _in_pool = in_pool;
     }
 
-	// ÅĞ¶Ï¶ÔÏóÊÇ·ñÔÚ¶ÔÏó³ØÖĞ
+    // åˆ¤æ–­å¯¹è±¡æ˜¯å¦åœ¨å¯¹è±¡æ± ä¸­
     bool is_in_pool() const throw ()
     {
         return _in_pool;
     }
 
-	// ÅÉÉúÀàÊµÏÖÇå¿Õ¶ÔÏó
-	void reset() = 0;
+    // æ´¾ç”Ÿç±»å®ç°æ¸…ç©ºå¯¹è±¡
+    void reset() = 0;
 
 private:
-	// ÊÇ·ñÔÚ¶ÔÏó³ØÖĞ
+    // æ˜¯å¦åœ¨å¯¹è±¡æ± ä¸­
     bool _in_pool;
-	// ÔÚ¶ÔÏó³ØÖĞµÄË÷Òı
+    // åœ¨å¯¹è±¡æ± ä¸­çš„ç´¢å¼•
     uint32_t _index;
-	ArrayList<PoolObject*>::Item _item;
+    ArrayList<PoolObject*>::Item _item;
 };
 
 
@@ -46,48 +46,48 @@ template<class ObjectClass>
 class ObjectPool
 {
 public:
-	
-	ObjectPool() throw () : _obj_num(0), _idle_num(0), _object_queue(NULL)
-	{
-	}
-
-	void create(uint32_t object_number) throw ()
-	{
-		MutexGuard locker(_lock);
-		
-		_obj_num = object_number;
-		_idle_num = _obj_num;
-
-		_object_queue = new ArrayList<ObjectClass*>();
-
-		for (uint32_t i = 0; i < _obj_num; ++i)
-		{
-			ObjectClass* object = new ObjectClass();
-			object->set_index(i);
-			object->set_in_pool(true);
-			_object_queue->push_back(&ObjectClass._item);
-		}
-	}
-
-	void destory() throw()
-	{
-		MutexGuard locker(_lock);
-		
-		DELETE_P(_object_queue);
-	}
-
-	// ´Ó¶ÔÏó³ØÖĞ»ñÈ¡Ò»¸ö¶ÔÏó
-	ObjectClass* borrow() throw ()
+    
+    ObjectPool() throw () : _obj_num(0), _idle_num(0), _object_queue(NULL)
     {
-    	MutexGuard locker(_lock);
-		
+    }
+
+    void create(uint32_t object_number) throw ()
+    {
+        Mutex::Locker locker(_lock);
+        
+        _obj_num = object_number;
+        _idle_num = _obj_num;
+
+        _object_queue = new ArrayList<ObjectClass*>();
+
+        for (uint32_t i = 0; i < _obj_num; ++i)
+        {
+            ObjectClass* object = new ObjectClass();
+            object->set_index(i);
+            object->set_in_pool(true);
+            _object_queue->push_back(&ObjectClass._item);
+        }
+    }
+
+    void destory() throw()
+    {
+        Mutex::Locker locker(_lock);
+        
+        DELETE_P(_object_queue);
+    }
+
+    // ä»å¯¹è±¡æ± ä¸­è·å–ä¸€ä¸ªå¯¹è±¡
+    ObjectClass* borrow() throw ()
+    {
+        Mutex::Locker locker(_lock);
+        
         ObjectClass* object = NULL;
         
-        // ¶ÔÏó³Ø²»Îª¿Õ
+        // å¯¹è±¡æ± ä¸ä¸ºç©º
         if (!_object_queue->is_empty())
         {
-        	// µ¯³öÒ»¸ö¶ÔÏó,ÉèÖÃ¶ÔÏóÒÑ²»ÔÚ³ØÖĞ,¿ÕÏĞ¶ÔÏóÊı¼õÒ»
-			object = _object_queue->pop_front();
+            // å¼¹å‡ºä¸€ä¸ªå¯¹è±¡,è®¾ç½®å¯¹è±¡å·²ä¸åœ¨æ± ä¸­,ç©ºé—²å¯¹è±¡æ•°å‡ä¸€
+            object = _object_queue->pop_front();
             object->set_in_pool(false);
             --_idle_num;
         }      
@@ -95,11 +95,11 @@ public:
         return object;
     }
 
-	void pay_back(ObjectClass* object) throw ()
+    void pay_back(ObjectClass* object) throw ()
     {
-    	MutexGuard locker(_lock);
-		
-        // È·±£¶ÔÏóÊÇ²»ÔÚ³ØÖĞµÄ
+        Mutex::Locker locker(_lock);
+        
+        // ç¡®ä¿å¯¹è±¡æ˜¯ä¸åœ¨æ± ä¸­çš„
         if (!object->is_in_pool())
         {
             object->reset();
@@ -110,23 +110,23 @@ public:
         }
     }
 
-	uint32_t get_pool_size() const throw ()
-	{
-		return _idle_num;
-	}
-
-	volatile uint32_t get_idle_number() const throw ()
+    uint32_t get_pool_size() const throw ()
     {
         return _idle_num;
     }
-		
+
+    volatile uint32_t get_idle_number() const throw ()
+    {
+        return _idle_num;
+    }
+        
 private:
-	// ³ØÖĞ×Ü¶ÔÏóÊı,°üÀ¨Ê¹ÓÃºÍÎ´Ê¹ÓÃµÄ
-	uint32_t _obj_num;
-	// Î´Ê¹ÓÃµÄ¶ÔÏóÊı
-	uint32_t _idle_num;
-	
-	Mutex _lock;
-	// ObjectClass* _object_array;
-	ArrayList<ObjectClass*>* _object_queue;
+    // æ± ä¸­æ€»å¯¹è±¡æ•°,åŒ…æ‹¬ä½¿ç”¨å’Œæœªä½¿ç”¨çš„
+    uint32_t _obj_num;
+    // æœªä½¿ç”¨çš„å¯¹è±¡æ•°
+    uint32_t _idle_num;
+    
+    Mutex _lock;
+    // ObjectClass* _object_array;
+    ArrayList<ObjectClass*>* _object_queue;
 };

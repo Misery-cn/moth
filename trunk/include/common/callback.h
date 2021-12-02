@@ -4,23 +4,23 @@
 class Callback
 {
 public:
-	Callback() {}
-	virtual ~Callback() {}
+    Callback() {}
+    virtual ~Callback() {}
 
-	virtual void complete(int r)
-	{
-		finish(r);
-		delete this;
-	}
+    virtual void complete(int r)
+    {
+        finish(r);
+        delete this;
+    }
 
 protected:
-	virtual void finish(int r) = 0;
-	
+    virtual void finish(int r) = 0;
+    
 
 private:
-	// Ω˚”√
-	Callback(const Callback& other);
-	const Callback& operator=(const Callback& other);
+    // Á¶ÅÁî®
+    Callback(const Callback& other);
+    const Callback& operator=(const Callback& other);
 };
 
 #endif

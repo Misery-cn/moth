@@ -8,18 +8,18 @@
 
 mmap_t* MMap::mmap_read_only(int32_t fd, size_t size, size_t offset, size_t size_max) throw (SysCallException)
 {
-	return do_map(PROT_READ, fd, size, offset, size_max, true);
+    return do_map(PROT_READ, fd, size, offset, size_max, true);
 }
 
 mmap_t* MMap::mmap_read_only(const char * filename, size_t size_max) throw (SysCallException)
 {
-	int fd = open(filename, O_RDONLY);
-	if (0 > fd)
-	{
-		THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
-	}
+    int fd = open(filename, O_RDONLY);
+    if (0 > fd)
+    {
+        THROW_SYSCALL_EXCEPTION(NULL, errno, "open");
+    }
 
-	return do_map(PROT_READ, fd, 0, 0, size_max, false);
+    return do_map(PROT_READ, fd, 0, 0, size_max, false);
 }
 
 mmap_t* MMap::mmap_write_only(int fd, size_t size, size_t offset, size_t size_max) throw (SysCallException)
@@ -56,7 +56,7 @@ mmap_t* MMap::mmap(const char* filename, size_t size_max) throw (SysCallExceptio
 
 mmap_t* MMap::do_map(int prot, int fd, size_t size, size_t offset, size_t size_max, bool byfd) throw (SysCallException)
 {
-	mmap_t* ptr = new mmap_t();
+    mmap_t* ptr = new mmap_t();
 
     try
     {        
@@ -66,58 +66,58 @@ mmap_t* MMap::do_map(int prot, int fd, size_t size, size_t offset, size_t size_m
             THROW_SYSCALL_EXCEPTION(NULL, errno, "fstat");
         }
 
-		// Èç¹û¸ÃÎÄ¼þÃèÊö·ûÓÉµ÷ÓÃÕß´ò¿ªµÄ,ÔòÓ¦ÓÉµ÷ÓÃÕß×Ô¼º¹Ø±Õ
+        // å¦‚æžœè¯¥æ–‡ä»¶æè¿°ç¬¦ç”±è°ƒç”¨è€…æ‰“å¼€çš„,åˆ™åº”ç”±è°ƒç”¨è€…è‡ªå·±å…³é—­
         ptr->_fd = byfd ? -1 : fd;
-		// Èç¹ûsizeÎª0,ÔòÓ³ÉäÕû¸öÎÄ¼þ
+        // å¦‚æžœsizeä¸º0,åˆ™æ˜ å°„æ•´ä¸ªæ–‡ä»¶
         ptr->_len = (0 == size) ? ((size_t)st.st_size - offset) : (size + offset > (size_t)st.st_size) ? (size_t)st.st_size : (size + offset);
-		ptr->_addr = NULL;
+        ptr->_addr = NULL;
 
-		// Èç¹û³¬¹ý×î´óÓ³ÉäÖµÔò²»ÓèÓ³Éä
-		if ((0 == size_max) || (ptr->_len < size_max))
-		{
-			void* addr = ::mmap(NULL, ptr->_len, prot, MAP_SHARED, fd, offset);
-			if (MAP_FAILED == addr)
-			{
-			    THROW_SYSCALL_EXCEPTION(NULL, errno, "mmap");
-			}
+        // å¦‚æžœè¶…è¿‡æœ€å¤§æ˜ å°„å€¼åˆ™ä¸äºˆæ˜ å°„
+        if ((0 == size_max) || (ptr->_len < size_max))
+        {
+            void* addr = ::mmap(NULL, ptr->_len, prot, MAP_SHARED, fd, offset);
+            if (MAP_FAILED == addr)
+            {
+                THROW_SYSCALL_EXCEPTION(NULL, errno, "mmap");
+            }
 
-			ptr->_addr = addr;
-		}        
+            ptr->_addr = addr;
+        }        
         
         return ptr;
     }
     catch (SysCallException& ex)
     {
-        // ¹Ø±ÕÎÄ¼þ
+        // å…³é—­æ–‡ä»¶
         if (ptr->_fd > -1)
         {
             close(ptr->_fd);
             ptr->_fd = -1;
         }
         
-		DELETE_P(ptr)
+        DELETE_P(ptr)
         throw;
     }    
 }
 
 void MMap::unmap(mmap_t* ptr) throw (SysCallException)
 {
-	if (ptr->_addr != NULL)
+    if (ptr->_addr != NULL)
     {
-		if (-1 == munmap(ptr->_addr, ptr->_len))
-		{
-		    THROW_SYSCALL_EXCEPTION(NULL, errno, "munmap");
-		}
-	}
+        if (-1 == munmap(ptr->_addr, ptr->_len))
+        {
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "munmap");
+        }
+    }
 
-    // ¼ÇµÃ¹Ø±Õ´ò¿ªµÄÎÄ¼þ
+    // è®°å¾—å…³é—­æ‰“å¼€çš„æ–‡ä»¶
     if (ptr->_fd > -1) 
     {
         close(ptr->_fd);
         ptr->_fd = -1;
     }
     
-	DELETE_P(ptr)
+    DELETE_P(ptr)
 }
 
 void MMap::flush_sync(mmap_t* ptr, size_t offset, size_t length, bool invalid) throw (SysCallException)

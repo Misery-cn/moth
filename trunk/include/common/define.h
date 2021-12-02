@@ -7,45 +7,45 @@
 #define IN
 #define OUT
 
-// sysÃüÃû¿Õ¼äºê
+// syså‘½åç©ºé—´å®
 #define SYS_NS_BEGIN namespace sys {
 #define SYS_NS_END }
 
-// utilÃüÃû¿Õ¼äºê
+// utilå‘½åç©ºé—´å®
 #define UTILS_NS_BEGIN namespace utils {
-#define UTILS_NS_END	}
+#define UTILS_NS_END    }
 
 #define DELETE_P(p) \
-	do { \
-		if (p) \
-		{ \
-			delete p; \
-			p = NULL; \
-		} \
-	} while(0);
+    do { \
+        if (p) \
+        { \
+            delete p; \
+            p = NULL; \
+        } \
+    } while(0);
 
 /*static inline void 
 DELETE_P(void* p)
 {
-	if (p)
-	{
-	    delete p;
-		p = NULL;
-	}
+    if (p)
+    {
+        delete p;
+        p = NULL;
+    }
 }*/
 
 #define DELETE_ARRAY(array) \
-	do { \
-		if (array) \
-		{ \
-			delete[] array; \
-			array = NULL; \
-		} \
-	} while(0);
+    do { \
+        if (array) \
+        { \
+            delete[] array; \
+            array = NULL; \
+        } \
+    } while(0);
 
 
 
-// ¼ÆËã³ÉÔ±ÔÚ½á¹¹ÌåÖĞµÄÆ«ÒÆÁ¿
+// è®¡ç®—æˆå‘˜åœ¨ç»“æ„ä½“ä¸­çš„åç§»é‡
 #ifndef offsetof
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 #endif
@@ -57,11 +57,11 @@ DELETE_P(void* p)
 
 #ifndef TEMP_FAILURE_RETRY
 #define TEMP_FAILURE_RETRY(expression) ({     \
-	__typeof(expression) __result;              \
-	do {                                        \
-		__result = (expression);                  \
-	} while (__result == -1 && errno == EINTR); \
-	__result; })
+    __typeof(expression) __result;              \
+    do {                                        \
+        __result = (expression);                  \
+    } while (__result == -1 && errno == EINTR); \
+    __result; })
 #endif
 
 
@@ -74,24 +74,24 @@ DELETE_P(void* p)
 #endif
 
 
-// ÎÄ¼şÈ«Ãû×î´ó×Ö½ÚÊı
+// æ–‡ä»¶å…¨åæœ€å¤§å­—èŠ‚æ•°
 #ifdef FILENAME_MAX
 #undef FILENAME_MAX
 #endif
 #define FILENAME_MAX 256
-		
-// Ä¿Â¼×î´ó×Ö½ÚÊı
+        
+// ç›®å½•æœ€å¤§å­—èŠ‚æ•°
 #ifdef PATH_MAX
 #undef PATH_MAX
-#endif		
+#endif        
 #define PATH_MAX 256
 
-#ifndef	LINE_MAX
-#define	LINE_MAX 1024
+#ifndef    LINE_MAX
+#define    LINE_MAX 1024
 #endif
 
 
-// IO²Ù×÷Í¨ÓÃ»º³åÇø´óĞ¡
+// IOæ“ä½œé€šç”¨ç¼“å†²åŒºå¤§å°
 #ifdef IO_BUFFER_MAX
 #undef IO_BUFFER_MAX
 #endif

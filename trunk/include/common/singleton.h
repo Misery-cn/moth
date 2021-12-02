@@ -9,23 +9,23 @@ template <typename T>
 class Singleton
 {
 public:
-	static T& instance();
-	virtual void update() {};
+    static T& instance();
+    virtual void update() {};
 
 protected:
-	Singleton();
+    Singleton();
 
 private:
-	// ½ûµô¹¹Ôìº¯ÊıºÍ¸³ÖµÔËËã·û,ÒÔ·À¹¹Ôì¶à¸öÊµÀı
-	Singleton(const Singleton&);
-	Singleton& operator=(const Singleton&);
+    // ç¦æ‰æ„é€ å‡½æ•°å’Œèµ‹å€¼è¿ç®—ç¬¦,ä»¥é˜²æ„é€ å¤šä¸ªå®ä¾‹
+    Singleton(const Singleton&);
+    Singleton& operator=(const Singleton&);
 
-	static void destroy_singleton();
+    static void destroy_singleton();
 
 private:
-	static Mutex _lock;
-	static T* _instance;
-	static bool _destroyed;
+    static Mutex _lock;
+    static T* _instance;
+    static bool _destroyed;
 };
 
 
@@ -43,12 +43,12 @@ T& Singleton<T>::instance()
 {
     if (!_instance)
     {
-        MutexGuard guard(_lock);
+        Mutex::Locker locker(_lock);
 
         if (!_instance)
         {
-			_instance = new T;
-			std::atexit(destroy_singleton);
+            _instance = new T;
+            std::atexit(destroy_singleton);
         }
     }
 

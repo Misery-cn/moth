@@ -12,7 +12,7 @@ extern crc32c_func_t choose_crc32(void);
 
 static inline uint32_t crc32c(uint32_t crc, unsigned char const *data, unsigned length)
 {
-	return crc32c_func(crc, data, length);
+    return crc32c_func(crc, data, length);
 }
 
 #endif

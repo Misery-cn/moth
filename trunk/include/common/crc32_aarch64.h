@@ -15,7 +15,7 @@ extern uint32_t crc32c_aarch64(uint32_t crc, unsigned char const* buffer, unsign
 
 static inline uint32_t crc32c_aarch64(uint32_t crc, unsigned char const* buffer, unsigned len)
 {
-	return 0;
+    return 0;
 }
 
 #endif

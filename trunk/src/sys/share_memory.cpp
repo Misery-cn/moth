@@ -48,9 +48,9 @@ bool ShareMemory::create(const char* path, mode_t mode) throw (SysCallException)
     
     if (path != NULL)
     {
-    	// Èç¹ûÒªÈ·±£key_tÖµ²»±ä£¬ÒªÃ´È·±£ftokµÄÎÄ¼ş²»±»É¾³ı£¬ÒªÃ´²»ÓÃftok£¬Ö¸¶¨Ò»¸ö¹Ì¶¨µÄkey_tÖµ
-    	// #define IPCKEY 0x01
-    	// Á½½ø³ÌÈçÔÚpathºÍproj_idÉÏ´ï³ÉÒ»ÖÂ,Ë«·½¾Í¶¼ÄÜ¹»Í¨¹ıµ÷ÓÃftokº¯ÊıµÃµ½Í¬Ò»¸öIPC¼ü
+        // å¦‚æœè¦ç¡®ä¿key_tå€¼ä¸å˜ï¼Œè¦ä¹ˆç¡®ä¿ftokçš„æ–‡ä»¶ä¸è¢«åˆ é™¤ï¼Œè¦ä¹ˆä¸ç”¨ftokï¼ŒæŒ‡å®šä¸€ä¸ªå›ºå®šçš„key_tå€¼
+        // #define IPCKEY 0x01
+        // ä¸¤è¿›ç¨‹å¦‚åœ¨pathå’Œproj_idä¸Šè¾¾æˆä¸€è‡´,åŒæ–¹å°±éƒ½èƒ½å¤Ÿé€šè¿‡è°ƒç”¨ftokå‡½æ•°å¾—åˆ°åŒä¸€ä¸ªIPCé”®
         key_t key = ftok(path, getpid());
         if (-1 == key)
         {
@@ -62,10 +62,10 @@ bool ShareMemory::create(const char* path, mode_t mode) throw (SysCallException)
     if (-1 == _shmid)
     {
         if (EEXIST == errno) 
-		{
-			return false;
+        {
+            return false;
         }
-		
+        
         THROW_SYSCALL_EXCEPTION(NULL, errno, "shmget");
     }
         

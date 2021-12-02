@@ -3,46 +3,46 @@
 
 #include "atomic.h"
 
-// ÒıÓÃ¼ÆÊı»ùÀà
+// å¼•ç”¨è®¡æ•°åŸºç±»
 class RefCountable
 {
 public:
-	// ³õÊ¼»¯Ê±ÒıÓÃ¼ÆÊı¼´Îª1
-	RefCountable() { atomic_set(&_ref, 1); }
+    // åˆå§‹åŒ–æ—¶å¼•ç”¨è®¡æ•°å³ä¸º1
+    RefCountable() { atomic_set(&_ref, 1); }
 
-	virtual ~RefCountable() {}
+    virtual ~RefCountable() {}
 
-	// »ñÈ¡µ±Ç°ÒıÓÃÊı
-	int get_ref() const { return atomic_read(&_ref); }
+    // è·å–å½“å‰å¼•ç”¨æ•°
+    int get_ref() const { return atomic_read(&_ref); }
 
-	// +1
-	void inc() { atomic_inc(&_ref); }
+    // +1
+    void inc() { atomic_inc(&_ref); }
 
-	// -1
-	bool dec()
-	{
-		volatile bool deleted = false;
-		// ¼õÒ»Èç¹ûµÈÓÚ0·µ»Øtrue
-		if (atomic_dec_and_test(&_ref))
-		{
-			deleted = true;
-			delete this;
-		}
+    // -1
+    bool dec()
+    {
+        volatile bool deleted = false;
+        // å‡ä¸€å¦‚æœç­‰äº0è¿”å›true
+        if (atomic_dec_and_test(&_ref))
+        {
+            deleted = true;
+            delete this;
+        }
 
-		return deleted;
-	}
+        return deleted;
+    }
 
-	// »ñÈ¡µ±Ç°ÒıÓÃ¼ÆÊıÖ¸Õë
-	RefCountable* get()
-	{
-		// +1
-		inc();
-		
-		return this;
-	}
-	
+    // è·å–å½“å‰å¼•ç”¨è®¡æ•°æŒ‡é’ˆ
+    RefCountable* get()
+    {
+        // +1
+        inc();
+        
+        return this;
+    }
+    
 private:
-	atomic_t _ref;
+    atomic_t _ref;
 };
 
 #endif

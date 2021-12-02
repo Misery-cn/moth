@@ -10,22 +10,22 @@
 
 // UTILS_NS_BEGIN
 
-// ÆÕÍ¨ÎÄ¼þËø£¬×ÜÊÇËø¶¨Õû¸öÎÄ¼þ
-// Ö§³Ö¶ÀÕ¼ºÍ¹²ÏíÁ½ÖÖÀàÐÍ£¬ÓÉ²ÎÊýexclusive¾ö¶¨
-// ½ø³ÌÍË³öÊ±£¬ËüËù³ÖÓÐµÄËø»á±»×Ô¶¯ÊÍ·Å
-// ×¢ÒâÍ¬Ò»¸öFileLocker¶ÔÏó£¬²»Òª¿çÏß³ÌÊ¹ÓÃ
-// Í¬Ò»¸öFileLocker¶ÔÏó×ÜÊÇÖ»»á±»Í¬Ò»¸öÏß³Ìµ÷¶È
+// æ™®é€šæ–‡ä»¶é”ï¼Œæ€»æ˜¯é”å®šæ•´ä¸ªæ–‡ä»¶
+// æ”¯æŒç‹¬å å’Œå…±äº«ä¸¤ç§ç±»åž‹ï¼Œç”±å‚æ•°exclusiveå†³å®š
+// è¿›ç¨‹é€€å‡ºæ—¶ï¼Œå®ƒæ‰€æŒæœ‰çš„é”ä¼šè¢«è‡ªåŠ¨é‡Šæ”¾
+// æ³¨æ„åŒä¸€ä¸ªFileLockerå¯¹è±¡ï¼Œä¸è¦è·¨çº¿ç¨‹ä½¿ç”¨
+// åŒä¸€ä¸ªFileLockerå¯¹è±¡æ€»æ˜¯åªä¼šè¢«åŒä¸€ä¸ªçº¿ç¨‹è°ƒåº¦
 class FileLocker
 {
 public:
-	// ²»¼ÓËø¹¹Ôìº¯Êý£¬ÓÉµ÷ÓÃÕß¾ö¶¨ºÎÊ±¼ÓËø
+    // ä¸åŠ é”æž„é€ å‡½æ•°ï¼Œç”±è°ƒç”¨è€…å†³å®šä½•æ—¶åŠ é”
     explicit FileLocker(const char* filepath) throw ()
         : _fd(-1), _filepath(filepath)
     {
     }
 
-	// ×Ô¶¯¼ÓËø¹¹Ôìº¯Êý
-	// ½¨ÒéÊ¹ÓÃSharedFileLocker»òExclusiveFileLocker£¬Ìæ´ú´Ë¹¹Ôìº¯Êýµ÷ÓÃ
+    // è‡ªåŠ¨åŠ é”æž„é€ å‡½æ•°
+    // å»ºè®®ä½¿ç”¨SharedFileLockeræˆ–ExclusiveFileLockerï¼Œæ›¿ä»£æ­¤æž„é€ å‡½æ•°è°ƒç”¨
     explicit FileLocker(const char* filepath, bool exclusive) throw ()
         : _fd(-1), _filepath(filepath)
     {
@@ -37,10 +37,10 @@ public:
         unlock();
     }
 
-	// ÊÇ·ñ¶ÀÕ¼¼ÓËø
+    // æ˜¯å¦ç‹¬å åŠ é”
     bool lock(bool exclusive) throw ()
     {
-        // ¶ÀÕ¼»¹ÊÇ¹²Ïí
+        // ç‹¬å è¿˜æ˜¯å…±äº«
         int operation = exclusive ? LOCK_EX : LOCK_SH;
 
         _fd = open(_filepath.c_str(), O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
@@ -52,7 +52,7 @@ public:
                 close(_fd);
 
                 _fd = -1;
-				// »Ö¸´£¬Ä¿µÄÊÇÈÃÉÏ²ãµ÷ÓÃÕß¿ÉÒÔÊ¹ÓÃerrno
+                // æ¢å¤ï¼Œç›®çš„æ˜¯è®©ä¸Šå±‚è°ƒç”¨è€…å¯ä»¥ä½¿ç”¨errno
                 errno = errcode;
             }
         }
@@ -87,7 +87,7 @@ public:
         return (-1 != _fd);
     }
 
-	// »ñÈ¡ËøÎÄ¼þÂ·¾¶
+    // èŽ·å–é”æ–‡ä»¶è·¯å¾„
     const std::string& get_filepath() const throw ()
     {
         return _filepath;
@@ -99,7 +99,7 @@ private:
 };
 
 
-// ¶ÀÕ¼ÎÄ¼þËø
+// ç‹¬å æ–‡ä»¶é”
 class ExclusiveFileLocker : public FileLocker
 {
 public:
@@ -114,7 +114,7 @@ private:
 };
 
 
-// ¹²ÏíÎÄ¼þËø
+// å…±äº«æ–‡ä»¶é”
 class SharedFileLocker : public FileLocker
 {
 public:
@@ -129,25 +129,25 @@ private:
 };
 
 
-// ÔöÇ¿ÐÍÎÄ¼þËø£¬¿ÉÖ»ËøÎÄ¼þÖ¸¶¨µÄ²¿·Ö,Ò»¸öExFileLocker¶ÔÏó£¬×ÜÊÇÖ»±»Ò»¸öÏß³Ìµ÷ÓÃ
+// å¢žå¼ºåž‹æ–‡ä»¶é”ï¼Œå¯åªé”æ–‡ä»¶æŒ‡å®šçš„éƒ¨åˆ†,ä¸€ä¸ªExFileLockerå¯¹è±¡ï¼Œæ€»æ˜¯åªè¢«ä¸€ä¸ªçº¿ç¨‹è°ƒç”¨
 class ExFileLocker
 {
 public:
-	// ¹¹ÔìÔöÇ¿ÐÍÎÄ¼þËø¶ÔÏó
-	// µ÷ÓÃÕßÐèÒª¸ºÔðÎÄ¼þµÄ´ò¿ªºÍ¹Ø±Õ
-	// fd±ØÐëÊÇÒÑ´ò¿ªµÄÎÄ¼þÃèÊö·û
-	// ÇÒ±ØÐëÒÔO_WRONLY»òO_RDWR·½Ê½´ò¿ª£¬·ñÔòÓöµ½EBADF´íÎó
-	// µ«Èç¹ûµ÷ÓÃ½ø³Ì¾ßÓÐPRIV_LOCKRDONLYÈ¨ÏÞµÄ×éµÄ³ÉÔ±£¬Ôò¿ÉÊ¹ÓÃO_RDONLY´ò¿ªfd
+    // æž„é€ å¢žå¼ºåž‹æ–‡ä»¶é”å¯¹è±¡
+    // è°ƒç”¨è€…éœ€è¦è´Ÿè´£æ–‡ä»¶çš„æ‰“å¼€å’Œå…³é—­
+    // fdå¿…é¡»æ˜¯å·²æ‰“å¼€çš„æ–‡ä»¶æè¿°ç¬¦
+    // ä¸”å¿…é¡»ä»¥O_WRONLYæˆ–O_RDWRæ–¹å¼æ‰“å¼€ï¼Œå¦åˆ™é‡åˆ°EBADFé”™è¯¯
+    // ä½†å¦‚æžœè°ƒç”¨è¿›ç¨‹å…·æœ‰PRIV_LOCKRDONLYæƒé™çš„ç»„çš„æˆå‘˜ï¼Œåˆ™å¯ä½¿ç”¨O_RDONLYæ‰“å¼€fd
     explicit ExFileLocker(int fd)
         : _fd(fd)
     {
     }
 
-	// Èç¹ûÇÀµ½Ëø£¬ÔòÁ¢¼´·µ»Øtrue£¬·ñÔò±»×èÈû
-	// Èç¹û¼ÓËøÊ§°Ü£¬Ôò·µ»Øfalse
-	// size Èç¹ûÎª0£¬±íÊ¾Ëø¶¨´ÓÎÄ¼þµ±Ç°Æ«ÒÆ¿ªÊ¼µ½ÎÄ¼þÎ²µÄÇøÓò
-	// Èç¹ûÎªÕý£¬Ôò±íÊ¾Ëø¶¨´ÓÎÄ¼þµ±Ç°Æ«ÒÆ¿ªÊ¼£¬Íùºó´óÐ¡ÎªsizeµÄÁ¬ÐøÇøÓò
-	// Èç¹ûÎª¸º£¬Ôò±íÊ¾Ëø¶¨´ÓÎÄ¼þµ±Ç°Æ«ÒÆ¿ªÊ¼£¬ÍùÇ°´óÐ¡ÎªsizeµÄÁ¬ÐøÇøÓò
+    // å¦‚æžœæŠ¢åˆ°é”ï¼Œåˆ™ç«‹å³è¿”å›žtrueï¼Œå¦åˆ™è¢«é˜»å¡ž
+    // å¦‚æžœåŠ é”å¤±è´¥ï¼Œåˆ™è¿”å›žfalse
+    // size å¦‚æžœä¸º0ï¼Œè¡¨ç¤ºé”å®šä»Žæ–‡ä»¶å½“å‰åç§»å¼€å§‹åˆ°æ–‡ä»¶å°¾çš„åŒºåŸŸ
+    // å¦‚æžœä¸ºæ­£ï¼Œåˆ™è¡¨ç¤ºé”å®šä»Žæ–‡ä»¶å½“å‰åç§»å¼€å§‹ï¼Œå¾€åŽå¤§å°ä¸ºsizeçš„è¿žç»­åŒºåŸŸ
+    // å¦‚æžœä¸ºè´Ÿï¼Œåˆ™è¡¨ç¤ºé”å®šä»Žæ–‡ä»¶å½“å‰åç§»å¼€å§‹ï¼Œå¾€å‰å¤§å°ä¸ºsizeçš„è¿žç»­åŒºåŸŸ
     bool lock(off_t size)
     {
         if (-1 != _fd)
@@ -158,11 +158,11 @@ public:
         return false;
     }
 
-	// ³¢ÊÔ¼ÓËø£¬×ÜÊÇÁ¢¼´·µ»Ø£¬²»»á±»×èÈû
-	// Èç¹û¼ÓËø³É¹¦£¬ÔòÁ¢¼´·µ»Øtrue£¬·ñÔòÁ¢¼´·µ»Øfalse
-	// size Èç¹ûÎª0£¬±íÊ¾³¢ÊÔËø¶¨´ÓÎÄ¼þµ±Ç°Æ«ÒÆ¿ªÊ¼µ½ÎÄ¼þÎ²µÄÇøÓò
-	// Èç¹ûÎªÕý£¬Ôò±íÊ¾³¢ÊÔËø¶¨´ÓÎÄ¼þµ±Ç°Æ«ÒÆ¿ªÊ¼£¬Íùºó´óÐ¡ÎªsizeµÄÁ¬ÐøÇøÓò
-	// Èç¹ûÎª¸º£¬Ôò±íÊ¾³¢ÊÔËø¶¨´ÓÎÄ¼þµ±Ç°Æ«ÒÆ¿ªÊ¼£¬ÍùÇ°´óÐ¡ÎªsizeµÄÁ¬ÐøÇøÓò
+    // å°è¯•åŠ é”ï¼Œæ€»æ˜¯ç«‹å³è¿”å›žï¼Œä¸ä¼šè¢«é˜»å¡ž
+    // å¦‚æžœåŠ é”æˆåŠŸï¼Œåˆ™ç«‹å³è¿”å›žtrueï¼Œå¦åˆ™ç«‹å³è¿”å›žfalse
+    // size å¦‚æžœä¸º0ï¼Œè¡¨ç¤ºå°è¯•é”å®šä»Žæ–‡ä»¶å½“å‰åç§»å¼€å§‹åˆ°æ–‡ä»¶å°¾çš„åŒºåŸŸ
+    // å¦‚æžœä¸ºæ­£ï¼Œåˆ™è¡¨ç¤ºå°è¯•é”å®šä»Žæ–‡ä»¶å½“å‰åç§»å¼€å§‹ï¼Œå¾€åŽå¤§å°ä¸ºsizeçš„è¿žç»­åŒºåŸŸ
+    // å¦‚æžœä¸ºè´Ÿï¼Œåˆ™è¡¨ç¤ºå°è¯•é”å®šä»Žæ–‡ä»¶å½“å‰åç§»å¼€å§‹ï¼Œå¾€å‰å¤§å°ä¸ºsizeçš„è¿žç»­åŒºåŸŸ
     bool try_lock(off_t size)
     {
         if (-1 != _fd)
@@ -173,11 +173,11 @@ public:
         return false;
     }
 
-	// ¼ì²âÔÚÖ¸¶¨µÄÇøÓòÖÐÊÇ·ñ´æÔÚÆäËû½ø³ÌµÄËø¶¨
-	// Èç¹û¸ÃÇøÓò¿É·ÃÎÊ£¬Ôò·µ»Øtrue£¬·ñÔò·µ»Øfalse
-	// size Èç¹ûÎª0£¬±íÊ¾¼ì²â´ÓÎÄ¼þµ±Ç°Æ«ÒÆ¿ªÊ¼µ½ÎÄ¼þÎ²µÄÇøÓòµÄËø¶¨×´Ì¬
-	// Èç¹ûÎªÕý£¬Ôò±íÊ¾¼ì²â´ÓÎÄ¼þµ±Ç°Æ«ÒÆ¿ªÊ¼£¬Íùºó´óÐ¡ÎªsizeµÄÁ¬ÐøÇøÓòµÄËø¶¨×´Ì¬
-	// Èç¹ûÎª¸º£¬Ôò±íÊ¾¼ì²â´ÓÎÄ¼þµ±Ç°Æ«ÒÆ¿ªÊ¼£¬ÍùÇ°´óÐ¡ÎªsizeµÄÁ¬ÐøÇøÓòµÄËø¶¨×´Ì¬
+    // æ£€æµ‹åœ¨æŒ‡å®šçš„åŒºåŸŸä¸­æ˜¯å¦å­˜åœ¨å…¶ä»–è¿›ç¨‹çš„é”å®š
+    // å¦‚æžœè¯¥åŒºåŸŸå¯è®¿é—®ï¼Œåˆ™è¿”å›žtrueï¼Œå¦åˆ™è¿”å›žfalse
+    // size å¦‚æžœä¸º0ï¼Œè¡¨ç¤ºæ£€æµ‹ä»Žæ–‡ä»¶å½“å‰åç§»å¼€å§‹åˆ°æ–‡ä»¶å°¾çš„åŒºåŸŸçš„é”å®šçŠ¶æ€
+    // å¦‚æžœä¸ºæ­£ï¼Œåˆ™è¡¨ç¤ºæ£€æµ‹ä»Žæ–‡ä»¶å½“å‰åç§»å¼€å§‹ï¼Œå¾€åŽå¤§å°ä¸ºsizeçš„è¿žç»­åŒºåŸŸçš„é”å®šçŠ¶æ€
+    // å¦‚æžœä¸ºè´Ÿï¼Œåˆ™è¡¨ç¤ºæ£€æµ‹ä»Žæ–‡ä»¶å½“å‰åç§»å¼€å§‹ï¼Œå¾€å‰å¤§å°ä¸ºsizeçš„è¿žç»­åŒºåŸŸçš„é”å®šçŠ¶æ€
     bool test_lock(off_t size)
     {
         if (-1 != _fd)
@@ -188,10 +188,10 @@ public:
         return false;
     }
 
-	// Èç¹û½âËø³É¹¦£¬ÔòÁ¢¼´·µ»Øtrue£¬·ñÔòÁ¢¼´·µ»Øfalse
-	// size Èç¹ûÎª0£¬±íÊ¾½âËø´ÓÎÄ¼þµ±Ç°Æ«ÒÆ¿ªÊ¼µ½ÎÄ¼þÎ²µÄÇøÓò
-	// Èç¹ûÎªÕý£¬Ôò±íÊ¾½âËø´ÓÎÄ¼þµ±Ç°Æ«ÒÆ¿ªÊ¼£¬Íùºó´óÐ¡ÎªsizeµÄÁ¬ÐøÇøÓò
-	// Èç¹ûÎª¸º£¬Ôò±íÊ¾½âËø´ÓÎÄ¼þµ±Ç°Æ«ÒÆ¿ªÊ¼£¬ÍùÇ°´óÐ¡ÎªsizeµÄÁ¬ÐøÇøÓò
+    // å¦‚æžœè§£é”æˆåŠŸï¼Œåˆ™ç«‹å³è¿”å›žtrueï¼Œå¦åˆ™ç«‹å³è¿”å›žfalse
+    // size å¦‚æžœä¸º0ï¼Œè¡¨ç¤ºè§£é”ä»Žæ–‡ä»¶å½“å‰åç§»å¼€å§‹åˆ°æ–‡ä»¶å°¾çš„åŒºåŸŸ
+    // å¦‚æžœä¸ºæ­£ï¼Œåˆ™è¡¨ç¤ºè§£é”ä»Žæ–‡ä»¶å½“å‰åç§»å¼€å§‹ï¼Œå¾€åŽå¤§å°ä¸ºsizeçš„è¿žç»­åŒºåŸŸ
+    // å¦‚æžœä¸ºè´Ÿï¼Œåˆ™è¡¨ç¤ºè§£é”ä»Žæ–‡ä»¶å½“å‰åç§»å¼€å§‹ï¼Œå¾€å‰å¤§å°ä¸ºsizeçš„è¿žç»­åŒºåŸŸ
     bool unlock(off_t size)
     {
         if (-1 != _fd)

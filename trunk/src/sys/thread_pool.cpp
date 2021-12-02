@@ -18,10 +18,10 @@ void ThreadPool::worker(WorkThread* wt)
     {
         join_old_threads();
 
-        // ´óÓÚÄ¬ÈÏÏß³ÌÊý
+        // å¤§äºŽé»˜è®¤çº¿ç¨‹æ•°
         if (_threads.size() > _num_threads)
         {
-            // ¼ÓÈë´ýjoin¶ÓÁÐ
+            // åŠ å…¥å¾…joiné˜Ÿåˆ—
             _threads.erase(wt);
             _old_threads.push_back(wt);
             break;
@@ -38,7 +38,7 @@ void ThreadPool::worker(WorkThread* wt)
                 _last_work_index %= _work_queues.size();
                 wq = _work_queues[_last_work_index];
 
-				// ÈÎÎñ¶ÓÁÐÖÐÈ¡Ò»¸öÈÎÎñ
+                // ä»»åŠ¡é˜Ÿåˆ—ä¸­å–ä¸€ä¸ªä»»åŠ¡
                 void* item = wq->_void_dequeue();
                 if (item)
                 {
@@ -63,13 +63,13 @@ void ThreadPool::worker(WorkThread* wt)
             }
         }
 
-		_cond.timed_wait(_lock, 1);
+        _cond.timed_wait(_lock, 1);
     }
-	
+    
     _lock.unlock();
 }
 
-// ´´½¨¹¤×÷Ïß³Ì
+// åˆ›å»ºå·¥ä½œçº¿ç¨‹
 void ThreadPool::start_threads()
 {
     while (_threads.size() < _num_threads)
@@ -78,12 +78,12 @@ void ThreadPool::start_threads()
 
         _threads.insert(wt);
 
-        // Æô¶¯¹¤×÷Ïß³Ì
+        // å¯åŠ¨å·¥ä½œçº¿ç¨‹
         wt->create();
     }
 }
 
-// ¹Ø±Õ´ýjoinµÄÏß³Ì
+// å…³é—­å¾…joinçš„çº¿ç¨‹
 void ThreadPool::join_old_threads()
 {
     while (!_old_threads.empty())
@@ -97,8 +97,8 @@ void ThreadPool::join_old_threads()
 void ThreadPool::start()
 {
     Mutex::Locker locker(_lock);
-	
-	start_threads();
+    
+    start_threads();
 }
 
 void ThreadPool::stop(bool clear_after)
@@ -113,7 +113,7 @@ void ThreadPool::stop(bool clear_after)
     {
         (*it)->join();
         delete *it;
-	}
+    }
 
     _threads.clear();
 
@@ -122,19 +122,19 @@ void ThreadPool::stop(bool clear_after)
     {
         _work_queues[i]->_clear();
     }
-	
+    
     _stop = false;
-	
+    
     _lock.unlock();
 }
 
 void ThreadPool::pause()
 {
     Mutex::Locker locker(_lock);
-	
+    
     _pause++;
-	
-    // Èç¹û»¹ÓÐÏß³ÌÕýÔÚÔËÐÐ,ÏÈ¹ÒÆð,µÈ´ýÏß³ÌÖ´ÐÐÍê³É»½ÐÑ
+    
+    // å¦‚æžœè¿˜æœ‰çº¿ç¨‹æ­£åœ¨è¿è¡Œ,å…ˆæŒ‚èµ·,ç­‰å¾…çº¿ç¨‹æ‰§è¡Œå®Œæˆå”¤é†’
     while (_processing)
     {
         _wait_cond.wait(_lock);
@@ -143,25 +143,25 @@ void ThreadPool::pause()
 
 void ThreadPool::unpause()
 {
-	Mutex::Locker locker(_lock);
-	
-	_pause--;
-	
-	_cond.signal();
+    Mutex::Locker locker(_lock);
+    
+    _pause--;
+    
+    _cond.signal();
 }
 
 void ThreadPool::drain(BaseWorkQueue* wq)
 {
-	Mutex::Locker locker(_lock);
-	
-	_draining++;
-	
-	while (_processing || (wq != NULL && !wq->_empty()))
-	{
-		_wait_cond.wait(_lock);
-	}
-	
-	_draining--;
+    Mutex::Locker locker(_lock);
+    
+    _draining++;
+    
+    while (_processing || (wq != NULL && !wq->_empty()))
+    {
+        _wait_cond.wait(_lock);
+    }
+    
+    _draining--;
 }
 
 // SYS_NS_END
