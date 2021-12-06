@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.11)
 
 add_subdirectory(arch)
+add_subdirectory(app)
 add_subdirectory(common)
 add_subdirectory(sys)
 add_subdirectory(db)

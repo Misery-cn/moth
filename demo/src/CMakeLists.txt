@@ -4,7 +4,6 @@ include_directories(../include)
 include_directories(../../trunk/include/arch)
 include_directories(../../trunk/include/sys)
 include_directories(../../trunk/include/common)
-include_directories(../../trunk/include/exception)
 include_directories(../../trunk/include/log)
 include_directories(../../trunk/include/net)
 include_directories(../../trunk/include/net/messages)
@@ -32,7 +31,7 @@ SET(SRC_LIST moth.cpp
     ../../trunk/src/sys/rw_lock.cpp
     ../../trunk/src/sys/share_memory.cpp
     ../../trunk/src/sys/spinlock.cpp
-    ../../trunk/src/exception/exception.cpp
+    ../../trunk/src/common/exception.cpp
     ../../trunk/src/common/argparse.cpp
     ../../trunk/src/common/armor.cpp
     ../../trunk/src/common/buffer.cpp

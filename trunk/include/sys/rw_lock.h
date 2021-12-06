@@ -15,17 +15,17 @@ public:
     // 解锁
     void unlock() throw (SysCallException);
     // 读锁
-    void lock_read() throw (SysCallException);
+    void rlock() throw (SysCallException);
     // 写锁
-    void lock_write() throw (SysCallException);
+    void wlock() throw (SysCallException);
     // 尝试读锁
-    bool try_lock_read() throw (SysCallException);
+    bool try_rlock() throw (SysCallException);
     // 尝试写锁
-    bool try_lock_write() throw (SysCallException);
+    bool try_wlock() throw (SysCallException);
 
-    bool timed_lock_read(uint32_t millisecond) throw (SysCallException);
+    bool timed_rlock(uint32_t millisecond) throw (SysCallException);
 
-    bool timed_lock_write(uint32_t millisecond) throw (SysCallException);
+    bool timed_wlock(uint32_t millisecond) throw (SysCallException);
     
 private:
     pthread_rwlockattr_t _attr;
@@ -40,11 +40,11 @@ public:
     {
         if (is_read)
         {
-            _lock.lock_read();
+            _lock.rlock();
         }
         else
         {
-            _lock.lock_write();
+            _lock.wlock();
         }
     }    
     
@@ -60,3 +60,4 @@ private:
 // SYS_NS_END
 
 #endif
+

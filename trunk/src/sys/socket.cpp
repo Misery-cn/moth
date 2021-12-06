@@ -1054,7 +1054,7 @@ void Socket::fault(bool onread)
 
 void Socket::accept_fail()
 {
-    Mutex::Locker(_lock);
+    // Mutex::Locker(_lock);
     
     if (SOCKET_CLOSED != _state)
     {    
@@ -1085,7 +1085,7 @@ void Socket::accept_fail()
 
 void Socket::connect_fail()
 {
-    Mutex::Locker(_lock);
+    // Mutex::Locker(_lock);
 
     if (SOCKET_CONNECTING == _state)
     {

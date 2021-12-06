@@ -6,8 +6,6 @@
 #include "dir_utils.h"
 #include "share_memory.h"
 
-
-
 void ShareMemory::open(const char* path) throw (SysCallException)
 {
     if (NULL == path)
@@ -15,17 +13,19 @@ void ShareMemory::open(const char* path) throw (SysCallException)
         THROW_SYSCALL_EXCEPTION(NULL, EINVAL, NULL);
     }
 
-    key_t key = ftok(path, getpid());
+    key_t key = ftok(path, IPCKEY);
     if (-1 == key)
     {
         THROW_SYSCALL_EXCEPTION(NULL, errno, "ftok");
     }
 
-    _shmid = shmget(key, 1, 0);
+    _shmid = shmget(key, 0, 0);
     if (-1 == _shmid)
     {
         THROW_SYSCALL_EXCEPTION(NULL, errno, "shmget");
     }
+
+    _shmkey = key;
 }
 
 void ShareMemory::close() throw (SysCallException)
@@ -42,7 +42,7 @@ void ShareMemory::close() throw (SysCallException)
 }
 
 
-bool ShareMemory::create(const char* path, mode_t mode) throw (SysCallException)
+bool ShareMemory::create(const char* path, size_t size, mode_t mode) throw (SysCallException)
 {
     key_t key = IPC_PRIVATE;
     
@@ -50,17 +50,18 @@ bool ShareMemory::create(const char* path, mode_t mode) throw (SysCallException)
     {
         // 如果要确保key_t值不变，要么确保ftok的文件不被删除，要么不用ftok，指定一个固定的key_t值
         // #define IPCKEY 0x01
-        // 两进程如在path和proj_id上达成一致,双方就都能够通过调用ftok函数得到同一个IPC键
-        key_t key = ftok(path, getpid());
+        // key = ftok(path, getpid());
+        key = ftok(path, IPCKEY);
         if (-1 == key)
         {
             THROW_SYSCALL_EXCEPTION(NULL, errno, "ftok");
         }
     }
 
-    _shmid = shmget(key, 1, IPC_CREAT | IPC_EXCL | mode);
+    _shmid = shmget(key, size, IPC_CREAT | IPC_EXCL | mode);
     if (-1 == _shmid)
     {
+        // 共享内存段已经存在
         if (EEXIST == errno) 
         {
             return false;
@@ -68,6 +69,9 @@ bool ShareMemory::create(const char* path, mode_t mode) throw (SysCallException)
         
         THROW_SYSCALL_EXCEPTION(NULL, errno, "shmget");
     }
+
+    _shmkey = key;
+    _shmsize = size;
         
     return true;
 }
@@ -83,10 +87,10 @@ void ShareMemory::detach() throw (SysCallException)
 
 void* ShareMemory::attach(int flag) throw (SysCallException)
 {
-    if (NULL != _shmaddr)
+    if (NULL == _shmaddr)
     {
         _shmaddr = shmat(_shmid, NULL, flag);
-        if ((void *)-1 == _shmaddr)
+        if ((void*)-1 == _shmaddr)
         {
             THROW_SYSCALL_EXCEPTION(NULL, errno, "shmat");
         }
@@ -95,9 +99,37 @@ void* ShareMemory::attach(int flag) throw (SysCallException)
     return _shmaddr;
 }
 
-void* ShareMemory::get_shared_memory_address() const
+void* ShareMemory::get_shm_address() const
 {
     return _shmaddr;
 }
 
+/**
+    struct shmid_ds {
+    struct ipc_perm shm_perm;
+    int shm_segsz;
+    __kernel_time_t     shm_atime;
+    __kernel_time_t     shm_dtime;
+    __kernel_time_t     shm_ctime;
+    __kernel_ipc_pid_t  shm_cpid;
+    __kernel_ipc_pid_t  shm_lpid;
+    unsigned short      shm_nattch;
+    unsigned short      shm_unused;
+    void                *shm_unused2;
+    void                *shm_unused3;
+    };
+ */
+int ShareMemory::stat(struct shmid_ds* buf) throw (SysCallException)
+{
+    if (-1 != _shmid)
+    {
+        int ret = shmctl(_shmid, IPC_STAT, buf);
+        if (-1 == ret)
+        {
+            THROW_SYSCALL_EXCEPTION(NULL, errno, "shmctl");
+        }
+        return 0;
+    }
+    return -1;
+}
 

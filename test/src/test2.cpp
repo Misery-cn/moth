@@ -7,7 +7,7 @@
 #include <list>
 #include "shm_queue.h"
 
-#define THREAD_NUM 1
+#define THREAD_NUM 2
 #define THREAD_SEND_NUM 100000
 
 std::atomic_int read_count;
@@ -21,7 +21,7 @@ void mul_write_func(ShmQueue* writeQueue, int threadId, const char* mes)
     {
         if (i >= THREAD_SEND_NUM)
         {
-            // break;
+            break;
         }
 
         const std::string& data = std::to_string(i);
@@ -63,7 +63,7 @@ void mul_read_func(ShmQueue* writeQueue, int threadId, const char* mes)
             {
                 break;
             }
-            printf("Read failed ret = %d\n", len);
+            // printf("Read failed ret = %d\n", len);
             // writeQueue->dump();
             // exit(-1);
         }
@@ -75,36 +75,36 @@ void mul_read_func(ShmQueue* writeQueue, int threadId, const char* mes)
 int main()
 {
     ShareMemory shm;
-    shm.create("/tmp", 10240);
+    shm.open("/tmp");
     shm.attach();
 
-    ShmQueue shmqueue(&shm, MUL_READ_MUL_WRITE);
+    ShmQueue shmqueue(&shm);
 
+    /*
     std::list<std::thread> write;
     for (int i = 0; i < THREAD_NUM; i++)
     {
         write.push_back(move(std::thread(mul_write_func, &shmqueue, i, "MulRWTest")));
     }
+    */
 
-    /*
     std::list<std::thread> read;
     for (int i = 0; i < THREAD_NUM; i++)
     {
         read.push_back(move(std::thread(mul_read_func, &shmqueue, i, "MulRWTest")));
     }
-    */
 
+    /*
     for (std::thread& thread : write)
     {
         thread.join();
     }
+    */
 
-    /*
     for (std::thread& thread : read)
     {
         thread.join();
     }
-    */
     
     return 0;
 }

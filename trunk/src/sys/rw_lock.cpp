@@ -29,7 +29,7 @@ void RWLock::unlock() throw (SysCallException)
     }
 }
 
-void RWLock::lock_read() throw (SysCallException)
+void RWLock::rlock() throw (SysCallException)
 {
     int r = pthread_rwlock_rdlock(&_rwlock);
     if (0 != r)
@@ -38,7 +38,7 @@ void RWLock::lock_read() throw (SysCallException)
     }
 }
 
-void RWLock::lock_write() throw (SysCallException)
+void RWLock::wlock() throw (SysCallException)
 {
     int r = pthread_rwlock_wrlock(&_rwlock);
     if (0 != r)
@@ -47,7 +47,7 @@ void RWLock::lock_write() throw (SysCallException)
     }
 }
 
-bool RWLock::try_lock_read() throw (SysCallException)
+bool RWLock::try_rlock() throw (SysCallException)
 {
     int r = pthread_rwlock_tryrdlock(&_rwlock);
 
@@ -64,7 +64,7 @@ bool RWLock::try_lock_read() throw (SysCallException)
     THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_rwlock_tryrdlock");
 }
 
-bool RWLock::try_lock_write() throw (SysCallException)
+bool RWLock::try_wlock() throw (SysCallException)
 {
     int r = pthread_rwlock_trywrlock(&_rwlock);
     
@@ -81,7 +81,7 @@ bool RWLock::try_lock_write() throw (SysCallException)
     THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_rwlock_trywrlock");
 }
 
-bool RWLock::timed_lock_read(uint32_t millisecond) throw (SysCallException)
+bool RWLock::timed_rlock(uint32_t millisecond) throw (SysCallException)
 {
     int r = 0;
 
@@ -113,7 +113,7 @@ bool RWLock::timed_lock_read(uint32_t millisecond) throw (SysCallException)
     THROW_SYSCALL_EXCEPTION(NULL, r, "pthread_rwlock_timedrdlock");
 }
 
-bool RWLock::timed_lock_write(uint32_t millisecond) throw (SysCallException)
+bool RWLock::timed_wlock(uint32_t millisecond) throw (SysCallException)
 {
     int r = 0;
 
@@ -146,3 +146,4 @@ bool RWLock::timed_lock_write(uint32_t millisecond) throw (SysCallException)
 }
 
 // SYS_NS_END
+
